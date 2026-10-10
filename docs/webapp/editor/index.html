@@ -488,6 +488,26 @@
   .tapebar { margin: 0 0 10px; }
   #tapetrans { min-width: 96px; }
   .tapek { text-transform: uppercase; }
+
+  /* ---- the tracker: the whole pattern as monospace hex columns, one group per track, with a
+         keyboard cursor. Colours are tokens. ---- */
+  .trkbox { border: 1px solid var(--hair); border-radius: var(--r); background: var(--panel); overflow: auto;
+            max-height: 62vh; margin: 0 0 12px; outline: none; }
+  .trkbox:focus-visible { border-color: var(--accent); }
+  .trktab { border-collapse: collapse; font-family: var(--font-screen); font-size: 12px; line-height: 1.55; white-space: pre; }
+  .trktab th, .trktab td { padding: 1px 7px; text-align: left; font-weight: 400; }
+  .trktab thead th { background: var(--panel); border-bottom: 1px solid var(--hair); position: sticky; top: 0; z-index: 2; color: var(--ink-2); }
+  .trktab thead tr:first-child th { text-transform: uppercase; letter-spacing: .08em; }
+  .trktab .rn { color: var(--ink-3); position: sticky; left: 0; background: var(--panel); z-index: 1; font-variant-numeric: tabular-nums; }
+  .trktab td { color: var(--ink-3); }
+  .trktab tr.beat td, .trktab tr.beat .rn { color: var(--ink-2); }
+  .trktab td.note.on { color: var(--ink); }
+  .trktab td.note.tie { color: var(--ink-3); }
+  .trktab td.acc { color: var(--te-red); }
+  .trktab td .mk { color: var(--te-blue); }
+  .trktab td.cur { background: var(--t1); color: var(--panel); border-radius: 2px; }
+  .trktab th.t0 { color: var(--t1); } .trktab th.t1 { color: var(--t2); }
+  .trktab th.t2 { color: var(--t3); } .trktab th.t3 { color: var(--t4); }
 </style>
 </head>
 <body>
@@ -516,6 +536,7 @@
       <div class="navh" data-t="navTrack"></div>
       <button role="tab" data-tab="sound" data-t="sound" data-ic="symbol_audio"></button>
       <button role="tab" data-tab="sequencer" data-t="tabSeq" data-ic="symbol_grid"></button>
+      <button role="tab" data-tab="tracker" data-t="tabTracker" data-ic="symbol_keyboard"></button>
       <button role="tab" data-tab="tracks" data-t="tabTracks" data-ic="ui_slider_vertical"></button>
       <button role="tab" data-tab="song" data-t="tabSong" data-ic="control_arrow_loop"></button>
       <div class="navh" data-t="navSounds"></div>
@@ -533,6 +554,7 @@
       <span id="live"></span>
       <span id="mock" hidden data-t="mock"></span>
       <button id="connect" class="pri" data-t="connect" data-ic="port_usb_c"></button>
+      <button id="devscreen" data-t="devScreen" data-ic="symbol_effector"></button>
       <div class="links"><a class="dim" href="../installer/" data-t="installer"></a><button class="lang" id="lang"></button></div>
     </div>
   </aside>
@@ -625,6 +647,26 @@
         <div class="stepdetail" id="stepdetail" hidden></div>
         <details class="more" id="steplist"><summary data-t="stepList"></summary>
           <div class="stepcols" id="steptables"></div></details>
+      </div>
+    </section>
+
+    <section class="panel" id="p-tracker" data-tab="tracker" data-dev hidden>
+      <div class="card">
+        <h2><span data-t="tabTracker" data-ic="symbol_keyboard"></span><span class="sub" id="trksub"></span></h2>
+        <p class="bar">
+          <button id="trkreload" data-t="reload" data-ic="control_arrow_loop"></button>
+          <span data-t="trkOctLabel"></span>
+          <button type="button" id="trkoctdn" class="sq">&minus;</button><span id="trkoct"></span><button type="button" id="trkoctup" class="sq">+</button>
+          <span class="dim" id="trkpos"></span>
+        </p>
+        <div class="trkbox" id="trkbox" tabindex="0" role="application" aria-label="Tracker"></div>
+        <p class="dim" data-t="trkHelp"></p>
+      </div>
+      <div class="card">
+        <h2 data-t="trkSongHead" data-ic="control_arrow_loop"></h2>
+        <table class="song" id="trkorder"><thead><tr><th>#</th><th data-t="songSection"></th><th data-t="songBars"></th><th data-t="songTimes"></th></tr></thead>
+          <tbody id="trkorderrows"></tbody></table>
+        <p class="dim" data-t="trkOrderHelp"></p>
       </div>
     </section>
 
@@ -3506,7 +3548,7 @@ function setLabel(e, txt) { e.replaceChildren(...(e.dataset.ic ? [icon(e.dataset
 
 const TEXT = {
   ja: {
-    other: "English", connect: "接続", disconnect: "切断", mock: "モック（実機なし）",
+    other: "English", connect: "接続", disconnect: "切断", mock: "モック（実機なし）", devScreen: "デバッグ画面",
     sound: "音色", engine: "エンジン", presets: "プリセット", initSound: "音色を初期化",
     track: "トラック", drum: "ドラム",
     saveFile: "ファイルに保存", loadFile: "ファイルを読み込む", projects: "プロジェクト",
@@ -3566,7 +3608,11 @@ const TEXT = {
     loadedUser: "読み込みました: ", reloaded: "本体で音色が変わったので読み直しました", readingBank: "スロットを読み込み中",
     badEngine: "このファームウェアにないエンジンです: ", flashFail: "書き込みに失敗しました（rc {rc}）",
     installer: "SLOOP インストーラー",
-    tabSeq: "シーケンサー", tabTracks: "トラック", tabSettings: "設定",
+    tabSeq: "シーケンサー", tabTracks: "トラック", tabSettings: "設定", tabTracker: "トラッカー",
+    trkHelp: "4 トラックを縦に並べたヘックス表示（行番号は 16 進）。←→↑↓ で移動、音符は Z S X D C V G B H N J M / Q 2 W 3 E R 5 T 6 Y 7 U、. か Delete で消去、[ ] でオクターブ。VOL は 16 進 2 桁、FX は A でアクセント・S でスライド。青い印はロック・フィル・微調整。",
+    trkOctLabel: "オクターブ", trkSongHead: "ソングオーダー", trkColNote: "ノート", trkColVol: "ヴォル", trkColFx: "エフェクト",
+    trkNoTracks: "このファームウェアは 4 トラック表示に対応していません。", trkLoading: "トラックを読み込み中 ",
+    trkOrderHelp: "FM-1 の SONG 画面の並び。編集は「ソング」タブで。",
     navTrack: "トラック", navSounds: "サウンド", navDevice: "本体", tabKits: "ドラムキット", fm1: "FM-1",
     stepList: "ステップ一覧（音名を入力）", stepsOf: "{n} ステップ", fontCredit: "フォント: Terminus（SIL OFL 1.1）",
     ctlDrag: "値を上下にドラッグでも変更できます。",
@@ -3707,7 +3753,7 @@ const TEXT = {
     songSent: "ソングを FM-1 に送りました",
   },
   en: {
-    other: "日本語", connect: "Connect", disconnect: "Disconnect", mock: "Mock device (no hardware)",
+    other: "日本語", connect: "Connect", disconnect: "Disconnect", mock: "Mock device (no hardware)", devScreen: "Dev screen",
     sound: "Sound", engine: "Engine", presets: "Presets", initSound: "Init sound",
     track: "Track", drum: "Drums",
     saveFile: "Save to file", loadFile: "Load file", projects: "Projects",
@@ -3767,7 +3813,11 @@ const TEXT = {
     loadedUser: "Loaded ", reloaded: "The sound changed on the device: read again", readingBank: "Reading the slots",
     badEngine: "This firmware has no such engine: ", flashFail: "Write failed (rc {rc})",
     installer: "SLOOP installer",
-    tabSeq: "Sequencer", tabTracks: "Tracks", tabSettings: "Settings",
+    tabSeq: "Sequencer", tabTracks: "Tracks", tabSettings: "Settings", tabTracker: "Tracker",
+    trkHelp: "Four tracks side by side, in hex (the row numbers are hex). Move with ←→↑↓; notes on Z S X D C V G B H N J M / Q 2 W 3 E R 5 T 6 Y 7 U; . or Delete clears; [ ] changes the octave. VOL is two hex digits, FX: A accents, S slides. The blue marks are locks / fill / nudge.",
+    trkOctLabel: "Octave", trkSongHead: "Song order", trkColNote: "NOTE", trkColVol: "VOL", trkColFx: "FX",
+    trkNoTracks: "This firmware has no four-track view.", trkLoading: "Reading tracks ",
+    trkOrderHelp: "The FM-1's SONG order. Edit it on the Song tab.",
     navTrack: "Track", navSounds: "Sounds", navDevice: "Device", tabKits: "Drum kit", fm1: "FM-1",
     stepList: "Step list (type note names)", stepsOf: "{n} steps", fontCredit: "Font: Terminus (SIL OFL 1.1)",
     ctlDrag: "You can also drag a value up or down.",
@@ -3935,7 +3985,7 @@ $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; 
 
 /* ---------------------------------------------------------------- tabs --- */
 /* one panel at a time; the last one is remembered (localStorage) and in the URL hash (#sound ...) */
-const TABS = ["sound", "sequencer", "tracks", "song", "library", "samples", "kits", "drumsynth", "projects", "settings"];
+const TABS = ["sound", "sequencer", "tracker", "tracks", "song", "library", "samples", "kits", "drumsynth", "projects", "settings"];
 const TAB_KEY = "felucca-editor-tab";
 const TRACK_TABS = new Set(["sound", "sequencer", "tracks"]);
 let tab = (() => {
@@ -3987,6 +4037,7 @@ function renderPanels() {
   if (want === "song" && ready) {                      /* (2.5) read the song order once per connection */
     if (SG.dev !== dev) { Object.assign(SG, { dev, rows: null, err: "", dirty: false }); op(readSong); } else renderSong();
   }
+  if (want === "tracker") trkOn();                     /* (2.5) the picoTracker-style hex columns + the song order */
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
 $("tabs").addEventListener("keydown", (e) => {          /* arrow keys move between the tabs */
@@ -4004,7 +4055,16 @@ window.addEventListener("hashchange", () => { const h = location.hash.slice(1); 
 const QS = new URLSearchParams(location.search);
 const MOCK = QS.get("mock") === "1";
 $("mock").hidden = !MOCK;
+$("devscreen").hidden = !MOCK;
 let mock = null;
+
+/* the dev screen: a popup running the real firmware UI compiled to WebAssembly (devscreen.html +
+   devscreen.core.mjs). Only meaningful against the mock, where there is no real device screen. */
+function openDevScreen() {
+  const w = window.open("devscreen.html", "fm1-devscreen", "width=1040,height=940,popup=yes");
+  if (w) w.focus();
+}
+$("devscreen").addEventListener("click", openDevScreen);
 
 /* -------------------------------------------------------------- state --- */
 let access = null;     /* MIDIAccess */
@@ -4089,6 +4149,7 @@ async function connect() {
       keys: null, watch: false, bank: null };
     setLabel($("connect"), t("disconnect"));
     renderLive();
+    if (MOCK) openDevScreen();                       /* the dev screen: a popup blocker may stop this — the button stays */
     await load(dev);
   } catch (e) {
     console.error(e);
@@ -4196,7 +4257,7 @@ async function load(d) {
     renderBank();
     renderSysinfo();
     sayK("ready");
-  } finally { busy--; }
+  } finally { busy--; if (tab === "tracker") trkOn(); }   /* the tracker read waits until the connect is done */
 }
 async function getDescOrNull(s, i) { try { return await getDesc(s, i); } catch (e) { if (e.message === "closed") throw e; return null; } }
 
@@ -5589,6 +5650,204 @@ $("songadd").addEventListener("click", () => songEdit(() => {
 $("songread").addEventListener("click", () => op(readSong));
 $("songsend").addEventListener("click", () => op(sendSong));
 for (const b of $("songloop").children) b.addEventListener("click", () => songEdit(() => { SG.loop = b.dataset.v === "1"; }));
+
+/* ------------------------------------------------ the tracker (picoTracker-style) ------------------------------------------------ */
+/* The whole pattern as monospace hex columns, one group per track, with a keyboard cursor — an editing
+   view next to the grid / roll / tape. Every track's steps come from TRACK_STEP (any track, v3), so all
+   four show at once; a step writes back through TRACK_STEP too. The song order (the settings object, v6)
+   is shown read-only, as in picoTracker's Song screen. Colours are tokens. */
+const TRK = { dev: null, pat: [], len: [], engine: [], preset: [], e0: [], locks: [], micro: [], fill: [],
+              ntrk: 4, rows: 16, t: 0, row: 0, col: 0, oct: 4, hex: "", cells: null };
+const TRK_OCT_MIN = 0, TRK_OCT_MAX = 7, TRK_FIELDS = 3;      /* NOTE, VOL, FX */
+const TRK_KEYS = { z: 0, s: 1, x: 2, d: 3, c: 4, v: 5, g: 6, b: 7, h: 8, n: 9, j: 10, m: 11,
+                   q: 12, "2": 13, w: 14, "3": 15, e: 16, r: 17, "5": 18, t: 19, "6": 20, y: 21, "7": 22, u: 23 };
+const trkCols = () => TRK.ntrk * TRK_FIELDS;
+const trkFieldOf = (c) => c % TRK_FIELDS;                    /* 0 NOTE, 1 VOL, 2 FX */
+const trkTrackOf = (c) => (c / TRK_FIELDS) | 0;
+const trkEmpty = () => ({ n: 0, notes: [0, 0, 0, 0], time: 2, flags: 0, vel: 0, lvl: 0, rat: 0 });
+const trkDrum = (t) => !!dev && TRK.engine[t] >= dev.info.nengines;
+const trkTitle = (t) => { const x = trackName({ engine: TRK.engine[t] || 0, preset: TRK.preset[t] || 0, e0: TRK.e0[t] || 0 }); return x || "TRK " + (t + 1); };
+/* a step's notes as one tracker cell: the drum names on the drum track; a chord shows its size ("C4+2") */
+function trkNoteText(t, s) {
+  if (!s || s.time === 2 || !s.n) return "...";
+  if (s.time === 1) return "===";
+  const ns = s.notes.slice(0, s.n);
+  const one = (n) => (trkDrum(t) ? drumName(n) : dsNote(n));
+  return ns.length > 1 ? one(ns[0]) + "+" + (ns.length - 1) : one(ns[0]);
+}
+const trkVolText = (s) => (!s || !s.n || s.time !== 0 ? ".." : (s.vel & 0x7f).toString(16).toUpperCase().padStart(2, "0"));
+/* FX = the two flags (A accent, S slide) then the read-only marks: fill F, a lock L, a nudge M */
+function trkFxText(t, i, s) {
+  const a = s && s.flags & 1, sl = s && s.flags & 2;
+  const fc = TRK.fill[t] ? TRK.fill[t][i] : 0;
+  const lk = TRK.locks[t] ? TRK.locks[t].filter((l) => l.step === i).length : 0;
+  const mc = TRK.micro[t] ? TRK.micro[t][i] : 0;
+  const mk = fc ? "F" + fc : lk ? "L" + Math.min(9, lk) : mc ? "M" + (mc > 0 ? "+" : "-") : "..";
+  return (a ? "A" : ".") + (sl ? "S" : ".") + mk;
+}
+function trkOn() {
+  if (!dev || !dev.dump) { renderTracker(); return; }
+  if (!hasTracks()) { renderTracker(); return; }
+  if (busy) { renderTracker(); return; }             /* still connecting: the end of load() calls us again */
+  if (TRK.dev !== dev || !TRK.pat.length) op(readTracker); else renderTracker();
+  if (SG.dev !== dev) { Object.assign(SG, { dev, rows: null, err: "", dirty: false }); op(async () => { await readSong(); renderTrkOrder(); }); }
+  else renderTrkOrder();
+}
+async function readTracker() {
+  if (!dev || !dev.dump || !hasTracks()) { TRK.pat = []; renderTracker(); return; }
+  busy++;
+  try {
+    const d = dev, ntrk = d.info.ntrk, nstep = d.info.nstep, id = pSlen();
+    const len = [];
+    TRK.engine = []; TRK.preset = []; TRK.e0 = [];
+    for (let k = 0; k < ntrk; k++) {                     /* each track's own LEN, and how to name it */
+      try {
+        const td = parse[CMD.TRACK_DUMP](await rq(req.trackDump(k)), d.info);
+        len[k] = Math.max(1, Math.min(nstep, td.p[id] || nstep));
+        TRK.engine[k] = td.engine; TRK.preset[k] = td.preset; TRK.e0[k] = td.p[d.info.pe0] || 0;
+      } catch (e) { if (e.message === "closed") throw e; len[k] = nstep; TRK.engine[k] = 0; }
+    }
+    TRK.ntrk = ntrk; TRK.rows = Math.max(...len, 1); TRK.len = len;
+    TRK.pat = []; TRK.locks = []; TRK.micro = []; TRK.fill = [];
+    for (let k = 0; k < ntrk; k++) {
+      TRK.pat[k] = [];
+      for (let i = 0; i < len[k]; i++) {
+        if (i % 16 === 0) sayK("trkLoading", `${k + 1}/${ntrk}` + " \u00b7 " + (i + "/" + len[k]));
+        TRK.pat[k][i] = parse[CMD.TRACK_STEP](await rq(req.trackStep(k, i)));
+      }
+      for (let i = len[k]; i < TRK.rows; i++) TRK.pat[k][i] = trkEmpty();
+      TRK.locks[k] = []; TRK.micro[k] = new Int16Array(TRK.rows); TRK.fill[k] = new Uint8Array(TRK.rows);
+      if (hasLocks()) {
+        try { TRK.locks[k] = parse[CMD.LOCK_GET](await rq(req.lockGet(k))).locks; } catch (e) { if (e.message === "closed") throw e; }
+        try { TRK.micro[k].set((parse[CMD.MICRO_GET](await rq(req.microGet(k))).micro || []).slice(0, TRK.rows)); } catch (e) { if (e.message === "closed") throw e; }
+        if (hasFill()) { try { TRK.fill[k].set((parse[CMD.FILL_GET](await rq(req.fillGet(k))).fill || []).slice(0, TRK.rows)); } catch (e) { if (e.message === "closed") throw e; } }
+      }
+    }
+    if (d !== dev) return;
+  } finally { busy--; }
+  TRK.dev = dev;
+  TRK.t = Math.min(TRK.t, TRK.ntrk - 1); TRK.row = Math.min(TRK.row, TRK.rows - 1);
+  renderTracker();
+}
+function renderTracker() {
+  const box = $("trkbox");
+  if (!box) return;
+  if (!dev || !dev.info) { box.replaceChildren(); return; }
+  if (!TRK.pat.length) { box.replaceChildren(el("p", { class: "dim", text: t(hasTracks() ? "trkLoading" : "trkNoTracks") })); return; }
+  const ntrk = TRK.ntrk, rows = TRK.rows;
+  const head1 = el("tr", {}, el("th", { class: "rn" }),
+    ...Array.from({ length: ntrk }, (_, k) => el("th", { colspan: TRK_FIELDS, class: "t" + k, text: trkTitle(k) })));
+  const head2 = el("tr", {}, el("th", { class: "rn", text: "HEX" }),
+    ...Array.from({ length: ntrk }, () => [el("th", { text: t("trkColNote") }), el("th", { text: t("trkColVol") }), el("th", { text: t("trkColFx") })]).flat());
+  const tbody = el("tbody");
+  for (let i = 0; i < rows; i++) {
+    const tr = el("tr", { "data-i": i, class: i % 4 === 0 ? "beat" : null });
+    tr.append(el("th", { class: "rn", text: i.toString(16).toUpperCase().padStart(2, "0") }));
+    for (let k = 0; k < ntrk; k++) for (let f = 0; f < TRK_FIELDS; f++) tr.append(el("td", { "data-t": k, "data-f": f }));
+    tbody.append(tr);
+  }
+  box.replaceChildren(el("table", { class: "trktab" }, el("thead", {}, head1, head2), tbody));
+  TRK.cells = tbody;
+  updateTracker();
+}
+function updateTracker() {
+  if (!TRK.pat.length || !TRK.cells) return;
+  const curT = trkTrackOf(TRK.col), curF = trkFieldOf(TRK.col);
+  for (const tr of TRK.cells.children) {
+    const i = +tr.dataset.i;
+    for (let k = 0; k < TRK.ntrk; k++) {
+      const s = TRK.pat[k][i], note = tr.children[1 + k * TRK_FIELDS], vol = tr.children[2 + k * TRK_FIELDS], fx = tr.children[3 + k * TRK_FIELDS];
+      note.textContent = trkNoteText(k, s);
+      note.className = "note" + (s && s.time === 1 ? " tie" : s && s.n && s.time === 0 ? " on" : "") + (s && s.flags & 1 ? " acc" : "");
+      vol.textContent = trkVolText(s);
+      fx.textContent = trkFxText(k, i, s);
+      fx.className = "fx" + (s && s.flags & 1 ? " acc" : "");
+      const on = i === TRK.row && k === curT;
+      note.classList.toggle("cur", on && curF === 0);
+      vol.classList.toggle("cur", on && curF === 1);
+      fx.classList.toggle("cur", on && curF === 2);
+    }
+  }
+  $("trkoct").textContent = String(TRK.oct);
+  $("trkpos").textContent = trkTitle(curT) + " \u00b7 " + TRK.row.toString(16).toUpperCase().padStart(2, "0");
+  const tr = TRK.cells.children[TRK.row];
+  if (tr && tr.scrollIntoView) tr.scrollIntoView({ block: "nearest" });
+}
+function trkWrite(t, i, st) {
+  TRK.pat[t][i] = st;
+  updateTracker();
+  if (!dev) return;
+  rq(req.trackStep(t, i, { n: st.n, notes: st.notes, time: st.time, flags: st.flags, vel: st.vel, lvl: st.lvl || 0, rat: st.rat || 0 }))
+    .then((a) => { const r = parse[CMD.TRACK_STEP](a); if (TRK.pat[t]) { TRK.pat[t][i] = r; updateTracker(); } })
+    .catch(report);
+}
+function trkNoteStep(s, notes) {
+  const notes4 = notes.concat([0, 0, 0, 0]).slice(0, 4);
+  if (!notes.length) return { ...s, n: 0, notes: notes4, time: 2, vel: 0 };
+  return { ...s, n: notes.length, notes: notes4, time: 0, vel: s.vel || 96 };
+}
+function trkNoteKey(t, i, pitch) {
+  if (pitch < 0 || pitch > 127) return;
+  const s = TRK.pat[t][i] || trkEmpty();
+  let notes = s.time === 0 && s.n ? s.notes.slice(0, s.n) : [];
+  if (notes.includes(pitch)) notes = notes.filter((n) => n !== pitch);
+  else if (notes.length >= 4) return;
+  else notes = notes.concat(pitch);
+  trkWrite(t, i, trkNoteStep(s, notes));
+}
+function trkKey(e) {
+  if (!TRK.pat.length || tab !== "tracker") return;
+  const k = e.key, move = (d) => { TRK.col = Math.max(0, Math.min(trkCols() - 1, TRK.col + d)); TRK.hex = ""; };
+  const row = (d) => { TRK.row = Math.max(0, Math.min(TRK.rows - 1, TRK.row + d)); TRK.hex = ""; };
+  const f = trkFieldOf(TRK.col), t = trkTrackOf(TRK.col);
+  if (k === "ArrowLeft") move(-1);
+  else if (k === "ArrowRight") move(1);
+  else if (k === "ArrowUp") row(-1);
+  else if (k === "ArrowDown") row(1);
+  else if (k === "Home") row(-TRK.rows);
+  else if (k === "End") row(TRK.rows);
+  else if (k === "PageUp") row(-16);
+  else if (k === "PageDown") row(16);
+  else if (k === "[") TRK.oct = Math.max(TRK_OCT_MIN, TRK.oct - 1);
+  else if (k === "]") TRK.oct = Math.min(TRK_OCT_MAX, TRK.oct + 1);
+  else if (f === 0) {
+    if (k === "." || k === "Delete" || k === "Backspace") { trkWrite(t, TRK.row, trkEmpty()); row(1); }
+    else { const semi = TRK_KEYS[k.toLowerCase()]; if (semi == null) return; trkNoteKey(t, TRK.row, (TRK.oct + 1) * 12 + semi); row(1); }
+  } else if (f === 1) {
+    if (k === "Escape") TRK.hex = "";
+    else if (/^[0-9a-fA-F]$/.test(k)) {
+      TRK.hex = (TRK.hex + k.toLowerCase()).slice(-2);
+      if (TRK.hex.length === 2) { trkWrite(t, TRK.row, { ...(TRK.pat[t][TRK.row] || trkEmpty()), vel: Math.min(127, parseInt(TRK.hex, 16)) }); TRK.hex = ""; row(1); }
+    } else return;
+  } else if (k.toLowerCase() === "a") trkWrite(t, TRK.row, { ...(TRK.pat[t][TRK.row] || trkEmpty()), flags: ((TRK.pat[t][TRK.row] || trkEmpty()).flags ^ 1) & 3 });
+  else if (k.toLowerCase() === "s") trkWrite(t, TRK.row, { ...(TRK.pat[t][TRK.row] || trkEmpty()), flags: ((TRK.pat[t][TRK.row] || trkEmpty()).flags ^ 2) & 3 });
+  else return;
+  e.preventDefault();
+  updateTracker();
+}
+function renderTrkOrder() {
+  const tb = $("trkorderrows");
+  if (!tb) return;
+  if (!SG.rows) { tb.replaceChildren(el("tr", {}, el("td", { colspan: 4, class: "dim", text: "\u2014" }))); return; }
+  const LET = "ABCD";
+  tb.replaceChildren(...SG.rows.map((r, k) => el("tr", { class: dev && dev.slotUsed && dev.slotUsed[r.scene] === false ? "bad" : null },
+    el("td", { class: "i", text: (k + 1).toString(16).toUpperCase().padStart(2, "0") }),
+    el("td", { text: LET[r.scene] }), el("td", { text: String(r.bars) }), el("td", { text: String(r.times) }))));
+}
+$("trkreload").addEventListener("click", () => op(readTracker));
+$("trkoctup").addEventListener("click", () => { TRK.oct = Math.min(TRK_OCT_MAX, TRK.oct + 1); updateTracker(); });
+$("trkoctdn").addEventListener("click", () => { TRK.oct = Math.max(TRK_OCT_MIN, TRK.oct - 1); updateTracker(); });
+$("trkbox").addEventListener("pointerdown", (e) => {
+  const td = e.target.closest("td[data-f]");
+  if (!td) return;
+  TRK.row = +td.parentElement.dataset.i;
+  TRK.col = +td.dataset.t * TRK_FIELDS + +td.dataset.f;
+  TRK.hex = "";
+  e.preventDefault();
+  $("trkbox").focus();
+  updateTracker();
+});
+$("trkbox").addEventListener("keydown", trkKey);
 
 /* ---- v7 (SLOOP 2.4): the selected step's nudge and parameter locks (a grid cell or a drum column picks it) */
 let selStep = 0;

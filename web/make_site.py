@@ -75,7 +75,7 @@ def main(pkg, version, out):
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(pkg, fw / name)
     shutil.copy(HERE / "editor.html", ed / "index.html")
-    for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt"):
+    for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "devscreen.core.mjs", "devscreen.core.wasm"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
     (out / "index.html").write_text(

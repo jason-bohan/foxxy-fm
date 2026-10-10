@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM-1 · DEV SCREEN</title>
+<style>
+  :root { --bg:#101213; --panel:#1a1d1f; --panel-2:#141719; --ink:#e8eaed; --ink-2:#9aa0a6; --line:#2b2f33;
+          --accent:#ffe18a; --blue:#5a9cff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:13px/1.5 ui-monospace, Menlo, monospace;
+         display:flex; flex-direction:column; min-height:100vh; }
+  header { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--panel);
+           border-bottom:1px solid var(--line); }
+  header b { letter-spacing:.12em; }
+  header .sub { color:var(--ink-2); }
+  header .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  main { flex:1; display:flex; gap:14px; padding:14px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .screenbox { background:#000; border:1px solid var(--line); border-radius:6px; padding:10px; }
+  canvas#scr { width:360px; height:360px; image-rendering:pixelated; display:block; }
+  .cap { margin-top:8px; color:var(--ink-2); font-size:11px; text-align:center; }
+  fieldset { border:1px solid var(--line); border-radius:6px; margin:0; padding:10px; background:var(--panel);
+             min-width:250px; }
+  legend { color:var(--ink-2); padding:0 6px; letter-spacing:.1em; }
+  select, input[type=number] { background:var(--panel-2); color:var(--ink); border:1px solid var(--line);
+    border-radius:4px; padding:4px 6px; font:inherit; margin:2px; }
+  .row { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0; align-items:center; }
+  button { background:var(--panel-2); color:var(--ink); border:1px solid var(--line); border-radius:4px;
+    padding:5px 8px; font:inherit; cursor:pointer; }
+  button:hover { border-color:var(--ink-2); }
+  button.on { background:var(--accent); color:#000; border-color:var(--accent); }
+  button.key { min-width:34px; }
+  .btn-grid { display:grid; grid-template-columns:repeat(7, auto); gap:4px; }
+  .enc { display:flex; align-items:center; gap:4px; }
+  .enc b { min-width:52px; color:var(--ink-2); font-weight:400; }
+  .enc button { min-width:22px; }
+  #err { color:#ff8a8a; }
+  .mono { color:var(--ink-2); font-size:11px; margin-top:8px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="dot"></span><b>FELUCCA FM-1</b><span class="sub">dev screen — the real firmware UI, on canvas</span>
+  <span id="err"></span>
+</header>
+<main>
+  <div class="screenbox">
+    <canvas id="scr" width="240" height="240"></canvas>
+    <div class="cap" id="cap">loading…</div>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    <fieldset>
+      <legend>NAVIGATION</legend>
+      <div class="row"><label>family <select id="fam"></select></label>
+           <label>page <select id="pg"></select></label></div>
+      <div class="row"><label>track <select id="trk"></select></label>
+           <label>bpm <input id="bpm" type="number" min="40" max="220" value="120" style="width:64px"></label>
+           <button id="play">PLAY</button></div>
+    </fieldset>
+    <fieldset>
+      <legend>PANEL</legend>
+      <div class="btn-grid" id="btns"></div>
+    </fieldset>
+    <fieldset>
+      <legend>KEYS</legend>
+      <div class="btn-grid" id="keys" style="grid-template-columns:repeat(8, auto)"></div>
+    </fieldset>
+    <fieldset>
+      <legend>ENCODERS</legend>
+      <div id="encs"></div>
+    </fieldset>
+  </div>
+</main>
+<script type="module">
+  import createDevScreen from "./devscreen.core.mjs";
+
+  const NAME = "C: FM-1 · DEV SCREEN",
+        canvas = document.getElementById("scr"),
+        ctx = canvas.getContext("2d"),
+        PANEL = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE",
+                 "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"],
+        ENCS = ["SELECT", "ALGO", "PRES", "K1", "K2", "K3", "K4"];
+
+  document.title = NAME;
+  let M = null, famSel, pgSel, trkSel, nonblack = 0;
+
+  function title(p) { return M.UTF8ToString(M._ds_page_title(p)); }
+
+  function refresh() {
+    if (!M) return;
+    document.getElementById("cap").textContent =
+      `${M._ds_ms()} ms · page ${M._ds_cur_page()} · track ${M._ds_selected_track()} · ` +
+      (M._ds_playing() ? "PLAYING" : "stopped") + ` · ${nonblack}% lit`;
+  }
+
+  let frames = 0, lastSample = 0;
+
+  function paint() {
+    const base = M._ds_screen() >> 1, u16 = M.HEAPU16, img = new ImageData(240, 240);
+    const d = img.data, px = u16;
+    let lit = 0;
+    for (let i = 0, j = 0; i < 240 * 240; i++, j += 4) {
+      let v = px[base + i];
+      v = ((v >> 8) & 0xff) | ((v & 0xff) << 8);
+      d[j]     = (v >> 11) * 255 / 31 | 0;
+      d[j + 1] = ((v >> 5) & 63) * 255 / 63 | 0;
+      d[j + 2] = (v & 31) * 255 / 31 | 0;
+      d[j + 3] = 255;
+      lit += v !== 0;
+    }
+    ctx.putImageData(img, 0, 0);
+    frames++;
+    if (frames - lastSample >= 30) { lastSample = frames; nonblack = Math.round(lit * 100 / 57600); }
+  }
+
+  function rebuildPages() {
+    famSel = document.getElementById("fam"); pgSel = document.getElementById("pg");
+    famSel.textContent = "";
+    for (let f = 0; f < M._ds_family_count(); f++) {
+      const o = document.createElement("option");
+      o.value = f; o.textContent = `${f}: ${M.UTF8ToString(M._ds_family_title(f))}`;
+      famSel.appendChild(o);
+    }
+    famSel.addEventListener("change", () => M._ds_open_family(+famSel.value));
+    pgSel.addEventListener("change", () => M._ds_set_page(+pgSel.value));
+    syncPages();
+  }
+  function syncPages() {
+    pgSel.textContent = "";
+    for (let p = 0; p < M._ds_page_count(); p++) {
+      const o = document.createElement("option");
+      o.value = p; o.textContent = `${p}: ${title(p)}`;
+      pgSel.appendChild(o);
+    }
+    pgSel.value = "" + M._ds_cur_page();
+  }
+  function rebuildTracks() {
+    trkSel = document.getElementById("trk");
+    for (let t = 0; t < 4; t++) {
+      const o = document.createElement("option");
+      o.value = t; o.textContent = `track ${t + 1}${t === 3 ? " (drums)" : ""}`;
+      trkSel.appendChild(o);
+    }
+    trkSel.addEventListener("change", () => M._ds_select_track(+trkSel.value));
+  }
+  function buildPanel() {
+    const box = document.getElementById("btns");
+    PANEL.forEach((n, i) => {
+      const b = document.createElement("button");
+      b.textContent = n;
+      b.addEventListener("pointerdown", (e) => { e.preventDefault(); M._ds_press(i); b.classList.add("on"); });
+      b.addEventListener("pointerup", (e) => { e.preventDefault(); M._ds_release(i); b.classList.remove("on"); });
+      box.appendChild(b);
+    });
+  }
+  function buildKeys() {
+    const box = document.getElementById("keys");
+    for (let i = 0; i < 16; i++) {
+      const b = document.createElement("button");
+      b.className = "key"; b.textContent = "" + (i + 1);
+      b.addEventListener("pointerdown", (e) => { e.preventDefault(); M._ds_key(i, 1); b.classList.add("on"); });
+      b.addEventListener("pointerup", (e) => { e.preventDefault(); M._ds_key(i, 0); b.classList.remove("on"); });
+      box.appendChild(b);
+    }
+  }
+  function buildEncs() {
+    const box = document.getElementById("encs");
+    ENCS.forEach((n, i) => {
+      const row = document.createElement("div");
+      row.className = "enc";
+      const lab = document.createElement("b"); lab.textContent = n;
+      const dn = document.createElement("button"); dn.textContent = "−";
+      const up = document.createElement("button"); up.textContent = "+";
+      dn.addEventListener("pointerdown", () => M._ds_turn(i, -1));
+      up.addEventListener("pointerdown", () => M._ds_turn(i, 1));
+      row.append(lab, dn, up); box.appendChild(row);
+    });
+  }
+  function wireMix() {
+    document.getElementById("play").addEventListener("click", (e) => {
+      const on = !M._ds_playing();
+      M._ds_play(on ? 1 : 0);
+      e.target.textContent = on ? "STOP" : "PLAY";
+      e.target.classList.toggle("on", on);
+    });
+    document.getElementById("bpm").addEventListener("change", (e) => M._ds_set_bpm(+e.target.value));
+  }
+
+  try {
+    M = await createDevScreen();
+    M._ds_init();
+    document.getElementById("cap").textContent =
+      `ready · ${M._ds_width()}x${M._ds_height()} · page ${M._ds_cur_page()} · ${M._ds_page_count()} pages`;
+    rebuildPages(); rebuildTracks(); buildPanel(); buildKeys(); buildEncs(); wireMix();
+    const $play = document.getElementById("play");
+    let last = performance.now();
+    const loop = () => {
+      if (!M) return;
+      const t = performance.now();
+      if (t - last >= 33) { last = t; M._ds_frame(); paint(); refresh(); }
+    };
+    setInterval(loop, 33);                          /* a timer, not rAF: virtual time drives it, no vblank race */
+    document.getElementById("err").textContent = "";
+  } catch (e) {
+    const err = document.getElementById("err");
+    err.textContent = "dev screen failed to start: " + e.message;
+    console.error(e);
+  }
+</script>
+</body>
+</html>
