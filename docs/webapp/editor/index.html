@@ -478,6 +478,16 @@
     .fxdeck .mode { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .fxdeck .lcd canvas { height: 64px; }
   }
+
+  /* ---- the tape: an OP-1-style take on the pattern — a ribbon of steps between two reels, a local
+         playhead at the pattern's BPM, echo heads following the FM-1's delay. Colours are tokens. ---- */
+  .tape { margin: 8px 0 4px; }
+  .tapebox { border: 1px solid var(--hair); border-radius: var(--r); background: var(--panel);
+             overflow: hidden; margin: 0 0 10px; }
+  .tapebox canvas { display: block; width: 100%; height: 180px; touch-action: none; }
+  .tapebar { margin: 0 0 10px; }
+  #tapetrans { min-width: 96px; }
+  .tapek { text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -582,7 +592,7 @@
           <span class="dim" id="noteshelp"></span></p>
         <p class="bar seqtools"><span data-t="lenLabel"></span>
           <button type="button" id="lenminus" class="sq">&minus;</button><input id="lenval" type="number" min="1" max="64"><button type="button" id="lenplus" class="sq">+</button>
-          <span class="seg" id="viewseg"><button type="button" data-v="grid" data-t="viewGrid"></button><button type="button" data-v="roll" data-t="viewRoll"></button></span>
+          <span class="seg" id="viewseg"><button type="button" data-v="grid" data-t="viewGrid"></button><button type="button" data-v="roll" data-t="viewRoll"></button><button type="button" data-v="tape" data-t="viewTape"></button></span>
           <button type="button" id="midiexp" data-t="midiExport" data-ic="symbol_download"></button>
           <button type="button" id="midiimp" data-t="midiImportBtn" data-ic="symbol_upload"></button>
           <input id="midifile" type="file" accept=".mid,.midi,audio/midi" hidden></p>
@@ -595,6 +605,22 @@
             <button type="button" id="rolldown" data-t="rollDown"></button> <span class="dim" id="rollrange"></span> <button type="button" id="rollup" data-t="rollUp"></button></p>
           <div class="rollbox"><canvas id="rollcv"></canvas></div>
           <p class="dim" data-t="rollHelp"></p>
+        </div>
+        <div class="tape" id="tape" hidden>
+          <div class="tapebox"><canvas id="tapecv" aria-hidden="true"></canvas></div>
+          <p class="bar tapebar"><button type="button" id="tapetrans" data-t="tapePlay"></button>
+            <span class="dim" id="tapepos"></span>
+            <span class="dim" data-t="tapeHelp"></span></p>
+          <span class="seg tapek" id="tapek">
+            <button type="button" data-trick="lin" data-t="tkIn"></button>
+            <button type="button" data-trick="lout" data-t="tkOut"></button>
+            <button type="button" data-trick="loop" data-t="tkLoop"></button>
+            <button type="button" data-trick="break" data-t="tkBreak"></button>
+            <button type="button" data-trick="reverse" data-t="tkReverse"></button>
+            <button type="button" data-trick="chop" data-t="tkChop"></button>
+            <button type="button" data-trick="memo1" data-t="tkMemo1"></button>
+            <button type="button" data-trick="memo2" data-t="tkMemo2"></button>
+          </span>
         </div>
         <div class="stepdetail" id="stepdetail" hidden></div>
         <details class="more" id="steplist"><summary data-t="stepList"></summary>
@@ -3650,7 +3676,10 @@ const TEXT = {
     dsStop: "ソングを止めてから保存してください", dsFlash: "フラッシュに書けませんでした", dsSaved: "FM-1 に保存しました",
     dsFileBad: "SLOOP のドラムシンセキットではありません", dsOpenAsk: "{x} を {k} に読み込みます。よろしいですか？", dsOpened: "読み込みました:",
     /* SLOOP 2.5: length, piano roll, MIDI files, song */
-    lenLabel: "長さ（ステップ）", viewGrid: "グリッド", viewRoll: "ピアノロール",
+    lenLabel: "長さ（ステップ）", viewGrid: "グリッド", viewRoll: "ピアノロール", viewTape: "テープ",
+    tapePlay: "再生", tapeStop: "停止",
+    tapeHelp: "パターンをテープで表示します。再生は FM-1 の BPM でヘッドを動かします（リンクにトランスポートはありません）。Loop in/out で範囲を、Loop で折り返し、Reverse でパターンを逆に並べて FM-1 に書き、Chop で切り分けます。Memo 1/2 はパターンをこのブラウザーに保存します（タップで復元、長押しで上書き）。エコーは FM-1 のディレイ時間に追従します。",
+    tkIn: "ループ IN", tkOut: "ループ OUT", tkLoop: "ループ", tkBreak: "ブレイク", tkReverse: "逆再生", tkChop: "チョップ", tkMemo1: "メモ 1", tkMemo2: "メモ 2",
     midiExport: "MIDI 書き出し", midiImportBtn: "MIDI 読み込み",
     rollLen: "音の長さ", rollUp: "オクターブ上", rollDown: "オクターブ下",
     rollHelp: "空いた所をクリック: 選んだ長さの音を置く（同じ位置の音は和音に、最大 4 音）。音をクリック: 消す。音の右端をドラッグ: 長さを変える（タイ）。",
@@ -3848,7 +3877,10 @@ const TEXT = {
     dsStop: "Stop the song first, then store", dsFlash: "Could not write the flash", dsSaved: "Stored on the FM-1",
     dsFileBad: "Not a SLOOP drum synth kit", dsOpenAsk: "Load {x} into {k}?", dsOpened: "Loaded:",
     /* SLOOP 2.5: length, piano roll, MIDI files, song */
-    lenLabel: "Length (steps)", viewGrid: "Grid", viewRoll: "Piano roll",
+    lenLabel: "Length (steps)", viewGrid: "Grid", viewRoll: "Piano roll", viewTape: "Tape",
+    tapePlay: "Play", tapeStop: "Stop",
+    tapeHelp: "Your pattern as tape. Play runs the playhead at the FM-1's BPM (the link has no transport to follow). Loop in/out mark a region, Loop keeps it; Reverse writes the pattern reversed and Chop cuts it apart. Memo 1/2 hold the pattern in this browser: tap to restore, hold to overwrite. The echo heads follow the FM-1's delay time.",
+    tkIn: "Loop in", tkOut: "Loop out", tkLoop: "Loop", tkBreak: "Break", tkReverse: "Reverse", tkChop: "Chop", tkMemo1: "Memo 1", tkMemo2: "Memo 2",
     midiExport: "Export MIDI", midiImportBtn: "Import MIDI",
     rollLen: "Note length", rollUp: "Octave up", rollDown: "Octave down",
     rollHelp: "Click an empty spot: a note of the chosen length (notes at the same step make a chord, 4 at most). Click a note: it goes. Drag a note's right end: its length (ties).",
@@ -3944,6 +3976,7 @@ function renderPanels() {
   $("hint").hidden = !hint;
   if (hint) $("hint").textContent = t(hint);
   fxDeckOn((want === "sound" || want === "tracks") && !document.hidden);
+  tapeRun();
   $("trackbar").hidden = !(ready && hasTracks() && TRACK_TABS.has(want));
   const nb = $("tabs").querySelector(`button[data-tab="${want}"]`);   /* the page's title: its name in the side bar */
   $("pagetitle").textContent = nb ? t(nb.dataset.t) : "";
@@ -4402,6 +4435,263 @@ function fxDeckOn(on) {
   if (on && !FXD.raf && FXD.cv) fxDeckDraw();   /* reduced-motion: one static frame */
 }
 
+/* ---- the tape: the pattern as a ribbon of steps between two reels, a local playhead at the
+       pattern's BPM (the protocol has no transport to follow), echo heads that follow the FM-1's
+       delay time, and the tape tricks. Reverse and Chop write the pattern back to the FM-1;
+       Memo keeps it in this browser. Colours are tokens. ---- */
+const TAP = { raf: 0, play: false, pos: 0, ang: 0, vel: 0, t: 0, drift: 0, blip: 0, last: 0,
+              lin: 0, lout: 0, loop: false, memo: [null, null] };
+const tapeMotion = fxDeckMotion;
+const tapeSps = () => Math.max(40, Math.min(240, ((dev && dev.dump && gBpm()) || 120))) * 4 / 60;   /* 16th-note steps a second */
+function tapeShown() {
+  const p = $("p-sequencer");
+  return !!p && !p.hidden && !$("tape").hidden;
+}
+function tapeLive() { return tapeShown() && !document.hidden && (TAP.play || tapeMotion()); }
+function tapeBlip(a) { TAP.blip = Math.min(1.5, TAP.blip + (a || 0.5)); }
+function tapeEcho() {
+  const NDLY_ST = [4, 2, 1, 0.5, 4 / 3, 2 / 3, 3, 1.5];   /* the FM-1's DLY TIME names, in 1/16 steps */
+  let st = 2, n = 2;
+  if (dev && dev.dump && dev.gdesc && dev.gdesc[4] && dev.gdesc[5]) {
+    st = (NDLY_ST[(dev.dump.g[4] | 0) % NDLY_ST.length] | 0) || 1;
+    n = 1 + Math.round(((dev.dump.g[5] | 0) / 127) * 3);
+  }
+  return { st, n };
+}
+function tapePos() {
+  if (!tapeShown() || !dev || !dev.steps.length) return "";
+  const len = stepLen();
+  return (Math.min(len, Math.floor((TAP.pos % len + len) % len) + 1)) + " / " + len;
+}
+function tapeUi() {
+  const b = $("tapetrans"), p = $("tapepos");
+  const lab = t(TAP.play ? "tapeStop" : "tapePlay");
+  if (b.textContent !== lab) b.textContent = lab;
+  const pos = tapePos();
+  if (pos && p.textContent !== pos) p.textContent = pos;
+}
+function tapeK() {
+  for (const b of $("tapek").children) {
+    const tr = b.dataset.trick;
+    const on = tr === "loop" ? (TAP.loop && TAP.lout > TAP.lin) : tr === "memo1" ? !!TAP.memo[0] : tr === "memo2" ? !!TAP.memo[1] : false;
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+function tapeColors() {
+  const cs = getComputedStyle(document.documentElement), v = (x, d) => cs.getPropertyValue(x).trim() || d;
+  return { paper: v("--paper", "#f5f5f5"), panel: v("--panel", "#ffffff"), hair: v("--hair", "#0f0e12"),
+           ink: v("--ink", "#0f0e12"), dim: v("--ink-3", "#7f7f7f"), soft: v("--soft", "#cccccc"),
+           acc: v("--accent", "#f05a24"), yellow: v("--te-yellow", "#fab413") };
+}
+function tapeReel(g, C, cx, cy, r, ang) {
+  g.strokeStyle = C.dim; g.lineWidth = 2;
+  g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = C.soft; g.lineWidth = 1;
+  g.beginPath(); g.arc(cx, cy, r - 10, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = C.ink; g.lineWidth = 2;
+  const hub = r - 10;
+  g.beginPath();
+  for (let s = 0; s < 4; s++) {
+    const a = ang + (s * Math.PI) / 2;
+    g.moveTo(cx + Math.cos(a) * hub * 0.45, cy + Math.sin(a) * hub * 0.45);
+    g.lineTo(cx + Math.cos(a) * hub, cy + Math.sin(a) * hub);
+  }
+  g.stroke();
+  g.fillStyle = C.ink;
+  g.beginPath(); g.arc(cx, cy, 4, 0, Math.PI * 2); g.fill();
+}
+function tapeDraw() {
+  const cv = $("tapecv");
+  if (!cv || !cv.isConnected || !cv.getClientRects().length) return false;
+  if (!dev || !dev.dump || !dev.steps.length) return false;
+  const len = stepLen();
+  if (!len) return true;
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.max(320, cv.clientWidth || Math.max(320, cv.parentElement.clientWidth || 800));
+  const H = 180;
+  const g = cv.getContext("2d");
+  if (!g) return false;
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const C = tapeColors();
+  g.fillStyle = C.panel; g.fillRect(0, 0, W, H);
+  const cy = H / 2, r = 40;
+  const lx = Math.max(52, 60), rx = Math.min(W - 52, W - 60);
+  const band0 = cy - 28, band1 = cy + 28;
+  const bandL = lx + r + 6, bandR = rx - r - 6;
+  g.fillStyle = C.paper; g.fillRect(bandL, band0, bandR - bandL, band1 - band0);
+  g.strokeStyle = C.hair; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(bandL, band0 + 0.5); g.lineTo(bandR, band0 + 0.5);
+  g.moveTo(bandL, band1 - 0.5); g.lineTo(bandR, band1 - 0.5); g.stroke();
+  const cw = (bandR - bandL) / len;
+  if (TAP.lout > TAP.lin) {                                   /* the loop region, marked on the tape */
+    const xa = bandL + TAP.lin * cw, xb = bandL + TAP.lout * cw;
+    g.fillStyle = C.yellow; g.globalAlpha = 0.14;
+    g.fillRect(xa, band0, xb - xa, band1 - band0);
+    g.globalAlpha = 1;
+    g.strokeStyle = C.yellow; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(xa + 1, band0 + 3); g.lineTo(xa - 5, cy); g.lineTo(xa + 1, band1 - 3);
+    g.moveTo(xb - 1, band0 + 3); g.lineTo(xb + 5, cy); g.lineTo(xb - 1, band1 - 3); g.stroke();
+    g.lineWidth = 1;
+  }
+  for (let i = 0; i < len; i++) {                            /* the steps as splices on the ribbon */
+    const s = dev.steps[i], on = !!s && s.n > 0, tie = !!s && s.time === 1;
+    const x = bandL + i * cw;
+    g.fillStyle = C.ink;
+    if (cw >= 5) {
+      if (on) { const h = (band1 - band0) * (0.25 + 0.35 * (i % 4 === 0 ? 1 : i % 2 === 0 ? 0.7 : 0.45));
+                g.globalAlpha = tie ? 0.5 : 0.85; g.fillRect(x + 1, cy - h / 2, Math.max(1, cw - 2), h); g.globalAlpha = 1; }
+      else { g.globalAlpha = 0.2; g.fillRect(x + 1, cy - 1, Math.max(1, cw - 2), 2); g.globalAlpha = 1; }
+    } else g.globalAlpha = on ? (tie ? 0.4 : 0.8) : 0.15, g.fillRect(x, cy - 10, Math.max(1, cw), 20), g.globalAlpha = 1;
+    if (i % 4 === 0) { g.fillStyle = C.dim; g.fillRect(x, band1 + 5, 1, 4); }
+    g.fillStyle = C.ink;
+  }
+  const ech = tapeEcho();                                     /* the echo heads (a CWO-style delay) */
+  if (tapeMotion()) {
+    for (let k = ech.n; k >= 1; k--) {
+      const ex = bandL + ((TAP.pos - k * ech.st) % len + len) % len / len * (bandR - bandL);
+      g.strokeStyle = C.acc; g.lineWidth = 1.5; g.globalAlpha = 0.55 * (1 - k / (ech.n + 1));
+      g.beginPath(); g.moveTo(ex + 2, band0 + 2); g.lineTo(ex - 2, cy); g.lineTo(ex + 2, band1 - 2); g.stroke();
+      g.globalAlpha = 1;
+    }
+  }
+  const px = bandL + ((TAP.pos % len) + len) % len / len * (bandR - bandL);   /* the playhead */
+  g.strokeStyle = C.acc; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(px + 3, band0 + 2); g.lineTo(px - 2, cy); g.lineTo(px + 3, band1 - 2); g.stroke();
+  g.lineWidth = 1;
+  tapeReel(g, C, lx, cy, r, TAP.ang);
+  tapeReel(g, C, rx, cy, r, -TAP.ang + TAP.drift);
+  if (cw >= 5) {                                             /* perforation drift while the tape runs */
+    g.fillStyle = C.dim;
+    const drift = ((TAP.drift % cw) + cw) % cw - cw;
+    for (let x = bandL + drift; x <= bandR; x += cw) {
+      g.globalAlpha = 0.25; g.fillRect(x, band0 + 3, 1, 3); g.fillRect(x, band1 - 6, 1, 3); g.globalAlpha = 1;
+    }
+  }
+  tapeUi();
+  return true;
+}
+function tapeTick() {
+  const now = performance.now();
+  let dt = (now - TAP.last) / 1000; TAP.last = now;
+  if (dt > 0.25) dt = 0.25;
+  TAP.t += dt;
+  TAP.blip *= Math.exp(-dt * 3);
+  const target = TAP.play ? tapeSps() * 1.1 : tapeMotion() ? 1.1 : 0;
+  const k = 1 - Math.exp(-dt * (TAP.play ? 6 : 2.2));
+  TAP.vel += (target - TAP.vel) * k;
+  TAP.ang += TAP.vel * dt * (TAP.play ? 1 : tapeMotion() ? 0.35 : 0);
+  if (!TAP.play && tapeMotion()) TAP.drift += dt * 8;
+  if (TAP.play) {
+    const len = stepLen();
+    const sps = tapeSps();
+    if (TAP.loop && TAP.lout > TAP.lin) {
+      TAP.pos += dt * sps;
+      TAP.drift += dt * sps * (TAP.lout - TAP.lin);
+      if (TAP.pos >= TAP.lout) TAP.pos = TAP.lin + (TAP.pos - TAP.lout) % (TAP.lout - TAP.lin);
+    } else {
+      TAP.pos += dt * sps;
+      TAP.drift += dt * sps * len;
+      if (len) TAP.pos %= len;
+    }
+  }
+  tapeDraw();
+  if (!tapeLive()) { TAP.raf = 0; return; }   /* stopped, and no idle motion: rest */
+  TAP.raf = requestAnimationFrame(tapeTick);
+}
+function tapeRun() {
+  const want = tapeLive();
+  if (want && !TAP.raf) { TAP.last = performance.now(); TAP.raf = requestAnimationFrame(tapeTick); return; }
+  if (!want && TAP.raf) { cancelAnimationFrame(TAP.raf); TAP.raf = 0; }
+  if (!want && tapeShown()) tapeDraw();   /* reduced-motion (or tab hidden): one static frame */
+}
+function tapeRegion() {
+  const len = stepLen();
+  const lo = TAP.loop && TAP.lout > TAP.lin ? TAP.lin : 0;
+  const hi = TAP.loop && TAP.lout > TAP.lin ? TAP.lout : len;
+  return { len, lo, hi, idx: Array.from({ length: hi - lo }, (_, i) => lo + i) };
+}
+async function tapeWrite(idx) {
+  idx = idx || tapeRegion().idx;
+  if (!idx.length || !dev) return;
+  try {
+    for (const i of idx) {
+      const s = dev.steps[i];
+      stepEdit.set(i, performance.now());
+      dev.steps[i] = parse[CMD.STEP_SET](await rq(req.stepSet(i, { n: s.n, notes: s.notes, time: s.time, flags: s.flags,
+        vel: s.vel, lvl: s.lvl || 0, rat: s.rat || 0 })));
+    }
+  } catch (e) { report(e); }
+}
+function tapeReverse() {
+  if (!dev) return;
+  const { lo, hi } = tapeRegion();
+  if (hi - lo < 2) { tapeBlip(0.4); return; }
+  const cells = dev.steps.slice(lo, hi).reverse();
+  for (let i = 0; i < cells.length; i++) dev.steps[lo + i] = cells[i];
+  tapeBlip(0.9);
+  op(() => tapeWrite());
+  renderSeqSteps();
+}
+function tapeChop() {
+  if (!dev) return;
+  const len = stepLen(), { lo, hi } = tapeRegion(), n = hi - lo;
+  if (n < 2) { tapeBlip(0.4); return; }
+  const p = n >= 16 ? 4 : 2, ps = Math.ceil(n / p);
+  const cut = [];
+  for (let s = lo; s < hi; s += ps) { const seg = []; for (let i = s; i < Math.min(hi, s + ps); i++) seg.push(dev.steps[i]); if (seg.length) cut.push(seg); }
+  const ord = cut.slice(1).concat(cut.slice(0, 1));
+  let o = lo;
+  for (const seg of ord) for (const s of seg) dev.steps[o++] = s;
+  tapeBlip(1);
+  op(() => tapeWrite());
+  renderSeqSteps();
+}
+function renderSeqSteps() { renderSteps(); }   /* (the grid and the tables follow a splice; the tape shows it at once) */
+function tapeMemo(slot, b, hold) {
+  const len = stepLen();
+  if (hold) { TAP.memo[slot] = dev.steps.slice(0, len); tapeBlip(0.9); tapeK(); tapeDraw(); return; }
+  if (TAP.memo[slot]) {
+    const idx = Array.from({ length: len }, (_, i) => i);
+    for (let i = 0; i < len; i++) if (TAP.memo[slot][i]) dev.steps[i] = { ...TAP.memo[slot][i], index: i };
+    tapeBlip(0.6);
+    op(() => tapeWrite(idx));
+    renderSeqSteps();
+  } else { TAP.memo[slot] = dev.steps.slice(0, len); tapeBlip(0.9); }
+  tapeK(); tapeDraw();
+}
+function tapeTrick(b) {
+  const tr = b.dataset.trick;
+  if (tr === "lin") { TAP.lin = Math.max(0, Math.floor(TAP.pos) % stepLen()); tapeBlip(0.3); }
+  else if (tr === "lout") { TAP.lout = Math.min(stepLen(), Math.max(TAP.lin + 1, Math.ceil(TAP.pos) % stepLen())); tapeBlip(0.3); }
+  else if (tr === "loop") { if (TAP.lout > TAP.lin) TAP.loop = !TAP.loop; tapeBlip(0.3); }
+  else if (tr === "break") { TAP.play = false; TAP.vel = -TAP.vel * 0.3; tapeBlip(0.7); }
+  else if (tr === "reverse") { tapeReverse(); return; }
+  else if (tr === "chop") { tapeChop(); return; }
+  else if (tr === "memo1") { tapeMemo(0, b, false); return; }
+  else if (tr === "memo2") { tapeMemo(1, b, false); return; }
+  tapeK(); tapeDraw(); tapeUi();
+}
+$("tapetrans").addEventListener("click", () => { TAP.play = !TAP.play; TAP.last = performance.now(); tapeRun(); tapeUi(); });
+$("tapek").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-trick]");
+  if (!b) return;
+  if (b._held) { b._held = false; return; }      /* a long press already stored: the click just clears the flag */
+  tapeTrick(b);
+});
+$("tapek").addEventListener("pointerdown", (e) => {
+  const b = e.target.closest("button[data-trick]");
+  if (!b) return;
+  const slot = b.dataset.trick === "memo1" ? 0 : b.dataset.trick === "memo2" ? 1 : -1;
+  if (slot < 0) return;
+  b._hold = setTimeout(() => { b._held = true; tapeMemo(slot, b, true); }, 550);
+});
+for (const b of $("tapek").children) {
+  b.addEventListener("pointerup", () => clearTimeout(b._hold));
+  b.addEventListener("pointercancel", () => clearTimeout(b._hold));
+}
+tapeK(); tapeUi();
+
 function paramRow(s, id) {
   const d = s ? dev.gdesc[id] : dev.pdesc[id];
   if (!visible(d) || (s === 1 && G_SKIP.has(d.label))) return null;
@@ -4612,9 +4902,12 @@ function renderSteps() {
   $("drumbar").hidden = $("drumgrid").hidden = !dg;
   $("stepgrid").hidden = $("steptables").hidden = dg;
   renderSeqTools();
+  const tapeOn = !dg && !isDrum() && RV.view === "tape";   /* (2.5) the OP-1-style tape instead of the tiles */
   const rollOn = !dg && !isDrum() && RV.view === "roll";   /* (2.5) the piano roll instead of the tiles */
   $("roll").hidden = !rollOn;
-  if (rollOn) $("stepgrid").hidden = true;
+  $("tape").hidden = !tapeOn;
+  if (rollOn || tapeOn) $("stepgrid").hidden = true;
+  tapeRun();
   renderStepDetail();
   $("steplist").hidden = dg;
   if (dg) { $("noteshelp").textContent = t("drumGridHelp"); $("steplen").textContent = t("stepsOf").replace("{n}", stepLen()); renderDrums(); return; }
@@ -4693,6 +4986,7 @@ function renderGrid() {
     b.replaceChildren(el("span", { class: "n", text: String(i + 1) + marks }), el("span", { class: "x", text: txt }));
   }
   if (!$("roll").hidden) renderRoll();
+  if (!$("tape").hidden) tapeDraw();
 }
 function focusStep(i) {
   const tr = $("steptables").querySelector(`tr[data-i="${i}"]`);
@@ -4724,7 +5018,7 @@ async function writeStep(i, tr) {
 }
 /* ---- SLOOP 2.5: LEN at hand, the piano roll of a synth track, MIDI files ---- */
 const RV = { view: "grid", frac: 1 / 16, lo: null, rows: 25, trk: -1, drag: null, geo: null };   /* view: grid | roll */
-try { if (localStorage.getItem("sloop-seq-view") === "roll") RV.view = "roll"; } catch (e) { /* no storage */ }
+try { const v = localStorage.getItem("sloop-seq-view"); if (v === "roll" || v === "tape") RV.view = v; } catch (e) { /* no storage */ }
 const ROLL_ROW = 16, ROLL_LAB = 40;
 const pDiv = () => pById("DIV", 30);
 const curDiv = () => Math.max(0, Math.min(ROLL.DIV_PER_BAR.length - 1, dev.dump.p[pDiv()] | 0));
@@ -4889,7 +5183,7 @@ $("rollcv").addEventListener("pointerup", rollDrop);
 $("rollcv").addEventListener("pointercancel", () => { RV.drag = null; renderRoll(); });
 $("rollup").addEventListener("click", () => { if (RV.lo != null) { RV.lo = Math.min(128 - RV.rows, RV.lo + 12); renderRoll(); } });
 $("rolldown").addEventListener("click", () => { if (RV.lo != null) { RV.lo = Math.max(0, RV.lo - 12); renderRoll(); } });
-window.addEventListener("resize", () => { if (RV.view === "roll") renderRoll(); });
+window.addEventListener("resize", () => { if (RV.view === "roll") renderRoll(); if (RV.view === "tape") tapeDraw(); });
 
 /* MIDI files: the selected track's pattern out as a .mid, a .mid in (a preview first) */
 function midiExport() {
@@ -6812,7 +7106,7 @@ async function keepAlive() {
   }
 }
 setInterval(keepAlive, 1000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden && dev && dev.watch) { rewatch = true; keepAlive(); } fxDeckOn(!document.hidden); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && dev && dev.watch) { rewatch = true; keepAlive(); } fxDeckOn(!document.hidden); tapeRun(); });
 
 let stepRR = 0;
 setInterval(async () => {
