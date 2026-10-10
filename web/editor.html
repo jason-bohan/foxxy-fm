@@ -465,7 +465,7 @@
             margin: 0 0 8px; background: var(--panel-2); border: 1px solid var(--hair); border-radius: var(--r); }
   .fxdeck .lcd { border: 1px solid var(--hair); border-radius: 2px; background: var(--paper); overflow: hidden; min-width: 0; }
   .fxdeck .lcd canvas { display: block; width: 100%; height: 84px; }
-  .fxdeck .mode { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; align-content: center; }
+  .fxdeck .mode { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; align-content: center; }
   .fxdeck .mode button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 7px 4px 6px;
                          font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
   .fxdeck .mode .led { width: 7px; height: 7px; border-radius: 50%; background: var(--soft); flex: none; }
@@ -475,7 +475,7 @@
                  text-transform: uppercase; font-size: 9px; letter-spacing: .2em; }
   @media (max-width: 860px) {
     .fxdeck { grid-template-columns: 1fr; }
-    .fxdeck .mode { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .fxdeck .mode { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .fxdeck .lcd canvas { height: 64px; }
   }
 </style>
@@ -4339,13 +4339,13 @@ function fxDeckBuild() {
   FXD.cv = el("canvas", { "aria-hidden": "true" });
   lcd.append(FXD.cv);
   const mode = el("div", { class: "mode", role: "group", "aria-label": "effects" });
-  for (const m of ["PITCH", "FILT 1", "FILT 2", "T.STRCH", "DELAY", "RING"]) {
+  for (const m of ["PITCH", "FILT 1", "FILT 2", "T.STRCH", "DELAY", "RING", "SLICER", "DUAL CHO"]) {
     mode.append(el("button", { type: "button", "aria-pressed": "false",
       onclick: (e) => { const b = e.currentTarget; b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true"); fxBlip(0.7); } },
       el("span", { class: "led" }), el("span", { text: m })));
   }
   FXD.deck = el("div", { class: "fxdeck" }, lcd, mode,
-    el("div", { class: "cap" }, el("span", { text: "effector" }), el("span", { class: "grow" }), el("span", { text: "6 effects" })));
+    el("div", { class: "cap" }, el("span", { text: "effector" }), el("span", { class: "grow" }), el("span", { text: "8 effects" })));
   return FXD.deck;
 }
 function fxDeckSync() {
