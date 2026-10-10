@@ -20,7 +20,7 @@ for h in felucca_font.h felucca_icons.h sloop_logo.h; do
     [ -f "$GEN/$h" ] || { echo "missing build/gen/$h (run ./build.sh once, or the tools/gen_*.py)" >&2; exit 1; }
 done
 
-EXPORTS='["_ds_init","_ds_screen","_ds_width","_ds_height","_ds_ms","_ds_frame","_ds_frames","_ds_press","_ds_release","_ds_tap","_ds_key","_ds_turn","_ds_home","_ds_open_family","_ds_set_page","_ds_cur_page","_ds_page_count","_ds_page_title","_ds_page_family","_ds_family_count","_ds_family_title","_ds_select_track","_ds_selected_track","_ds_play","_ds_playing","_ds_set_bpm","_ds_set_engine","_ds_set_preset","_malloc","_free"]'
+EXPORTS='["_ds_init","_ds_screen","_ds_width","_ds_height","_ds_ms","_ds_frame","_ds_frames","_ds_press","_ds_release","_ds_tap","_ds_key","_ds_turn","_ds_home","_ds_open_family","_ds_set_page","_ds_cur_page","_ds_page_count","_ds_page_title","_ds_page_family","_ds_family_count","_ds_family_title","_ds_select_track","_ds_selected_track","_ds_play","_ds_playing","_ds_set_bpm","_ds_set_engine","_ds_set_preset","_ds_out","_ds_audio_enable","_ds_master","_ds_audio","_malloc","_free"]'
 
 docker run --rm -v "$ROOT":/src -w /src emscripten/emsdk:latest \
     emcc tests/devscreen.c -Ibuild/gen -Ifirmware/src -Ifirmware/hal \

@@ -40,6 +40,7 @@ DS_API void ds_init(void)
         trk[i].engine = trk[i].eng_req;
     }
     TDRUM->p[P_E0] = DRUM_DEFAULT_KIT;
+    song.master_q12 = 2048;             /* main.c sets 2048 at power-on: the harness would mix at 0 */
     go_home();
     ui.force = 1;
     frame();
@@ -95,6 +96,34 @@ DS_API int ds_playing(void) { return (int)song.playing; }
 DS_API void ds_set_bpm(int bpm) { song.g[G_BPM] = (int16_t)bpm; ui.force = 1; frame(); }
 DS_API void ds_set_engine(int t, int e) { if (t >= 0 && t < NPART) { set_engine_of(&trk[t], (uint32_t)e); ui.force = 1; frame(); } }
 DS_API void ds_set_preset(int t, int p) { if (t >= 0 && t < NPART) { apply_preset_to(&trk[t], (uint32_t)p); ui.force = 1; frame(); } }
+
+/* the mix, as the audio ISR produces it (44100 Hz, stereo, -1..1). ds_audio runs n samples into the
+ * buffer at ds_out (2n floats); when enabled it also steps the UI once per 704-sample frame (16 ms),
+ * so what you hear and what the screen shows stay in lockstep and the JS loop must not also call
+ * ds_frame. The master level is the song's (2048 at power-on; ds_master sets it, 0..4096). */
+#define DS_FRAME_BLOCKS 22u
+#define DS_OUT_N (2u * (64u * CTL))
+static float ds_aout[DS_OUT_N];
+static int ds_adriven;
+
+DS_API float *ds_out(void) { return ds_aout; }
+DS_API void ds_audio_enable(int on) { ds_adriven = on ? 1 : 0; }
+DS_API void ds_master(uint32_t q12) { song.master_q12 = q12 > 4096 ? 4096 : q12; ui.force = 1; }
+DS_API void ds_audio(uint32_t n)
+{
+    static int32_t o[2u * CTL];
+    uint32_t i = 0u, b = 0u;
+    while (i < n) {
+        uint32_t k, this = n - i > (uint32_t)CTL ? CTL : n - i;
+        mix_block(o, CTL);
+        for (k = 0u; k < this; k++) {
+            ds_aout[2u * (i + k)] = (float)o[2u * k] * (1.f / 32768.f);
+            ds_aout[2u * (i + k) + 1u] = (float)o[2u * k + 1u] * (1.f / 32768.f);
+        }
+        i += this;
+        if (++b == DS_FRAME_BLOCKS) { ui_input(); ui_leds(); ui_draw(); fm1_ms += 16u; b = 0u; }
+    }
+}
 
 #ifndef __EMSCRIPTEN__
 /* a native render, to check the harness compiles and the screens come out (build/host/dev-*.ppm) */
