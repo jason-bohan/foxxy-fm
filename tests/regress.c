@@ -116,7 +116,7 @@ static void blk(void)
     fpos += CTL;
 }
 
-static uint32_t at(double s) { return (uint32_t)(s * FS) / CTL * CTL; }
+static uint32_t sample_at(double s) { return (uint32_t)(s * FS) / CTL * CTL; }
 static void run_to(uint32_t f) { while (fpos < f) blk(); }
 
 /* after the last note-off (rel_at): until the voices are free, then the FX tail */
@@ -145,20 +145,20 @@ static void phrase(track_t *t, uint32_t base)
     static const uint8_t CH[5] = {0, 7, 12, 16, 19};
     uint32_t i;
     input_on(t, base, 100);
-    run_to(at(0.30));
+    run_to(sample_at(0.30));
     input_off(t, base);
-    run_to(at(0.35));
+    run_to(sample_at(0.35));
     input_on(t, base + 4u, 80);
-    run_to(at(0.60));
+    run_to(sample_at(0.60));
     input_on(t, base + 7u, 120);               /* overlaps: MONO / LEGATO hand over, POLY two voices */
-    run_to(at(0.70));
+    run_to(sample_at(0.70));
     input_off(t, base + 4u);
-    run_to(at(0.95));
+    run_to(sample_at(0.95));
     input_off(t, base + 7u);
-    run_to(at(1.00));
+    run_to(sample_at(1.00));
     for (i = 0; i < 5u; i++)
         input_on(t, base - 12u + CH[i], 90 + 5 * i);
-    run_to(at(1.80));
+    run_to(sample_at(1.80));
     for (i = 0; i < 5u; i++)
         input_off(t, base - 12u + CH[i]);
     rel_at = fpos;
@@ -218,7 +218,7 @@ static void job_drums(const job_t *j)           /* every GM note through the dru
     host_tracks_init();
     for (n = 35; n <= 81u; n++, k++) {
         input_on(TDRUM, n, 60u + (n * 7u) % 60u);
-        run_to(at(0.06 * (k + 1)));
+        run_to(sample_at(0.06 * (k + 1)));
         input_off(TDRUM, n);
     }
     input_on(TDRUM, 46, 100);                  /* open hat, choked by the closed one */
@@ -588,7 +588,7 @@ static int chk_steal_fade(char *msg, uint32_t n)
         if (f == 0)
             for (i = 0; i < 7u; i++)
                 trk_note_on(&trk[0], N1[i], 90);
-        if (f == at(0.5))
+        if (f == sample_at(0.5))
             trk_note_on(&trk[1], 74, 90);
         if (ms >= 1000u && f % (FS / 2u) < CTL && ms < 3500u)
             trk_note_on(&trk[ms / 500u % 2u ? 1u : 2u], 76u + ms / 250u, 90);
