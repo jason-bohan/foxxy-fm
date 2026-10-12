@@ -36,6 +36,34 @@ def product_of(raw):
     return "".join(chr((m - i - 1) & 0xFF) for i in range(BLOCKS) if (m := raw[i * BLK + KEEP]) != 0x7D)
 
 
+def check_modules(ed):
+    """Every relative import in the shipped pages must resolve.
+
+    A missing module is not a soft failure: the browser aborts the whole ES
+    module graph on one 404, so the dev screen never boots and shows no error.
+    The copy list above is hand-kept, so verify it against the real imports.
+    """
+    seen, missing = set(), []
+    queue = [p for p in (ed / "devscreen.html", ed / "fm1.html", ed / "index.html") if p.exists()]
+    while queue:
+        cur = queue.pop()
+        if cur in seen:
+            continue
+        seen.add(cur)
+        src = cur.read_text(encoding="utf-8", errors="replace")
+        if cur.suffix == ".html":
+            src = "".join(re.findall(r"<script\b[^>]*>(.*?)</script>", src, re.S | re.I))
+        for spec in re.findall(r"""(?:import|from)\s+["'](\.[^"']+)["']""", src):
+            target = (cur.parent / spec.split("?")[0]).resolve()
+            if not target.exists():
+                missing.append(f"{cur.name} -> {spec}")
+            elif target.suffix in (".js", ".mjs"):
+                queue.append(target)
+    if missing:
+        raise SystemExit("site: missing modules (add them to the copy list in make_site.py):\n  "
+                         + "\n  ".join(sorted(missing)))
+
+
 def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
@@ -76,12 +104,13 @@ def main(pkg, version, out):
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(pkg, fw / name)
     shutil.copy(HERE / "editor.html", ed / "index.html")
-    for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "fm1.html", "fm1-view.js", "tracker-view.js", "key-layout.js", "fm1-theme.js", "fm1-view.css", "devscreen-midi.js", "control-feedback.js", "computer-keyboard.js", "midi-map.js", "devscreen.core.mjs", "devscreen.core.wasm"):
+    for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "fm1.html", "fm1-view.js", "tracker-view.js", "key-layout.js", "fm1-theme.js", "fm1-view.css", "devscreen-midi.js", "control-feedback.js", "computer-keyboard.js", "midi-map.js", "sequencer-selection.js", "audio-studio.js", "sampler-tools.js", "devscreen.core.mjs", "devscreen.core.wasm"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
     for f in ("spacefoxx.html", "spacefoxx-game.js"):   # the tune-sync game
         if (HERE / f).exists():
             shutil.copy(HERE / f, gm / f)
+    check_modules(ed)
     (out / "index.html").write_text(
         '<!doctype html><meta charset="utf-8"><title>Foxxy FM</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
