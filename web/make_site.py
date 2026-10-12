@@ -37,30 +37,46 @@ def product_of(raw):
 
 
 def check_modules(ed):
-    """Every relative import in the shipped pages must resolve.
+    """Every file the shipped pages reference must be there.
 
-    A missing module is not a soft failure: the browser aborts the whole ES
-    module graph on one 404, so the dev screen never boots and shows no error.
-    The copy list above is hand-kept, so verify it against the real imports.
+    A missing file is not a soft failure and the copy list above is
+    hand-kept, so verify it against what the pages actually ask for:
+
+      - a 404 on one ES module aborts the whole module graph, so the dev
+        screen never boots and shows no error;
+      - the emscripten loader fetches its .wasm by name (new URL(...)), not
+        by import, so a failed emcc run would otherwise ship a dead screen
+        behind a green build;
+      - a stylesheet or script dropped from the list renders the page
+        unstyled or inert instead of loudly broken.
     """
-    seen, missing = set(), []
+    IMPORTS = re.compile(r"""(?:import|from)\s+["'](\.[^"']+)["']""")
+    ASSETS = re.compile(r"""(?:src|href)\s*=\s*["'](\.[^"']+)["']""", re.I)
+    WASM = re.compile(r"""["']([\w.\-]+\.wasm)["']""")
+    seen, missing = set(), set()
     queue = [p for p in (ed / "devscreen.html", ed / "fm1.html", ed / "index.html") if p.exists()]
     while queue:
-        cur = queue.pop()
+        cur = queue.pop().resolve()
         if cur in seen:
             continue
         seen.add(cur)
         src = cur.read_text(encoding="utf-8", errors="replace")
+        specs = set()
         if cur.suffix == ".html":
-            src = "".join(re.findall(r"<script\b[^>]*>(.*?)</script>", src, re.S | re.I))
-        for spec in re.findall(r"""(?:import|from)\s+["'](\.[^"']+)["']""", src):
-            target = (cur.parent / spec.split("?")[0]).resolve()
+            specs |= set(ASSETS.findall(src))
+            specs |= set(IMPORTS.findall("".join(
+                re.findall(r"<script\b[^>]*>(.*?)</script>", src, re.S | re.I))))
+        else:
+            specs |= set(IMPORTS.findall(src))
+            specs |= set(WASM.findall(src))      # the emscripten loader's own payload
+        for spec in specs:
+            target = (cur.parent / spec.split("?")[0].split("#")[0]).resolve()
             if not target.exists():
-                missing.append(f"{cur.name} -> {spec}")
-            elif target.suffix in (".js", ".mjs"):
+                missing.add(f"{cur.name} -> {spec}")
+            elif target.suffix in (".js", ".mjs", ".html"):
                 queue.append(target)
     if missing:
-        raise SystemExit("site: missing modules (add them to the copy list in make_site.py):\n  "
+        raise SystemExit("site: missing files (add them to the copy list in make_site.py):\n  "
                          + "\n  ".join(sorted(missing)))
 
 
@@ -103,6 +119,9 @@ def main(pkg, version, out):
         old.unlink()
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(pkg, fw / name)
+    for stale in list(ed.iterdir()) + list(gm.iterdir()):   # a rebuilt dir must not keep what the list dropped
+        if stale.is_file():
+            stale.unlink()
     shutil.copy(HERE / "editor.html", ed / "index.html")
     for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "fm1.html", "fm1-view.js", "tracker-view.js", "key-layout.js", "fm1-theme.js", "fm1-view.css", "devscreen-midi.js", "control-feedback.js", "computer-keyboard.js", "midi-map.js", "sequencer-selection.js", "audio-studio.js", "sampler-tools.js", "devscreen.core.mjs", "devscreen.core.wasm"):
         if (HERE / f).exists():
