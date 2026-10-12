@@ -28,11 +28,13 @@ static void __attribute__((noinline,minsize)) fox_act(uint32_t action) {
     else{fox_sound(4);fox.fun=(uint8_t)clamp(fox.fun+8,0,100);ui_message("YIP YIP!");}
     ui.force=1;
 }
-/* a 24x24 RGB565 sprite frame, scaled up, black transparent, into the canvas strip */
-static void fox_sprite(int32_t x0,int32_t y0,uint32_t s,const uint16_t *f) {
+/* a 24x24 four-colour sprite frame (2 bits a pixel through FOX_PAL), scaled up,
+ * black transparent, into the canvas strip */
+static void fox_sprite(int32_t x0,int32_t y0,uint32_t s,const uint8_t *f) {
     for(uint32_t y=0;y<FOX_FRAME_HEIGHT;y++)
         for(uint32_t x=0;x<FOX_FRAME_WIDTH;x++) {
-            uint16_t c=f[y*FOX_FRAME_WIDTH+x];
+            uint32_t i=y*FOX_FRAME_WIDTH+x;
+            uint16_t c=FOX_PAL[(f[i>>2]>>((i&3u)*2u))&3u];
             if(!c)continue;
             for(uint32_t dy=0;dy<s;dy++)
                 for(uint32_t dx=0;dx<s;dx++)
@@ -46,7 +48,7 @@ static void __attribute__((noinline,minsize)) fox_draw(void) {
         cv_begin(240,120,C_BLACK);cv_oy=-(int32_t)(pass*120u);
         cv_text(4,2,&FONT_S,"POCKET FOXXY",C_WHITE);
         te_text_c(120,24,ui.msg_t?ui.msg:fox.sleeping?"NAP TIME":fox.food<25?"HUNGRY":fox.energy<25?"SLEEPY":fox.clean<25?"NEEDS A BATH":fox.fun<25?"LET'S PLAY":"HAPPY FOX",C_WHITE);
-        const uint16_t *fr;                     /* the animation follows the state */
+        const uint8_t *fr;                      /* the animation follows the state */
         if(fox.sleeping)fr=fox_sleep_sequence[(fm1_ms/500u)%FOX_SLEEP_FRAMES];
         else if(fox.action==1u&&fm1_ms-fox.acted<2000u)fr=fox_play_sequence[(fm1_ms/250u)%FOX_PLAY_FRAMES];
         else if(fox.action==0u&&fm1_ms-fox.acted<2000u)fr=fox_eat_sequence[(fm1_ms/300u)%FOX_EAT_FRAMES];
