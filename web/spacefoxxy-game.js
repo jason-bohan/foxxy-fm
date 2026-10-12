@@ -1,17 +1,20 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* spaceFoxx: a Star-Fox-style rail shooter. Flies on any canvas; with TUNE
+/* spaceFoxxy: a Star-Fox-style rail shooter. Flies on any canvas; with TUNE
  * SYNC on it plays the FM-1 over Web MIDI (movement -> CCs, events -> notes)
  * so the track bends with the mission. No dependencies. */
 "use strict";
 
 /* ---------------- tuning ---------------- */
 const W = 960, H = 540, CX = 480, HOR = 300, FAR = 130;
+/* Z0 is the camera's near offset: the smaller it is, the harder the near field
+ * rushes. At 6 a ring topped out at 51 px and could never surround the ship. */
+const Z0 = 1.2, RING_R = 0.34, RING_SEG = 16, RING_GONE = -1.0;
 const CYAN = "#4ee2ec", ORANGE = "#ff4500", GOLD = "#ffc618", STEEL = "#2a3b4c";
 const PENTA = [72, 74, 76, 79, 81, 84, 86, 88];   /* ring chimes climb with combo */
 
 /* world -> screen. x,y in roughly [-1.5,1.5], z 0 (camera) .. FAR */
 function project(x, y, z) {
-  const f = 1 / (z + 6);
+  const f = 1 / (z + Z0);
   return { x: CX + x * 900 * f, y: HOR - y * 700 * f, s: 150 * f };
 }
 function buildCC(cc, v) { return [0xB0, cc & 127, Math.max(0, Math.min(127, v | 0))]; }
@@ -147,7 +150,7 @@ const sync = {
 };
 
 /* ---------------- control bindings ---------------- */
-const CTL_KEY = "spacefoxx-controls-v1";
+const CTL_KEY = "spacefoxxy-controls-v1";
 function saveCtl() {
   try { localStorage.setItem(CTL_KEY, JSON.stringify(G.ctl)); } catch (e) { /* private mode */ }
 }
@@ -250,7 +253,8 @@ function routeMidiInput(data) {
 
 /* ---------------- spawning ---------------- */
 function spawnRing() {
-  G.rings.push({ x: Math.random() * 1.8 - 0.9, y: Math.random() * 1.1 - 0.25, z: FAR, got: false });
+  G.rings.push({ x: Math.random() * 1.8 - 0.9, y: Math.random() * 1.1 - 0.25, z: FAR, got: false,
+    rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 1.1 });
 }
 function spawnFoe() {
   const weaver = Math.random() < 0.4;
@@ -327,7 +331,7 @@ function update(dt) {
   /* entities drift closer */
   const dz = G.speed * dt;
   for (const s of G.stars) { s.z -= dz * 1.4; if (s.z < 1) { s.z = FAR; s.x = Math.random() * 4 - 2; s.y = Math.random() * 3 - 1.5; } }
-  for (const r of G.rings) r.z -= dz;
+  for (const r of G.rings) { r.z -= dz; r.rot += r.vr * dt; }
   for (const f of G.foes) { f.z -= f.sp * dt; if (f.wv) f.x += Math.sin(G.t * 3 + f.ph) * dt * 0.9; }
   for (const k of G.rocks) { k.z -= dz * 0.85; k.rot += k.vr * dt; }
   for (const s of G.shots) s.z += 170 * dt;
@@ -340,7 +344,7 @@ function update(dt) {
 
   /* ring pass */
   for (const r of G.rings) {
-    if (!r.got && r.z < 6) {
+    if (!r.got && r.z < 0.8) {
       r.got = true;
       const d = Math.hypot(r.x - p.x, r.y - p.y);
       if (d < 0.34) {
@@ -348,13 +352,13 @@ function update(dt) {
         const pts = 100 + G.combo * 50;
         G.score += pts;
         G.msg = "RING +" + pts; G.msgT = 1.2;
-        const pr = project(r.x, r.y, 6);
+        const pr = project(r.x, r.y, 0.8);
         burst(pr.x, pr.y, 22, [GOLD, "#fff2b0", CYAN], 240);
         sfx.ring(); sfx.chime(G.combo); sync.ring();
       }
     }
   }
-  G.rings = G.rings.filter(r => r.z > 0.5);
+  G.rings = G.rings.filter(r => r.z > RING_GONE);   /* keep it alive past the camera */
 
   /* lasers vs foes + rocks */
   for (const s of G.shots) {
@@ -474,18 +478,39 @@ function drawRock(k) {
   ctx.strokeStyle = "#8a7f70"; ctx.lineWidth = 2; ctx.stroke();
   ctx.restore();
 }
+/* the ring's rim, as world points on a circle at its depth, each projected on its
+ * own: an ellipse drawn flat to the camera can only ever be a hoop pasted on the
+ * screen, while real vertices keep their perspective as the ring sweeps past. */
+function ringRim(r, rad) {
+  const pts = [];
+  for (let i = 0; i < RING_SEG; i++) {
+    const a = r.rot + i * 6.2832 / RING_SEG;
+    pts.push(project(r.x + Math.cos(a) * rad, r.y + Math.sin(a) * rad, r.z));
+  }
+  return pts;
+}
 function drawRing(r) {
-  const p = project(r.x, r.y, r.z);
-  const rx = 0.34 * p.s * 60, ry = rx * 0.55;
-  if (rx < 3) return;
-  ctx.save(); ctx.translate(p.x, p.y);
-  ctx.fillStyle = r.got ? "#5a4d00" : "#8a6d00";
-  ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, 6.29); ctx.fill();
-  ctx.fillStyle = "#000";
-  ctx.beginPath(); ctx.ellipse(0, 0, rx * 0.62, ry * 0.62, 0, 0, 6.29); ctx.fill();
-  ctx.strokeStyle = r.got ? "#5a4d00" : GOLD; ctx.lineWidth = Math.max(2, rx * 0.09);
-  ctx.beginPath(); ctx.ellipse(0, 0, rx * 0.8, ry * 0.8, 0, 0, 6.29); ctx.stroke();
-  ctx.restore();
+  const out = ringRim(r, RING_R), inn = ringRim(r, RING_R * 0.68);
+  const span = Math.abs(out[0].x - out[RING_SEG >> 1].x);
+  if (span < 3) return;                        /* still a speck on the horizon */
+  const near = Math.max(0, Math.min(1, 1 - r.z / 40));
+  /* one quad a segment, lit down the upper left, so the facets read as metal */
+  for (let i = 0; i < RING_SEG; i++) {
+    const j = (i + 1) % RING_SEG;
+    const a = r.rot + i * 6.2832 / RING_SEG;
+    const lit = 0.45 + 0.55 * Math.max(0, Math.cos(a - 2.2));
+    const g = Math.round((r.got ? 70 : 150) * lit + 70 * lit * near);
+    ctx.fillStyle = `rgb(${g},${Math.round(g * 0.76)},${Math.round(g * 0.1)})`;
+    ctx.beginPath();
+    ctx.moveTo(out[i].x, out[i].y); ctx.lineTo(out[j].x, out[j].y);
+    ctx.lineTo(inn[j].x, inn[j].y); ctx.lineTo(inn[i].x, inn[i].y);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = r.got ? "rgba(90,77,0,0.9)" : GOLD;
+  ctx.lineWidth = Math.max(1, 1 + 3 * near);
+  ctx.beginPath();
+  for (let i = 0; i < RING_SEG; i++) i ? ctx.lineTo(out[i].x, out[i].y) : ctx.moveTo(out[0].x, out[0].y);
+  ctx.closePath(); ctx.stroke();
 }
 function render() {
   ctx.save();
@@ -721,4 +746,5 @@ if (typeof window !== "undefined" && typeof document !== "undefined" && document
   else init();
 }
 /* node smoke-test surface */
-if (typeof module !== "undefined") module.exports = { project, buildCC, buildNoteOn, buildNoteOff, PENTA, parseChanged, parseDesc, normParam };
+if (typeof module !== "undefined") module.exports = { project, buildCC, buildNoteOn, buildNoteOff, PENTA, parseChanged, parseDesc, normParam,
+  Z0, RING_R, RING_SEG, RING_GONE };
