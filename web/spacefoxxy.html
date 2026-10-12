@@ -1,13 +1,13 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<!-- spaceFoxx: a Star-Fox-style rail shooter that plays the FM-1 as it flies.
+<!-- spaceFoxxy: a Star-Fox-style rail shooter that plays the FM-1 as it flies.
      TUNE SYNC sends ship movement as MIDI CCs and game events as MIDI notes
      to the FM-1, so the track playing bends with the mission. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>spaceFoxx — tune-sync mission</title>
+<title>spaceFoxxy — tune-sync mission</title>
 <style>
   :root { --bg: #000; --fg: #4ee2ec; --dim: #2a3b4c; --laser: #ff4500; --gold: #ffc618; --ink: #f2f2f2; }
   * { box-sizing: border-box; }
@@ -91,7 +91,7 @@
   <div id="wrap">
     <canvas id="game" width="960" height="540"></canvas>
     <div class="overlay" id="startOv">
-      <h2>spaceFoxx</h2>
+      <h2>spaceFoxxy</h2>
       <p>Fly through rings, blast the patrol, don't kiss the asteroids.
          With <b>TUNE SYNC</b> on and the FM-1 connected, your flying plays the
          firmware: steering bends pan and filter, lasers fire drum hits,
@@ -121,10 +121,10 @@
       <button id="helpClose" type="button">CLOSE</button>
     </div>
   </div>
-  <p class="note">spaceFoxx is a fork-flavoured homage: full credits
-    <a href="https://github.com/spaceFoxx/foxxy-fm">github.com/spaceFoxx/foxxy-fm</a>.
+  <p class="note">spaceFoxxy is a fork-flavoured homage: full credits
+    <a href="https://github.com/spaceFoxxy/foxxy-fm">github.com/spaceFoxxy/foxxy-fm</a>.
     Star Fox is a trademark of Nintendo; this game is not affiliated with them.</p>
 </main>
-<script src="spacefoxx-game.js"></script>
+<script src="spacefoxxy-game.js"></script>
 </body>
 </html>

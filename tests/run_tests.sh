@@ -49,7 +49,7 @@ run "Studio and compact tape isolation and capacity" "$OUT/tape_modes_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/sequencer_selection_test" tests/sequencer_selection_test.c -lm
 run "Sequencer mouse selection and grouped edits" "$OUT/sequencer_selection_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/pocket_fox_test" tests/pocket_fox_test.c -lm
-run "Pocket fox care and controls" "$OUT/pocket_fox_test"
+run "Pocket foxxy care and controls" "$OUT/pocket_fox_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/devscreen_clock_test" tests/devscreen_clock_test.c -lm
 run "Devtool controls preserve playback timing" "$OUT/devscreen_clock_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/ui_return_home_test" tests/ui_return_home_test.c -lm
@@ -60,7 +60,7 @@ if command -v node >/dev/null 2>&1; then
   run "MIDI setup files and transfer replies" node web/test_midi_map.mjs
   run "Tactile sound controls" node web/test_control_feedback.mjs
   run "Instrument theme and backdrop image" node web/test_fm1_theme.mjs
-  run "spaceFoxx game wiring and MIDI builders" node web/test_spacefoxx.mjs
+  run "spaceFoxxy game wiring and MIDI builders" node web/test_spacefoxxy.mjs
 fi
 
 $CC -o "$OUT/storage_test" tests/storage_test.c

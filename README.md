@@ -4,12 +4,12 @@
 Free and open source (GPL-3.0), a fork of <a href="https://github.com/isod89/sloop-fm1">Sloop</a> by isod89, based on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita / Hügelton Instruments.</p>
 
 <p align="center">
-<a href="https://spacefoxx.github.io/foxxy-fm/"><b>Install from the browser</b></a> ·
+<a href="https://spacefoxxy.github.io/foxxy-fm/"><b>Install from the browser</b></a> ·
 <a href="GUIDE.md">Complete guide</a> ·
 <a href="FOXXY.md">Manual</a> ·
 <a href="DEMARRAGE-RAPIDE-FR.md">Guide en français</a> ·
-<a href="https://spacefoxx.github.io/foxxy-fm/webapp/editor/">Web editor</a> ·
-<a href="https://spacefoxx.github.io/foxxy-fm/webapp/spacefoxx/">spaceFoxx game</a> ·
+<a href="https://spacefoxxy.github.io/foxxy-fm/webapp/editor/">Web editor</a> ·
+<a href="https://spacefoxxy.github.io/foxxy-fm/webapp/spacefoxxy/">spaceFoxxy game</a> ·
 <a href="../../releases">Releases</a> ·
 <a href="../../issues">Report a bug</a>
 </p>
@@ -202,7 +202,7 @@ Every button can glow so its label is readable on a black FM-1; the C keys or ev
 
 ### From the browser (recommended)
 
-1. Open **[the Foxxy FM installer](https://spacefoxx.github.io/foxxy-fm/)** in **Chrome or Edge** on a computer.
+1. Open **[the Foxxy FM installer](https://spacefoxxy.github.io/foxxy-fm/)** in **Chrome or Edge** on a computer.
 2. Connect the FM-1 by USB — a **data** cable, directly (no hub).
 3. Press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the Foxxy FM logo.
 
@@ -356,7 +356,7 @@ On USB the FM-1 is also an **audio input named "Felucca"**: 44.1 or 48 kHz (2.5:
 
 ## The web editor
 
-Open it from the [installer page](https://spacefoxx.github.io/foxxy-fm/) (or the [editor link](https://spacefoxx.github.io/foxxy-fm/webapp/editor/)) in Chrome or Edge, with the FM-1 on USB, and press **Connect**. It follows the device live: turn a knob on the FM-1 and the editor moves.
+Open it from the [installer page](https://spacefoxxy.github.io/foxxy-fm/) (or the [editor link](https://spacefoxxy.github.io/foxxy-fm/webapp/editor/)) in Chrome or Edge, with the FM-1 on USB, and press **Connect**. It follows the device live: turn a knob on the FM-1 and the editor moves.
 
 - **Sound** — every parameter of the selected track, the engines and the presets; on an FM6 track the **FM6** panel: every operator, the bank, **Import / Export SysEx** (DX7 voices and banks).
 - **Sequencer** — the steps, as tiles or as a **piano roll**, and the track's length (1–64 steps); on the drum track a grid of 16 sounds × the steps, with levels and ratchets, and the kit. Click a step for its nudge, parameter locks and fill condition. **Export MIDI / Import MIDI**: the selected track as a MIDI file, and back.

@@ -63,7 +63,7 @@ The 11 black keys are F#3, G#3, A#3, C#4, D#4, F#4, G#4, A#4, C#5, D#5, F#5. The
 
 ## 1. Install and update
 
-**From the browser (recommended).** Open the [installer page](https://spacefoxx.github.io/foxxy-fm/) in **Chrome or Edge**, connect the FM-1 by USB (a data cable, plugged straight in, no hub), press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the Foxxy FM logo.
+**From the browser (recommended).** Open the [installer page](https://spacefoxxy.github.io/foxxy-fm/) in **Chrome or Edge**, connect the FM-1 by USB (a data cable, plugged straight in, no hub), press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the Foxxy FM logo.
 
 **From the source folder (Windows).** Double-click **`INSTALL-FOXXY.bat`**: it builds the firmware and opens the installer at `http://localhost:8766/webapp/installer/`. Keep the black window open until the install is done. **`OPEN-EDITOR.bat`** opens the web editor.
 
@@ -645,9 +645,9 @@ The **title line** of every screen also carries short messages: *KEY D*, *ERASED
 
 **MEOW FX** is a frequency-shifting delay effect with frequency, delay, feedback and sideband controls. The effect selector also provides delay, phone, punch, grid, spring and nitro effects.
 
-The devtool’s **Control sounds** setting offers Soft rubber, Muted click or Off. The **Knobs** and **Buttons / keys** switches independently enable tactile feedback and remember your choices. These switches leave musical notes and Pocket Fox sounds controlled by the main sound and master volume controls.
+The devtool’s **Control sounds** setting offers Soft rubber, Muted click or Off. The **Knobs** and **Buttons / keys** switches independently enable tactile feedback and remember your choices. These switches leave musical notes and Pocket Foxxy sounds controlled by the main sound and master volume controls.
 
-**POCKET FOX** is a virtual pet in HOME menu → SYSTEM → POCKET FOX, or the devtool header. SELECT chooses FEED, PLAY, CLEAN, SLEEP or PET; OCT+ performs the action and OCT− returns home. Turn K1–K4 clockwise for the first four actions, or click an action along the bottom of its screen. Care actions have quiet synthesized sounds: munching, a playful meow, washing, a sleepy sigh and purring. They follow master volume. Food, fun, energy and cleanliness slowly decline; sleeping restores energy. The devtool remembers its cat between visits in browser storage. Hardware keeps the cat for the current power session.
+**POCKET FOXXY** is a virtual pet in HOME menu → SYSTEM → POCKET FOXXY, or the devtool header. SELECT chooses FEED, PLAY, CLEAN, SLEEP or PET; OCT+ performs the action and OCT− returns home. Turn K1–K4 clockwise for the first four actions, or click an action along the bottom of its screen. Care actions have quiet synthesized sounds: munching, a playful meow, washing, a sleepy sigh and purring. They follow master volume. Food, fun, energy and cleanliness slowly decline; sleeping restores energy. The devtool remembers its cat between visits in browser storage. Hardware keeps the cat for the current power session.
 
 In the **devtool sequencer**, a normal click retains its drawing behaviour. Hold the left mouse button and drag to select multiple steps or drum cells. Ctrl/Cmd+C copies the selection; click a destination step and press Ctrl/Cmd+V to paste. Delete/Backspace clears selected notes. Shift extends the selection, Ctrl/Cmd-click toggles cells, and Escape clears the selection. These mouse selection controls are browser-only.
 
@@ -813,7 +813,7 @@ The oscilloscope shows the stereo mix before master volume (blue left, amber rig
 | 9 | **BOUNCE** | a ball per track, kicked up by its notes |
 | 10 | **ORBIT** | four planets turning in 1, 2, 4 and 8 beats round a sun that pulses with the mix |
 | 11 | **WIRES** | a string per track, set swinging by its notes |
-| 12 | **SPACEFOXX** | an audio-synced flight: the ship weaves to the beat and bends toward fresh melody notes, kicks and synth notes fire lasers, golden rings fly at the ship (thread one to score, miss to break the combo), patrol ships drift down to blast |
+| 12 | **SPACEFOXXY** | an audio-synced flight: the ship weaves to the beat and bends toward fresh melody notes, kicks and synth notes fire lasers, golden rings fly at the ship (thread one to score, miss to break the combo), patrol ships drift down to blast |
 
 The visualiser sees the mix **as if MASTER were all the way up**: with MASTER turned down, even to 0, it still moves at full size. It costs the sound nothing.
 
@@ -985,7 +985,7 @@ Foxxy FM 2.5: the editor's **Drum synth** page changes every value of a synthesi
 
 ## 24. The web editor
 
-Open it from the [installer page](https://spacefoxx.github.io/foxxy-fm/), the [editor link](https://spacefoxx.github.io/foxxy-fm/webapp/editor/), or **`OPEN-EDITOR.bat`**, in **Chrome or Edge** with the FM-1 on USB, and press **Connect** (allow MIDI). It follows the device live: turn a knob on the FM-1, the editor moves. It looks like the FM-1: the black screen, the four track colours, the FM-1's own pixel font. The language button switches English / Japanese.
+Open it from the [installer page](https://spacefoxxy.github.io/foxxy-fm/), the [editor link](https://spacefoxxy.github.io/foxxy-fm/webapp/editor/), or **`OPEN-EDITOR.bat`**, in **Chrome or Edge** with the FM-1 on USB, and press **Connect** (allow MIDI). It follows the device live: turn a knob on the FM-1, the editor moves. It looks like the FM-1: the black screen, the four track colours, the FM-1's own pixel font. The language button switches English / Japanese.
 
 **Layout:** the side bar has the pages in three groups — **Track** (Sound, Sequencer, Tracks, Song), **Sounds** (Library, Samples, Drum kit, Drum synth), **Device** (Projects, Settings) — and the connection. On top: the page title, the messages, and on the Track pages the **four tracks** (number, sound, engine): click one to select it. With the side bar focused, the arrow keys move between pages.
 

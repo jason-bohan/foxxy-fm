@@ -325,7 +325,7 @@ static const page_t PAGES[] = {
     {"TRACKER", FAM_TRC, SC_TRC, GR_TRC, {0xFF, 0xFF, 0xFF, 0xFF}},   /* HOME menu: the four tracks as one hex view */
     {"TAPE", FAM_TAPE, SC_TAPE, GR_NONE, {0xFF, 0xFF, 0xFF, 0xFF}},
     {"MIXER", FAM_MIX, SC_MIX, GR_NONE, {0xFF, 0xFF, 0xFF, 0xFF}},
-    {"POCKET FOX", FAM_FOX, SC_FOX, GR_NONE, {0xFF, 0xFF, 0xFF, 0xFF}},
+    {"POCKET FOXXY", FAM_FOX, SC_FOX, GR_NONE, {0xFF, 0xFF, 0xFF, 0xFF}},
     {"MEOW FX", FAM_MEOW, SC_MEOW, GR_NONE, {0xFF, 0xFF, 0xFF, 0xFF}},
 };
 #define NPAGES (sizeof(PAGES) / sizeof(PAGES[0]))

@@ -101,7 +101,7 @@ def main(pkg, version, out):
     logo = HERE.parent / "assets" / "logo" / "foxxy-logo.svg"     # the Foxxy FM logo, inline
     html = html.replace("<!--LOGO-->", logo.read_text(encoding="utf-8") if logo.exists() else "<b>Foxxy FM</b>")
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
-    gm = out / "webapp" / "spacefoxx"
+    gm = out / "webapp" / "spacefoxxy"
     for d in (inst, ed, fw, gm):
         d.mkdir(parents=True, exist_ok=True)
     guide = HERE.parent / "output/pdf/Studio-0.3-guide-rapide-FR.pdf"
@@ -126,7 +126,7 @@ def main(pkg, version, out):
     for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "fm1.html", "fm1-view.js", "tracker-view.js", "key-layout.js", "fm1-theme.js", "fm1-view.css", "devscreen-midi.js", "control-feedback.js", "computer-keyboard.js", "midi-map.js", "sequencer-selection.js", "audio-studio.js", "sampler-tools.js", "devscreen.core.mjs", "devscreen.core.wasm"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
-    for f in ("spacefoxx.html", "spacefoxx-game.js"):   # the tune-sync game
+    for f in ("spacefoxxy.html", "spacefoxxy-game.js"):   # the tune-sync game
         if (HERE / f).exists():
             shutil.copy(HERE / f, gm / f)
     check_modules(ed)

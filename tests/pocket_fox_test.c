@@ -24,5 +24,5 @@ int main(void) {
         assert(energy>1000);memset(l,0,sizeof l);memset(r,0,sizeof r);fox_audio(l,r,CTL);for(uint32_t i=0;i<CTL;i++)assert(!l[i]&&!r[i]);
     }
     song.master_q12=0;master_cur=0;dc_l=dc_r=dce_l=dce_r=lc_l1=lc_l2=lc_r1=lc_r2=0;memset(lce,0,sizeof lce);fox_sound(4);int32_t muted[CTL*2];mix_block(muted,CTL);for(uint32_t i=0;i<CTL*2;i++)assert(!muted[i]);
-    puts("Pocket fox: care, sleep recovery, needs decay, bounds, mouse and hardware controls PASS");
+    puts("Pocket foxxy: care, sleep recovery, needs decay, bounds, mouse and hardware controls PASS");
 }

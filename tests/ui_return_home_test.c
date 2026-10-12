@@ -12,5 +12,5 @@ int main(void) {
         open[i]();ds_tap(B_HOME);assert(cur_page()->scope==SC_TRK);assert(cv_oy==0);
         ds_home();assert(!memcmp(expected,screen,sizeof expected));
     }
-    puts("Home redraw: Meow FX, tape, mixer and Pocket Fox return to the complete Tracks screen PASS");
+    puts("Home redraw: Meow FX, tape, mixer and Pocket Foxxy return to the complete Tracks screen PASS");
 }

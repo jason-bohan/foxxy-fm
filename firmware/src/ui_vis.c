@@ -3,7 +3,7 @@
  * any page closes it; SELECT steps through the twelve styles (the name shows a second); a layer held shows
  * its screen as ever, then the visualiser comes back. The keys, PLAY and REC work as always.
  *   1 OSCILLOSCOPE  2 SPECTRUM  3 SPECTROGRAM  4 LISSAJOUS  5 VU METERS  6 CIRCLE
- *   7 TAPE  8 LCD  9 BOUNCE  10 ORBIT  11 WIRES  12 SPACEFOXX (audio-synced flight:
+ *   7 TAPE  8 LCD  9 BOUNCE  10 ORBIT  11 WIRES  12 SPACEFOXXY (audio-synced flight:
  *   a ship weaving to the beat and the melody, rings to fly through, lasers fired by
  *   kicks and notes, patrol ships to blast, score and combo)
  * It reads what the audio already leaves for the UI: the scope buffers (audio.c, the mix at 22 kHz, left and
@@ -12,7 +12,7 @@
  * bands of 120 rows (the canvas holds 124): no cost to the audio. */
 #define VIS_N 12u
 static const char *const VIS_NAME[VIS_N] = {"OSCILLOSCOPE", "SPECTRUM", "SPECTROGRAM", "LISSAJOUS", "VU METERS",
-                                            "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SPACEFOXX"};
+                                            "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SPACEFOXXY"};
 /* vis_on, vis_shown_last, vis_name_t: ui_draw.c; vis_style: panel.c (kept with the settings) */
 #define VIS_FFT 512u
 #define VIS_SG_W 48u                                /* spectrogram: 48 columns of 5 px, 72 rows of 3 px */
@@ -89,7 +89,7 @@ static struct {
     uint8_t flash[4], kick;                         /* frames since a note started (0 = none) / a kick, fading */
     int16_t wamp[4];                                /* WIRES: each string's swing (0..1000) */
     uint8_t wn[4];                                  /* its wave count (from the note) */
-    /* SPACEFOXX: the ship (1/16 px), score, combo, ring-pass flash */
+    /* SPACEFOXXY: the ship (1/16 px), score, combo, ring-pass flash */
     int16_t sx_x, sx_y;
     uint16_t sx_score;
     uint8_t sx_combo, sx_pop, sx_on, sx_tm;
@@ -398,7 +398,7 @@ static void vis_update(void)
             }
         }
         break;
-    case 11: {                                       /* SPACEFOXX: fly the scene a step */
+    case 11: {                                       /* SPACEFOXXY: fly the scene a step */
         uint32_t bq = vis_beat_q8();
         int32_t spd = 2 + (song.playing ? 2 : 0) + vs.lvl[4] / 250;
         int32_t tx, ty, k;
@@ -719,11 +719,11 @@ static void vis_wires(void)
         cv_text(10, y0 - 22, &FONT_S, lab, TE_COL[i]);
     }
 }
-/* SPACEFOXX: an audio-synced flight. The ship weaves to the beat and bends toward
+/* SPACEFOXXY: an audio-synced flight. The ship weaves to the beat and bends toward
  * fresh melody notes, its engine flaring with the drums; kicks and synth notes fire
  * lasers; golden rings fly at the ship (threading one scores, missing breaks the
  * combo); patrol ships drift down to be blasted. Score and combo ride along. */
-static void vis_spacefoxx(void)
+static void vis_spacefoxxy(void)
 {
     uint32_t bq = vis_beat_q8();
     int32_t i, k, sx = vs.sx_x / 16, sy = vs.sx_y / 16;
@@ -821,7 +821,7 @@ static void vis_draw(void)
         case 8: vis_bounce(); break;
         case 9: vis_orbit(); break;
         case 10: vis_wires(); break;
-        default: vis_spacefoxx(); break;
+        default: vis_spacefoxxy(); break;
         }
         if (!pass && (vis_name_t || ui.msg_t)) {    /* the style's name a second (or a message) */
             char n[8];

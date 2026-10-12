@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""The Foxxy FM logo: a fox head (the spaceFoxx mascot) in a 270-degree dial
+"""The Foxxy FM logo: a fox head (the spaceFoxxy mascot) in a 270-degree dial
 (the knobs of the UI), plus a geometric wordmark.
 
   tools/gen_logo.py OUT.h          firmware boot splash (RLE, 16-colour palette, RGB565)

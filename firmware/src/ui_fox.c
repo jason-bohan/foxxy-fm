@@ -44,7 +44,7 @@ static void __attribute__((noinline,minsize)) fox_draw(void) {
     int32_t bob=fox.sleeping?0:(int32_t)(((fm1_ms/400u)%2u)*3u);
     for(uint32_t pass=0;pass<2;pass++) {
         cv_begin(240,120,C_BLACK);cv_oy=-(int32_t)(pass*120u);
-        cv_text(4,2,&FONT_S,"POCKET FOX",C_WHITE);
+        cv_text(4,2,&FONT_S,"POCKET FOXXY",C_WHITE);
         te_text_c(120,24,ui.msg_t?ui.msg:fox.sleeping?"NAP TIME":fox.food<25?"HUNGRY":fox.energy<25?"SLEEPY":fox.clean<25?"NEEDS A BATH":fox.fun<25?"LET'S PLAY":"HAPPY FOX",C_WHITE);
         const uint16_t *fr;                     /* the animation follows the state */
         if(fox.sleeping)fr=fox_sleep_sequence[(fm1_ms/500u)%FOX_SLEEP_FRAMES];

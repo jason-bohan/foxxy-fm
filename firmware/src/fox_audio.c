@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* Original, sample-free sounds for Pocket Fox; independent of the Meow effect. */
+/* Original, sample-free sounds for Pocket Foxxy; independent of the Meow effect. */
 static struct {uint32_t left,total,phase,flutter,seed;int32_t noise;uint8_t kind;} fox_voice;
 static void __attribute__((noinline,minsize)) fox_sound(uint32_t kind) {
     fm1_irq_off();
