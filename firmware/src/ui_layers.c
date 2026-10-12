@@ -35,6 +35,7 @@ static uint8_t chain_tap[CHAIN_MAX], chain_taps;        /* the section keys tapp
 static void layers_init(void)
 {
     uint32_t l;
+    for (l = 0; l < NB; l++) ml_btn[l] = panel.btn[l];
     for (l = LY_FX; l < LY_COUNT; l++)
         ly_bit[l] = 1u << panel.btn[LAYER_BTN[l]];
     dyn_bit[0] = 1u << panel.btn[B_OCTDN];
@@ -213,6 +214,7 @@ static void steps_held_edit(uint32_t knob, int32_t s)
                 lv = LV_UP[clamp((int32_t)lvl_rank(lv) + s, 0, 3)];
             else
                 rt = (uint32_t)clamp((int32_t)rt + s, 0, 3);
+            if (knob == 2u) ratchet_clear6(t, idx, 1u << pen_lane);
             dstep_set(d, pen_lane, lv, rt);
         } else {
             step_t *st = &t->step[idx];
@@ -228,6 +230,7 @@ static void steps_held_edit(uint32_t knob, int32_t s)
                     lv = LV_UP[clamp((int32_t)lvl_rank(lv) + s, 0, 3)];
                 else
                     rt = (uint32_t)clamp((int32_t)rt + s, 0, 3);
+                if (knob == 2u) ratchet_clear6(t, idx, 1u << i);
                 st->lvl = (uint8_t)((st->lvl & ~(3u << sh)) | lv << sh);
                 st->rat = (uint8_t)((st->rat & ~(3u << sh)) | rt << sh);
             }
@@ -366,7 +369,7 @@ static void layer_key(uint32_t layer, uint32_t k, uint32_t down)
                 } else {
                     ui.msg_t = 0;                           /* (the sub line shows the chain) */
                 }
-                if (chain_taps < CHAIN_MAX && (fm1_in.buttons & ly_bit[LY_SONG]))
+                if (chain_taps < CHAIN_MAX && (ml_buttons(fm1_in.buttons) & ly_bit[LY_SONG]))
                     chain_tap[chain_taps++] = (uint8_t)w;   /* (SAVE held: more taps make a chain) */
             } else {
                 section_load((uint32_t)w);
@@ -682,7 +685,7 @@ static void layer_screen_draw(void)
         break;
     case LY_ERASE:
     case LY_ROLL: {                                     /* the keys' sounds: lit = held */
-        uint32_t held = fm1_in.notes;
+        uint32_t held = ml_keys(fm1_in.notes);
         col = layer == LY_ERASE ? TE_RED : col;
         str_cpy(sub, layer == LY_ERASE ? (song.playing ? "as it plays" : "every step") : "hold + key", sizeof sub);
         for (i = 0; i < 16u; i++) {
@@ -735,14 +738,14 @@ static void layer_screen_draw(void)
                 on = dstep_has(d, pen_lane);
                 if (on) {
                     lv = dstep_lvl(d, pen_lane);
-                    rt = dstep_rat(d, pen_lane);
+                    rt = ratchet_hits(t, idx, pen_lane, dstep_rat(d, pen_lane)) - 1u;
                 }
             } else {
                 const step_t *st = &t->step[idx];
                 on = step_on(st);
                 if (on) {
                     lv = st->lvl & 3u;
-                    rt = st->rat & 3u;
+                    rt = ratchet_hits(t, idx, 0, st->rat & 3u) - 1u;
                     note_name(tl[i].lab, st->note[0]);
                 } else if (st->time == ST_TIE) {
                     str_cpy(tl[i].lab, "--", 8);

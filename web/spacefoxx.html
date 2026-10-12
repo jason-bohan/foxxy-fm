@@ -1,0 +1,130 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- spaceFoxx: a Star-Fox-style rail shooter that plays the FM-1 as it flies.
+     TUNE SYNC sends ship movement as MIDI CCs and game events as MIDI notes
+     to the FM-1, so the track playing bends with the mission. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spaceFoxx — tune-sync mission</title>
+<style>
+  :root { --bg: #000; --fg: #4ee2ec; --dim: #2a3b4c; --laser: #ff4500; --gold: #ffc618; --ink: #f2f2f2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.5 "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 20px 16px 48px; }
+  .top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .logo { font-size: 30px; font-weight: 800; letter-spacing: .04em; color: var(--fg); margin: 0; }
+  .logo b { color: var(--laser); }
+  .sub { color: var(--dim); filter: brightness(1.8); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+  button, select { font: inherit; color: var(--ink); background: #101418; border: 1px solid var(--dim);
+                   padding: 8px 12px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--fg); }
+  button.on { background: var(--laser); border-color: var(--laser); color: #000; font-weight: 700; }
+  button:disabled { opacity: .4; cursor: default; }
+  details#controls { border: 1px solid var(--dim); padding: 10px 14px; margin: 0 0 12px; }
+  details#controls summary { cursor: pointer; color: var(--fg); letter-spacing: .12em; font-size: 13px; }
+  .ctlgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 10px; }
+  .ctlgrid h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: .1em; color: var(--gold); }
+  .ctlgrid p { margin: 6px 0; }
+  .ctlgrid span[id^="bind"] { color: var(--fg); font-family: monospace; }
+  button.learn { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+  @media (max-width: 700px) { .ctlgrid { grid-template-columns: 1fr; } }
+  #wrap { position: relative; border: 1px solid var(--dim); }
+  canvas { display: block; width: 100%; height: auto; background: #000; }
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+             justify-content: center; gap: 12px; background: rgba(0,0,0,.72); text-align: center; padding: 16px; }
+  .overlay[hidden] { display: none; }
+  .overlay h2 { color: var(--fg); letter-spacing: .2em; margin: 0; font-size: 26px; }
+  .overlay p { margin: 0; max-width: 560px; color: var(--ink); }
+  .overlay .keys { color: var(--gold); font-size: 13px; }
+  .bigbtn { font-size: 17px; font-weight: 700; letter-spacing: .1em; padding: 12px 28px;
+            background: var(--laser); border-color: var(--laser); color: #000; }
+  table.map { border-collapse: collapse; font-size: 13px; }
+  table.map td { border: 1px solid var(--dim); padding: 4px 10px; }
+  table.map td:first-child { color: var(--gold); white-space: nowrap; }
+  .note { color: #8a8a92; font-size: 12.5px; }
+  .note a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1 class="logo">space<b>Foxx</b></h1>
+    <span class="sub">tune-sync mission &middot; a Foxxy FM joint</span>
+  </div>
+  <div class="bar">
+    <button id="soundBtn" class="on" type="button">SOUND ON</button>
+    <button id="syncBtn" type="button">TUNE SYNC OFF</button>
+    <select id="midiOut" aria-label="FM-1 MIDI output"></select>
+    <select id="midiIn" aria-label="Controller MIDI input"></select>
+    <button id="midiBtn" type="button">CONNECT FM-1</button>
+    <button id="helpBtn" type="button">HELP</button>
+    <span class="note" id="midiState">FM-1 not connected: game sounds only.</span>
+  </div>
+  <details id="controls">
+    <summary>CONTROLS — keyboard, FM-1 knobs, MIDI controller</summary>
+    <div class="ctlgrid">
+      <div>
+        <h3>Keyboard</h3>
+        <p class="keys">ARROWS / WASD steer &middot; SPACE fire &middot; SHIFT boost &middot; P pause</p>
+        <p><button id="autoBtn" type="button">AUTO-FIRE OFF</button></p>
+      </div>
+      <div>
+        <h3>FM-1 knobs <span class="note">(needs CONNECT + SysEx)</span></h3>
+        <p><button id="learnKX" type="button">LEARN STEER X</button> <span id="bindKX">—</span></p>
+        <p><button id="learnKY" type="button">LEARN STEER Y</button> <span id="bindKY">—</span></p>
+        <p class="note">Click LEARN, then turn any knob (SELECT, K1–K4…). Knob-only pilots: use AUTO-FIRE.</p>
+      </div>
+      <div>
+        <h3>MIDI controller / FM-1 keys</h3>
+        <p><button id="learnCX" type="button">LEARN STEER X CC</button> <span id="bindCX">bend</span></p>
+        <p><button id="learnCY" type="button">LEARN STEER Y CC</button> <span id="bindCY">CC 1</span></p>
+        <p><button id="learnFire" type="button">LEARN FIRE NOTE</button> <span id="bindFire">—</span></p>
+        <p><button id="learnBoost" type="button">LEARN BOOST NOTE</button> <span id="bindBoost">—</span></p>
+        <p><button id="ctrlReset" type="button">RESET DEFAULTS</button></p>
+      </div>
+    </div>
+  </details>
+  <div id="wrap">
+    <canvas id="game" width="960" height="540"></canvas>
+    <div class="overlay" id="startOv">
+      <h2>spaceFoxx</h2>
+      <p>Fly through rings, blast the patrol, don't kiss the asteroids.
+         With <b>TUNE SYNC</b> on and the FM-1 connected, your flying plays the
+         firmware: steering bends pan and filter, lasers fire drum hits,
+         rings drop melodic chimes, crashes duck the mix.</p>
+      <p class="keys">ARROWS / WASD / MOUSE steer &middot; SPACE / CLICK fire &middot; SHIFT boost &middot; P pause &middot; full MIDI + knob setup in CONTROLS below</p>
+      <button class="bigbtn" id="startBtn" type="button">START MISSION</button>
+    </div>
+    <div class="overlay" id="overOv" hidden>
+      <h2 id="overTitle">MISSION COMPLETE</h2>
+      <p id="overScore"></p>
+      <button class="bigbtn" id="againBtn" type="button">FLY AGAIN</button>
+    </div>
+    <div class="overlay" id="helpOv" hidden>
+      <h2>PILOT MANUAL</h2>
+      <p class="keys">ARROWS / WASD / MOUSE steer &middot; SPACE / CLICK fire &middot; SHIFT boost &middot; P pause</p>
+      <table class="map">
+        <tr><td>Steer X</td><td>CC 10 pan on track 1</td></tr>
+        <tr><td>Steer Y</td><td>CC 74 track filter</td></tr>
+        <tr><td>Boost</td><td>CC 71 resonance swell</td></tr>
+        <tr><td>Laser</td><td>Ch 10 drum blip</td></tr>
+        <tr><td>Ring</td><td>Ch 1 chime + delay-send spike</td></tr>
+        <tr><td>Kill</td><td>Ch 10 kick boom</td></tr>
+        <tr><td>Crash</td><td>CC 7 level duck + shock hit</td></tr>
+      </table>
+      <p class="note">Needs Chrome or Edge on localhost / HTTPS for Web MIDI.
+         Pick the FM-1 output, press CONNECT, then TUNE SYNC.</p>
+      <button id="helpClose" type="button">CLOSE</button>
+    </div>
+  </div>
+  <p class="note">spaceFoxx is a fork-flavoured homage: full credits
+    <a href="https://github.com/spaceFoxx/foxxy-fm">github.com/spaceFoxx/foxxy-fm</a>.
+    Star Fox is a trademark of Nintendo; this game is not affiliated with them.</p>
+</main>
+<script src="spacefoxx-game.js"></script>
+</body>
+</html>

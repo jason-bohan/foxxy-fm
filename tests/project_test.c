@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* Host test of the project formats (firmware/src/project.c, -DPROJ_HOST part). Format 5 ("FUN5",
- * SLOOP 2.4: format 4 + per-step nudges, parameter locks and fill conditions) is written; format 4 ("FUN4", SLOOP 2.0:
- * 10-byte steps with levels and ratchets, the drum track's 16 lanes, P_CHORD), format 3 ("FUN3", SLOOP
+ * FOXXY FM 2.4: format 4 + per-step nudges, parameter locks and fill conditions) is written; format 4 ("FUN4", FOXXY FM 2.0:
+ * 10-byte steps with levels and ratchets, the drum track's 16 lanes, P_CHORD), format 3 ("FUN3", FOXXY
  * 1.x), format 2 ("FUN2", 53 parameters per track) and format 1 ("FUN1"), built byte for byte as the
  * firmware stored them, convert: every old value at its parameter, the parameters added since at their
  * defaults, the swings onto the MPC scale (x 0.8), synth steps as they were, the drum track's notes onto
@@ -129,7 +129,7 @@ int main(void)
     bad += check("format 5 fits one flash object; 4 slots fit .noinit (with panel, settings, dbg, bootguard)",
                  sizeof(project_t) <= 3840u && 4u * sizeof(project_t) <= 0x3D50u - 256u && sizeof(project_t) == 3840u);   /* (full: a parameter more needs a new layout) */
 
-    /* format 3 (SLOOP 1.x) */
+    /* format 3 (FOXXY FM 1.x) */
     memset(&v3, 0, sizeof v3);
     v3.magic = PROJ_MAGIC_V3;
     v3.size = sizeof v3;
@@ -196,7 +196,7 @@ int main(void)
                  q.t[0].engine == 7 && q.t[1].engine == 0 && q.t[2].engine == 6 && q.t[3].engine == 0 &&
                  str_eq(ENGINES[7]->name, "WHEEL") && str_eq(ENGINES[6]->name, "TRIO") && NENGINES > 8);
 
-    /* a FUN4 image (SLOOP 2.0 .. 2.3, as stored) -> FUN5: the same, zero nudges, every lock free */
+    /* a FUN4 image (FOXXY FM 2.0 .. 2.3, as stored) -> FUN5: the same, zero nudges, every lock free */
     memset(&v4, 0, sizeof v4);
     v4.magic = PROJ_MAGIC_V4;
     v4.size = sizeof v4;
@@ -344,6 +344,12 @@ int main(void)
          step_fill(&trk[1], 4) == FC_FILL && step_fill(&trk[1], 5) == FC_NOFILL && trk[1].fill[1] == 0x09;
     bad += check("apply: a nudge past the range is clamped, a lock on LEN / step 64 / param 200 is freed, LEVEL 999 -> 127, condition 3 -> normal", ok);
 
+    trk[0].lock[0] = (plock_t){.step=0, .param=LOCK_RATCHET6, .val=3};
+    TDRUM->lock[0] = (plock_t){.step=0, .param=LOCK_RATCHET6, .val=(int16_t)0x8000};
+    proj_capture(&q); trk[0].lock[0].step = LOCK_FREE; TDRUM->lock[0].step = LOCK_FREE;
+    proj_apply(&q, 1);
+    bad += check("six-hit metadata survives project capture/apply for synth notes and high drum lanes",
+        ratchet_hits(&trk[0],0,1,3) == 6 && ratchet_hits(TDRUM,0,15,3) == 6 && ratchet_hits(&trk[0],0,2,3) == 4);
     printf("%s\n", bad ? "PROJECT FORMAT TEST FAILED" : "project format test passed");
     return bad != 0;
 }

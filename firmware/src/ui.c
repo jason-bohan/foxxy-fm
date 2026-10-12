@@ -3,7 +3,7 @@
 /* Felucca user interface. Four columns map to KNOB 1..4. Rendering is lazy:
  * every element remembers what it last drew and is redrawn only on change. */
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "SLOOP 2.5"  /* the beat machine firmware for the FM-1 (based on Felucca) */
+#define FELUCCA_VERSION "FOXXY FM 2.5"  /* Foxxy FM: the beat machine firmware for the FM-1 (a Sloop fork, based on Felucca) */
 #endif
 static void project_save(uint32_t slot);
 static void arrangement_save(void);
@@ -151,6 +151,13 @@ static int undo_swap(int redo)
             step_t x = t->step[i];
             t->step[i] = undo.st[i];
             undo.st[i] = x;
+            int8_t m = t->micro[i]; t->micro[i] = undo.micro[i]; undo.micro[i] = m;
+        }
+        for (i = 0; i < sizeof undo.fill; i++) {
+            uint8_t f = t->fill[i]; t->fill[i] = undo.fill[i]; undo.fill[i] = f;
+        }
+        for (i = 0; i < NLOCK; i++) {
+            plock_t p = t->lock[i]; t->lock[i] = undo.lock[i]; undo.lock[i] = p;
         }
     }
     len = t->p[P_SLEN];

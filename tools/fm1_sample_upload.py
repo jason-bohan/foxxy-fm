@@ -105,7 +105,7 @@ def main():
             return
     if cmd != "info":
         if len(sys.argv) < 3 or sys.argv[2] not in ("1", "2", "3", "4"):
-            sys.exit("SLOT is 1, 2, 3 or 4 (USR4: SLOOP 2.4 and later)")
+            sys.exit("SLOT is 1, 2, 3 or 4 (USR4: Foxxy FM 2.4 and later)")
         slot = int(sys.argv[2]) - 1
     link = Link()
     if cmd == "info":

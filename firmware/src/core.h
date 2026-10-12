@@ -6,6 +6,7 @@
  * pattern and the pattern parameters of its track_t). The parts share one budget of
  * NVOICE sounding voices (voice.c). */
 #include <stdint.h>
+#include "midi_learn.h"
 #define NVOICE 8                 /* voices per part, and the budget shared by all parts */
 #define NPOLY 8
 #define NPART 3                  /* synth parts: tracks 1..3 */
@@ -17,11 +18,11 @@ enum { V_POLY, V_MONO, V_LEGATO, V_UNISON };   /* P_VOICE */
 #ifndef FELUCCA_SLICE
 #define FELUCCA_SLICE 0          /* the SLICE engine (eng_slice.c): kept in the tree, not built by default */
 #endif
-/* SLOOP 2.4: FM6 (eng_fm6.c) is engine 9 in every build; SLICE, when built, comes last (10). Projects and user
- * presets store the engine index as a byte, and no shipped SLOOP was built with SLICE, so its number is stored
+/* FOXXY FM 2.4: FM6 (eng_fm6.c) is engine 9 in every build; SLICE, when built, comes last (10). Projects and user
+ * presets store the engine index as a byte, and no shipped FOXXY was built with SLICE, so its number is stored
  * nowhere: FM6 may take 9 and SLICE moves up (engines.c ENGINES[], params.c N_ENGNAME follow this order) */
 #define NENGINES (12 + FELUCCA_SLICE)
-#define ENGI_GRAIN 8u            /* GRAIN, PHYS, NOISE (SLOOP 2.5, appended after FM6: the stores keep the numbers) */
+#define ENGI_GRAIN 8u            /* GRAIN, PHYS, NOISE (FOXXY FM 2.5, appended after FM6: the stores keep the numbers) */
 #define ENGI_PHYS 10u
 #define ENGI_NOISE 11u
 #define ENGI_SLICE 12u           /* with FELUCCA_SLICE: after NOISE */
@@ -62,9 +63,9 @@ enum {                          /* per-track parameters */
     P_SLCR, P_SLPAT, P_SLRATE, P_SLDEPTH,      /* SLICER insert (slicer.c); new common parameters go just
                                                 * before P_E0 (user presets and projects map by count) */
     P_CHORD,                                   /* chord mode: one key plays a chord of the scale (seq.c) */
-    P_TFLT,                                    /* SLOOP 2.4: the track's filter, < 0 low-pass, > 0 high-pass (fx.c) */
-    P_STRUM,                                   /* SLOOP 2.4: a chord's notes one after the other, ms each (> 0 down, < 0 up) */
-    P_VLEAD,                                   /* SLOOP 2.4: chord mode, each chord voiced nearest the last (seq.c) */
+    P_TFLT,                                    /* FOXXY FM 2.4: the track's filter, < 0 low-pass, > 0 high-pass (fx.c) */
+    P_STRUM,                                   /* FOXXY FM 2.4: a chord's notes one after the other, ms each (> 0 down, < 0 up) */
+    P_VLEAD,                                   /* FOXXY FM 2.4: chord mode, each chord voiced nearest the last (seq.c) */
     P_E0, P_E1, P_E2, P_E3, P_E4, P_E5, P_E6, P_E7,
     P_COUNT
 };
@@ -81,7 +82,7 @@ enum {                          /* global parameters */
     G_DUST, G_DUCK, G_FILT,     /* the master bus: lo-fi / vinyl, the kick ducking the parts, the DJ filter (fx.c) */
     G_ROLL,                     /* note repeat rate (ARP + key, seq.c) */
     G_NEWPRJ,                   /* TOOLS > NEW: a new project (GO) */
-    G_DRDLY,                    /* SLOOP 2.5: the drums' delay send (GLO > DRUMS; a project keeps it in its own byte) */
+    G_DRDLY,                    /* FOXXY FM 2.5: the drums' delay send (GLO > DRUMS; a project keeps it in its own byte) */
     G_COUNT
 };
 
@@ -182,7 +183,7 @@ typedef struct {                 /* a step of the drum track (10 bytes, the size
     uint8_t rat[4];              /* 2 bits per lane: ratchet */
 } dstep_t;
 _Static_assert(sizeof(step_t) == 10 && sizeof(dstep_t) == 10, "a step is 10 bytes on every track");
-/* SLOOP 2.4: per-step nudge (micro timing) and parameter locks (seq.c seq_tick / lock_step) */
+/* FOXXY FM 2.4: per-step nudge (micro timing) and parameter locks (seq.c seq_tick / lock_step) */
 #define MICRO_MIN (-32)          /* a step's nudge in 1/64 of its length: half a step early .. */
 #define MICRO_MAX 31             /* .. just under half a step late (0 = on the grid) */
 #define NLOCK 24                 /* parameter locks per track (several may share a step: other params) */
@@ -192,7 +193,8 @@ typedef struct {                 /* a lock: on step `step` the track's p[param] 
     int16_t val;
 } plock_t;
 #define LOCK_FREE 0xFFu
-/* a step's condition (SLOOP 2.4 fill, GLO + key 9 / 10): plays always, only during a fill, never during one */
+#define LOCK_RATCHET6 0xFEu      /* step metadata: bit per note/lane uses six hits (base ratchet x4). */
+/* a step's condition (FOXXY FM 2.4 fill, GLO + key 9 / 10): plays always, only during a fill, never during one */
 enum { FC_NORM, FC_FILL, FC_NOFILL };     /* (3: as FC_NORM) */
 
 typedef struct track {
@@ -243,7 +245,7 @@ typedef struct track {
     uint32_t seq_off;            /* units to the note-off of the step's notes */
     uint8_t seq_active;          /* any step programmed */
     uint8_t rat_done[4];         /* ratchet hits played in this step: per note (synth) */
-    uint32_t rat_lanes;          /* .. per lane (drums): 2 bits each */
+    uint64_t rat_lanes;          /* .. per lane (drums): 3 bits each, up to six hits */
     uint32_t rskip_abs;          /* live recording put notes into the step about to play: */
     uint8_t rskip_n, rskip[4];   /* do not trigger them again there (they sound already) */
     uint16_t rskip_lanes;        /* (the drum track: lanes) */

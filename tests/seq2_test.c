@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* SLOOP 2.0 sequencer: the transport clock and what plays on it.
+/* FOXXY FM 2.0 sequencer: the transport clock and what plays on it.
  *   timing   the kick and the click stay together for 64 bars at any tempo (no drift); a tempo or DIV
  *            change mid-step plays one step, not a burst; LEN changes keep the track in phase; an odd
  *            LEN with SWING stays in phase with a 16-step track
@@ -603,7 +603,7 @@ static void t_mclk(void)
     mi_r = mi_w;
 }
 
-/* the REC screen's MODE and START (SLOOP 2.3): an empty project records at the tempo set (TEMPO) or
+/* the REC screen's MODE and START (FOXXY FM 2.3): an empty project records at the tempo set (TEMPO) or
  * takes it from the playing (FREE); COUNT: PLAY clicks one bar, then the loop and the recording start */
 static void t_recmode(void)
 {
@@ -618,6 +618,23 @@ static void t_recmode(void)
     check(ft_on && !song.playing, "REC mode FREE, empty project: the first note starts a free take");
     transport_req = 2; run_block(); ft_bars = 0;
     for (k = 0; k < 4u; k++) trk_note_off(&trk[k % NPART], 60);
+
+    reset(100);
+    song.sel = 0; rec_tempo = 0; rec_count = 0; rec_wait = 1;
+    TSEL->p[P_AMODE] = 1; TSEL->p[P_AHOLD] = 2; TSEL->p[P_APROB] = 127;
+    input_on(TSEL, 60, 100); input_on(TSEL, 64, 100);
+    check(ft_on && ft_n == 0, "FREE arp recording waits for generated notes, not held keys");
+    for (k = 0; k < (uint32_t)(FS / CTL); k++) run_block();
+    input_off(TSEL, 60); input_off(TSEL, 64);
+    {
+        uint32_t before = ft_n;
+        for (k = 0; k < (uint32_t)(FS / CTL); k++) run_block();
+        check(ft_n > before && ft_ev[0].d != FT_OPEN,
+              "FREE arp recording captures repeated latched output and note gates on track 1");
+    }
+    ft_close();
+    check(TSEL->seq_active && TSEL->step[0].n, "FREE arp take creates a playable track 1 pattern");
+    transport_req = 2; run_block();
 
     reset(100);
     song.sel = 0;
@@ -668,7 +685,7 @@ static void t_recmode(void)
     rec_tempo = 0, rec_count = 0;
 }
 
-/* SLOOP 2.4 fixes: a MIDI START cuts a count-in short (the master counts); swing is off on the
+/* FOXXY FM 2.4 fixes: a MIDI START cuts a count-in short (the master counts); swing is off on the
  * triplet grids; a DIV change in the first beat after PLAY does not lose a step */
 static void t_fixes24(void)
 {
@@ -730,7 +747,7 @@ static void t_fixes24(void)
     transport_req = 2; run_block();
 }
 
-/* SLOOP 2.4: steps of whole beats (DIV 1/2, 1BAR, 2BAR) and the dotted delay times */
+/* FOXXY FM 2.4: steps of whole beats (DIV 1/2, 1BAR, 2BAR) and the dotted delay times */
 static void t_longdiv(void)
 {
     uint32_t i, k, n0, bpb = (uint32_t)((double)FS * 60.0 / 120.0 / CTL + 0.5);
@@ -767,7 +784,7 @@ static void t_longdiv(void)
           "2.4: div_units: 1BAR = 4 beats, 2BAR = 8, 1/16 = a quarter beat");
 }
 
-/* SLOOP 2.4: GLO > SYSTEM > MIDI = SEQ sends what the sequencer plays to MIDI OUT (note on, then off),
+/* FOXXY FM 2.4: GLO > SYSTEM > MIDI = SEQ sends what the sequencer plays to MIDI OUT (note on, then off),
  * with the keys' channels; KEYS (the default) sends nothing of it; STOP ends every note sent */
 static void mo_drain(uint32_t *on, uint32_t *off, uint32_t *onDrum, uint32_t *last_note)
 {
@@ -809,7 +826,7 @@ static void t_midiout(void)
         run_block();                                  /* (the released voices die down for the next test) */
 }
 
-/* SLOOP 2.4: per-step nudge (micro timing). A step nudged +16 fires a quarter step after its grid time,
+/* FOXXY FM 2.4: per-step nudge (micro timing). A step nudged +16 fires a quarter step after its grid time,
  * -16 a quarter step before it (inside the previous grid step); over 8 bars, with two neighbours whose
  * nudges cross, no step is lost or played twice */
 static void t_micro(void)
@@ -873,7 +890,7 @@ static void t_micro(void)
     for (i = 0; i < 16u; i++) TDRUM->micro[i] = 0;
 }
 
-/* SLOOP 2.4: parameter locks. A lock on P_E0 at step 3 sets t->p[P_E0] for that step, the base is back at
+/* FOXXY FM 2.4: parameter locks. A lock on P_E0 at step 3 sets t->p[P_E0] for that step, the base is back at
  * step 4; a knob turned during the locked step is kept as the new base; STOP restores; a lock on a parameter
  * that is not lockable is refused */
 static void t_plock(void)
@@ -917,7 +934,7 @@ static void t_plock(void)
     for (i = 0; i < (uint32_t)(FS / CTL); i++) run_block();
 }
 
-/* SLOOP 2.4: fill conditions. A FILL ONLY step is silent until GLO + key 9 is held (fill_held) and plays while
+/* FOXXY FM 2.4: fill conditions. A FILL ONLY step is silent until GLO + key 9 is held (fill_held) and plays while
  * it is, a NO FILL step the other way round; its ratchets go with it; a synth step too. FILL NEXT BAR (fill_arm)
  * makes exactly the next bar a fill; STOP clears a held and an armed fill */
 static uint32_t bar_run(uint32_t to_beat)         /* run to the start of beat to_beat; the first block in it */
@@ -993,7 +1010,7 @@ static void t_fill(void)
         run_block();
 }
 
-/* SLOOP 2.4: the quick chain (SAVE held + two or more section keys, ui_layers.c chain_release). Sections A (1 bar:
+/* FOXXY FM 2.4: the quick chain (SAVE held + two or more section keys, ui_layers.c chain_release). Sections A (1 bar:
  * 16 steps of 1/16) and B (2 bars: the drum track 32 steps) in proj_slot[0..1]; the chain A B asked for while
  * playing: A on the next bar, B a bar later, A two bars after that, round again; a single tap ends the chain */
 static void t_chain(void)
@@ -1082,7 +1099,7 @@ static void t_chain(void)
     live_sec = -1;
 }
 
-/* SLOOP 2.4: GLO > SYSTEM > IN = CLOCK: MIDI note-ons are ignored (the clock is not); a note-off still ends a
+/* FOXXY FM 2.4: GLO > SYSTEM > IN = CLOCK: MIDI note-ons are ignored (the clock is not); a note-off still ends a
  * note held when IN was switched */
 static void t_midiin(void)
 {
@@ -1108,7 +1125,7 @@ static void t_midiin(void)
         song.g[G_SYNC] = 1;
         mclk_push(0xFA0Fu);
         mclk_run(&t, &next, per, 2000.0 + per / 2, 0);
-        check(song.playing && clk_beat == 4u, "2.4: IN = CLOCK: the clock still runs SLOOP (START, one bar)");
+        check(song.playing && clk_beat == 4u, "2.4: IN = CLOCK: the clock still runs FOXXY (START, one bar)");
         mclk_push(0xFC0Fu); mclk_run(&t, &next, per, t + 10.0, 0);
         song.g[G_SYNC] = 0;
     }
@@ -1116,7 +1133,7 @@ static void t_midiin(void)
     mi_r = mi_w;
 }
 
-/* SLOOP 2.5: MIDI CCs set track parameters (Felucca 1.1.5's CC map), on the track the channel plays */
+/* FOXXY FM 2.5: MIDI CCs set track parameters (Felucca 1.1.5's CC map), on the track the channel plays */
 static void cc_push(uint32_t ch, uint32_t cc, uint32_t v) { mclk_push(0x0Bu | (0xB0u | ch) << 8 | cc << 16 | v << 24); }
 static void t_midicc(void)
 {
@@ -1253,7 +1270,7 @@ static void t_tflt(void)
     lock_del(&trk[1], 3, P_COUNT);
 }
 
-/* SLOOP 2.5: GLO > DRUMS > DLY sends the drums to the tempo delay: echoes after a hit has died; 0 none
+/* FOXXY FM 2.5: GLO > DRUMS > DLY sends the drums to the tempo delay: echoes after a hit has died; 0 none
  * (the drums' path bit for bit as 2.4); through the drum track's FILTER too */
 static double drdly_echo(int32_t dly, int32_t flt)
 {

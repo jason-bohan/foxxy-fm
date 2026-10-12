@@ -3,12 +3,13 @@
 /* Editor protocol: SysEx for the web editor (web/EDITOR_PROTOCOL.md; v2 = user presets + live sync,
  * v3 = four tracks: the v1 / v2 commands act on the selected track, cmds 27-30 reach any track;
  * v4 = TRACK_PARAM (31) and the TRACK_CHANGED push (32), enabled by WATCH bit 1;
- * v5 = SLOOP 2.0: INFO ends with the protocol version (5), steps carry level / ratchet bytes,
+ * v5 = FOXXY FM 2.0: INFO ends with the protocol version (5), steps carry level / ratchet bytes,
  * DRUM_STEP (33) reads / writes the drum track's 16 lanes, TRACK ends with the solo mask;
- * v6 = SLOOP 2.3: backup / restore (34-36); v7 = SLOOP 2.4: the steps' nudges and parameter locks (37-40);
- * v8 = SLOOP 2.4: the steps' fill conditions (41-42); v9 = SLOOP 2.4: the FM6 engine's patches (68-71,
- * editor_fm6.c: Felucca 1.0's numbers) and the patch bank as backup object 8); v10 = SLOOP 2.5: the SYN drum
- * kits (72-76, editor_dsyn.c) and backup object 9.
+ * v6 = FOXXY FM 2.3: backup / restore (34-36); v7 = FOXXY FM 2.4: the steps' nudges and parameter locks (37-40);
+ * v8 = FOXXY FM 2.4: the steps' fill conditions (41-42); v9 = FOXXY FM 2.4: the FM6 engine's patches (68-71,
+ * editor_fm6.c: Felucca 1.0's numbers) and the patch bank as backup object 8); v10 = FOXXY FM 2.5: the SYN drum
+ * kits (72-76, editor_dsyn.c) and backup object 9; v11 = portable MIDI learn mappings; v12 = assignable Shift banks
+ * (77, editor_midi.c).
  *   F0 7D 46 4C cmd args.. F7     (7D = non-commercial ID, "FL")
  * Values are 14 bit, two 7-bit bytes LSB first, offset by 8192 (so -8192..8191).
  * Every request gets a reply with the same cmd; 23/24/26 are also pushed
@@ -28,8 +29,8 @@ enum { ED_INFO = 1, ED_GET, ED_SET, ED_DUMP, ED_DESC, ED_STEP_GET, ED_STEP_SET, 
        ED_LOCK_GET, ED_LOCK_SET, ED_MICRO_GET, ED_MICRO_SET,                    /* v7: parameter locks, nudges */
        ED_FILL_GET, ED_FILL_SET,                                                /* v8: fill conditions */
        ED_FM6_GET = 68, ED_FM6_PUT, ED_FM6_LIST, ED_FM6_ERASE };                /* v9: FM6 patches (Felucca's numbers) */
-/* v10 (SLOOP 2.5): DSYN_LIST .. DSYN_PLAY = 72..76, editor_dsyn.c; backup object 9 = the SYN kits */
-#define ED_PROTO 10u                                   /* the protocol version INFO ends with */
+/* v10 (FOXXY FM 2.5): DSYN_LIST .. DSYN_PLAY = 72..76, editor_dsyn.c; backup object 9 = the SYN kits */
+#define ED_PROTO 12u                                   /* v12: assignable MIDI Shift and mapping banks */
 
 static uint8_t ed_out[600];
 static uint32_t ed_n;
@@ -432,7 +433,7 @@ static const uint8_t *ed_bk_obj(uint32_t id, uint32_t *len)   /* 0 = no such obj
             *len = sizeof(fm6_bank_t);
         return (const uint8_t *)fm6_bank_flash(fm6_bank_cur < 0 ? 0u : (uint32_t)fm6_bank_cur);
     }
-    if (id == 9u) {                                       /* SLOOP 2.5: the SYN drum kits (drum_synth.c dsu) */
+    if (id == 9u) {                                       /* FOXXY FM 2.5: the SYN drum kits (drum_synth.c dsu) */
         (void)dsu_kit(0);
         *len = sizeof dsu;
         return (const uint8_t *)&dsu;
@@ -487,7 +488,7 @@ static uint32_t ed_bk_commit(void)
         fm6_bank_changed();
         return 0;
     }
-    if (id == 9u) {                                       /* SLOOP 2.5: the SYN drum kits, written with the settings */
+    if (id == 9u) {                                       /* FOXXY FM 2.5: the SYN drum kits, written with the settings */
         persist_t p;
         uint32_t k;
         if (ed_flash_busy())
@@ -603,6 +604,7 @@ static int ed_backup(uint32_t cmd, const uint8_t *a, uint32_t na)   /* no flash:
 #endif
 
 #include "editor_fm6.c"                               /* v9: the FM6 patches (68..71) */
+#include "editor_midi.c"
 #include "editor_dsyn.c"                              /* v10: the SYN drum kits (72..76) */
 
 static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0 and F7 */
@@ -625,6 +627,10 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
         ed_send();
         return;
     }
+    if (ed_midi_handle(cmd, a, na)) {
+        ed_send();
+        return;
+    }
     switch (cmd) {
     case ED_INFO:
         ed_str("FELUCCA " FELUCCA_VERSION, 24);
@@ -636,7 +642,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
         for (i = 0; i < NENGINES; i++)
             ed_str(ENGINES[i]->name, 8);
         ed_b(NTRK);                                       /* v3 */
-        ed_b(ED_PROTO);                                   /* v5..: the protocol version (9: FM6 patches, 10: SYN kits) */
+        ed_b(ED_PROTO);                                   /* v5..: protocol version (12: assignable MIDI Shift) */
         break;
     case ED_GET:
     case ED_SET:
@@ -1008,7 +1014,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
         ed_v(t->p[a[1]]);
         break;
     }
-    /* v7 (SLOOP 2.4): the parameter locks and nudges of a track (core.h plock_t / micro, seq.c lock_step) */
+    /* v7 (FOXXY FM 2.4): the parameter locks and nudges of a track (core.h plock_t / micro, seq.c lock_step) */
     case ED_LOCK_GET: {                                    /* track -> track, n, n x (step, param, v14) */
         const track_t *t;
         uint32_t n = 0;
@@ -1083,7 +1089,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
         ed_b((uint32_t)(t->micro[a[1]] + 64));
         break;
     }
-    /* v8 (SLOOP 2.4): the steps' fill conditions (core.h FC_*, seq.c step_fill): 2 bits a step, as stored */
+    /* v8 (FOXXY FM 2.4): the steps' fill conditions (core.h FC_*, seq.c step_fill): 2 bits a step, as stored */
     case ED_FILL_GET:                                      /* track -> track, pack7 of the NSTEP / 4 bytes */
         if (na < 1u || a[0] >= NTRK)
             return;

@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* Engine table: order = PRESETS browsing order (and the engine numbers of the editor protocol). */
 #include "dsp.c"
-/* SLOOP 2.5: the big per-part state of GRAIN, FM6 and PHYS shares one arena per synth part (a part plays one
+/* FOXXY FM 2.5: the big per-part state of GRAIN, FM6 and PHYS shares one arena per synth part (a part plays one
  * engine at a time: on a switch the old engine fades out, its voices end, then the new one starts, voice.c
  * engine_block). The first engine to ask for it after another one gets it cleared, as at power-on. */
 static void *eng_arena_of(const track_t *t, uint32_t eng);
@@ -15,7 +15,7 @@ static inline int32_t soft_knee(int32_t y, int32_t k)   /* linear up to k, then 
     a = k + (softclip((a - k) * 2) >> 1);
     return y < 0 ? -a : a;
 }
-/* (pitch_inc: felucca_tables.h, SLOOP 2.5: from the top octave) */
+/* (pitch_inc: felucca_tables.h, FOXXY FM 2.5: from the top octave) */
 #include "eng_analog.c"
 #include "eng_digital.c"
 #include "eng_phase.c"
@@ -25,9 +25,9 @@ static inline int32_t soft_knee(int32_t y, int32_t k)   /* linear up to k, then 
 #include "eng_trio.c"
 #include "eng_drawbar.c"
 #include "eng_grain.c"
-#include "eng_fm6.c"            /* FM6: 6-operator FM, msfa ported (fm6_core.c, Apache-2.0); SLOOP 2.4 */
-#include "eng_phys.c"           /* PHYS: physical models, from Felucca 1.0 (DaisySP, Rings: MIT); SLOOP 2.5 */
-#include "eng_noise.c"          /* NOISE: from Felucca 1.0; SLOOP 2.5 */
+#include "eng_fm6.c"            /* FM6: 6-operator FM, msfa ported (fm6_core.c, Apache-2.0); FOXXY FM 2.4 */
+#include "eng_phys.c"           /* PHYS: physical models, from Felucca 1.0 (DaisySP, Rings: MIT); FOXXY FM 2.5 */
+#include "eng_noise.c"          /* NOISE: from Felucca 1.0; FOXXY FM 2.5 */
 
 typedef union {
     gr_part_t grain;

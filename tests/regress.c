@@ -1101,7 +1101,7 @@ int main(int argc, char **argv)
             perror(cpath);
             return 2;
         }
-        fprintf(f, "# SLOOP host CPU baseline (tests/regress.c): cost per sample, per mille of the idle + drums mix\n"
+        fprintf(f, "# FOXXY host CPU baseline (tests/regress.c): cost per sample, per mille of the idle + drums mix\n"
                    "# (cpu/mix/idle_drums = 1000), cc -O2; %s on the host that wrote it. The check allows +%.0f %%\n"
                    "# (instructions) or +%.0f %% (timed). Rewritten by BUDGET_UPDATE=1.\n",
                 J[c0].r.ipc ? "instructions counted" : "timed, best of three seconds", CPU_TOL * 100, CPU_TOL_NS * 100);

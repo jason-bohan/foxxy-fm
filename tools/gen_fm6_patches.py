@@ -5,7 +5,7 @@
 
   tools/gen_fm6_patches.py OUT.h
 
-Felucca 1.0's own patches (ported into SLOOP 2.4 with the FM6 engine) (no factory ROM data of any instrument): written here as readable
+Felucca 1.0's own patches (ported into Foxxy FM 2.4 with the FM6 engine) (no factory ROM data of any instrument): written here as readable
 operator settings, packed in the generic 128-byte 6-operator voice layout (the 32-voice bank's record).
 Operators are listed as OP1..OP6; the packed record starts with OP6, as the format does.
 """

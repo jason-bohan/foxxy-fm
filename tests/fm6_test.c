@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* FM6 engine test (firmware/src/eng_fm6.c, fm6_core.c, fm6_bank.c) on the host, through hostsim.c as regress.c
- * (from Felucca 1.0.1, adapted to SLOOP: no project round trip of the patch, the bank on a simulated NOR).
+ * (from Felucca 1.0.1, adapted to FOXXY: no project round trip of the patch, the bank on a simulated NOR).
  *   build/host/fm6_test [DEMODIR]          (run_tests.sh: build/fm6_demo)
  * 1. algorithms: every one of the 32 has its classic carrier count; with every operator at full level and
  *    a ratio of 1, each sounds, and its level grows with its carriers.

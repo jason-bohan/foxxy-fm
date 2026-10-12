@@ -14,6 +14,7 @@ enum { PX_LOOP4, PX_LOOP8, PX_LOOP16, PX_LOOP32, PX_STUT, PX_REV, PX_STOP, PX_HA
 static const char *const PUNCH_NAME[PUNCH_NFX] = {
     "LOOP 4", "LOOP 8", "LOOP 16", "LOOP 32", "STUTTER", "REVERSE", "STOP", "HALF",
     "LOW", "HIGH", "PHONE", "CRUSH", "ALIAS", "GATE", "ECHO", "WOBBLE"};
+static uint8_t punch_pool_locked;
 static int16_t punch_ring[PUNCH_N] __attribute__((section(".pool")));
 static struct {
     volatile int8_t req;          /* effect asked for by the keys (-1 none), ISR keyboard_block */
@@ -128,9 +129,11 @@ static void punch_process(int32_t *l, int32_t *r, uint32_t n)
 {
     uint32_t i;
     int32_t want = punch.req;
+    if(punch_pool_locked && (want<=PX_HALF || want==PX_ECHO || want==PX_WOBBLE))want=-1;
     uint32_t beat, step, echo_d;
     tsvf_t c1, c2;
-    if (punch.cur < 0 && want < 0) {                   /* idle: only the ring */
+    if (punch.cur < 0 && want < 0) {
+        if(punch_pool_locked)return;                   /* idle: only the ring */
         for (i = 0; i < n; i++)
             punch_ring[punch.w++ & (PUNCH_N - 1u)] = (int16_t)clamp((l[i] + r[i]) >> 4, -32768, 32767);
         return;
@@ -156,7 +159,7 @@ static void punch_process(int32_t *l, int32_t *r, uint32_t n)
         int32_t x = l[i], y = r[i], wl = x, wr = y, m = (x + y) >> 1;
         int32_t fx = punch.cur;
         uint32_t target = want == fx ? 32767u : 0u;
-        if (!punch_owns(fx, punch.w))                   /* (a held loop keeps its material) */
+        if (!punch_pool_locked && !punch_owns(fx, punch.w))                   /* (a held loop keeps its material) */
             punch_ring[punch.w & (PUNCH_N - 1u)] = (int16_t)clamp(m >> 3, -32768, 32767);
         switch (fx) {
         case PX_LPF:

@@ -47,17 +47,18 @@ def main(pkg, version, out):
     html = (HERE / "index_pkg.html").read_text(encoding="utf-8")
     lib = strip_module((HERE / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8"))
-    name = f"sloop-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
+    name = f"foxxy-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     meta = json.dumps({"version": version, "product": product, "pkg": "../../firmware/" + name,
                        "sha256": hashlib.sha256(raw).hexdigest()})   # the page checks the download against it
     for mark in ("/*LIB*/", "/*META*/"):
         if html.count(mark) != 1:
             raise SystemExit(f"index_pkg.html must contain {mark} once; update make_site.py")
     html = html.replace("/*LIB*/", lib).replace("/*META*/", meta)
-    logo = HERE.parent / "assets" / "logo" / "sloop-logo.svg"     # the SLOOP logo, inline
-    html = html.replace("<!--LOGO-->", logo.read_text(encoding="utf-8") if logo.exists() else "<b>SLOOP</b>")
+    logo = HERE.parent / "assets" / "logo" / "foxxy-logo.svg"     # the Foxxy FM logo, inline
+    html = html.replace("<!--LOGO-->", logo.read_text(encoding="utf-8") if logo.exists() else "<b>Foxxy FM</b>")
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
-    for d in (inst, ed, fw):
+    gm = out / "webapp" / "spacefoxx"
+    for d in (inst, ed, fw, gm):
         d.mkdir(parents=True, exist_ok=True)
     guide = HERE.parent / "output/pdf/Studio-0.3-guide-rapide-FR.pdf"
     guide_link = ""
@@ -70,18 +71,21 @@ def main(pkg, version, out):
         notes = HERE / "beta_banner.html"
         banner = notes.read_text(encoding="utf-8") if notes.exists() else "<p><b>BETA</b></p>"
     html = html.replace("<!--BANNER-->", banner)
-    for old in list(fw.glob("felucca-*.fwsc")) + list(fw.glob("sloop-*.fwsc")):   # one package: the current one
+    for old in list(fw.glob("felucca-*.fwsc")) + list(fw.glob("foxxy-*.fwsc")) + list(fw.glob("sloop-*.fwsc")):   # one package: the current one
         old.unlink()
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(pkg, fw / name)
     shutil.copy(HERE / "editor.html", ed / "index.html")
-    for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "devscreen.core.mjs", "devscreen.core.wasm"):
+    for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "devscreen.html", "fm1.html", "fm1-view.js", "tracker-view.js", "key-layout.js", "fm1-theme.js", "fm1-view.css", "devscreen-midi.js", "control-feedback.js", "computer-keyboard.js", "midi-map.js", "devscreen.core.mjs", "devscreen.core.wasm"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
+    for f in ("spacefoxx.html", "spacefoxx-game.js"):   # the tune-sync game
+        if (HERE / f).exists():
+            shutil.copy(HERE / f, gm / f)
     (out / "index.html").write_text(
-        '<!doctype html><meta charset="utf-8"><title>SLOOP</title>'
+        '<!doctype html><meta charset="utf-8"><title>Foxxy FM</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
-        '<a href="webapp/installer/">SLOOP installer</a>\n', encoding="utf-8")
+        '<a href="webapp/installer/">Foxxy FM installer</a>\n', encoding="utf-8")
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 
 

@@ -136,7 +136,7 @@ static void fm1_main(void)
 #endif
     settings_init();
     lcd_init();
-    sloop_splash();                                     /* the SLOOP logo (splash.c) */
+    foxxy_splash();                                     /* the FOXXY logo (splash.c) */
     if (felucca_dbg.magic != DBG_MAGIC) {
         memset(&felucca_dbg, 0, sizeof felucca_dbg);
         felucca_dbg.magic = DBG_MAGIC;
@@ -187,12 +187,17 @@ static void fm1_main(void)
                 song.batt_raw = song.batt_raw ? song.batt_raw + (b - song.batt_raw) / 32 : b;
         }
         {
+            static int32_t master_anchor;
             int32_t a = fm1_adc_read(FM1_ADC_MASTER);
             if (a >= 0) {
                 uint32_t k10;
                 knob += (a * 16 - knob) / 8;
                 k10 = (uint32_t)(knob / 16);
-                song.master_q12 = (k10 * k10) >> 8;            /* 0 .. ~4096 */
+                if (!ml_master_active || a - master_anchor > 16 || master_anchor - a > 16) {
+                    ml_master_active = 0;
+                    master_anchor = a;
+                    song.master_q12 = (k10 * k10) >> 8;
+                } /* Moving the physical master takes control back from MIDI. */
             }
         }
         {   /* OCT- + OCT+ held 5 s, stopped: enter UBOOT with RAM intact (debug / update); a countdown

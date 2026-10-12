@@ -368,7 +368,7 @@ static const preset_t TRIO_PRESETS[] = {
     {"SAW PAD", {0, 0, 12, 30, 0, 72, 10, 64}, {52, 90, 115, 86}, 6, 0, FX(0, 40, 20, 60)},
     {"SYNC LEAD", {9, 9, 0, 0, 0, 82, 30, 64}, {2, 70, 100, 40}, 18, 1, FX(0, 10, 30, 22), XP(P_GLIDE + 1, 56)},
     {"HOOVER", {0, 0, -12, 40, 0, 70, 20, 64}, {10, 70, 110, 40}, 10, 1, FX(10, 40, 10, 24), XP(P_GLIDE + 1, 70)},
-    /* SLOOP 2.5: a musette accordion, a 70s string machine, an 80s poly synth */
+    /* FOXXY FM 2.5: a musette accordion, a 70s string machine, an 80s poly synth */
     {"ACCORDION", {1, 0, 12, 14, 0, 92, 10, 40}, {6, 70, 118, 24}, 0, 0, FX(0, 20, 0, 22)},
     {"ENSEMBLE", {0, 12, 0, 10, 0, 85, 0, 64}, {50, 90, 118, 80}, 0, 0, FX(0, 90, 10, 55)},
     {"80S POLY", {0, 0, 12, 12, 0, 70, 30, 64}, {2, 72, 70, 50}, 34, 0, FX(0, 50, 22, 34)},

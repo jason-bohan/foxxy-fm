@@ -1,21 +1,22 @@
-<p align="center"><img src="assets/logo/sloop-logo.png" alt="SLOOP" width="420"></p>
+<p align="center"><img src="assets/logo/foxxy-logo.png" alt="Foxxy FM" width="420"></p>
 
 <p align="center"><b>A live groovebox firmware for the M-VAVE FM-1 — for any style.</b><br>
-Free and open source (GPL-3.0), based on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita / Hügelton Instruments.</p>
+Free and open source (GPL-3.0), a fork of <a href="https://github.com/isod89/sloop-fm1">Sloop</a> by isod89, based on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita / Hügelton Instruments.</p>
 
 <p align="center">
-<a href="https://isod89.github.io/sloop-fm1/"><b>Install from the browser</b></a> ·
+<a href="https://spacefoxx.github.io/foxxy-fm/"><b>Install from the browser</b></a> ·
 <a href="GUIDE.md">Complete guide</a> ·
-<a href="SLOOP.md">Manual</a> ·
+<a href="FOXXY.md">Manual</a> ·
 <a href="DEMARRAGE-RAPIDE-FR.md">Guide en français</a> ·
-<a href="https://isod89.github.io/sloop-fm1/webapp/editor/">Web editor</a> ·
+<a href="https://spacefoxx.github.io/foxxy-fm/webapp/editor/">Web editor</a> ·
+<a href="https://spacefoxx.github.io/foxxy-fm/webapp/spacefoxx/">spaceFoxx game</a> ·
 <a href="../../releases">Releases</a> ·
 <a href="../../issues">Report a bug</a>
 </p>
 
 ---
 
-SLOOP turns the FM-1 into a four-track groovebox you play live: **three synths and a drum machine** with 16 sounds on the white keys, twelve synthesis engines, 153 sounds, 37 drum kits, your own samples, a song mode you play with your hands, USB audio, MIDI in on the jack and MIDI clock — and now **physical models** (guitars, sitar, bells, hand drums), a **noise** engine, **six-operator FM with DX7 patches**, **parameter locks**, **micro timing**, **fills**, a **quick chain** of sections and the **sequencer to MIDI out**. House, techno, hip-hop, trap, drum & bass, amapiano, synthwave, lo-fi, ambient, chiptune — it does not pick a style for you. No factory patterns, nothing to load: everything you hear, you play.
+Foxxy FM turns the FM-1 into a four-track groovebox you play live: **three synths and a drum machine** with 16 sounds on the white keys, twelve synthesis engines, 153 sounds, 37 drum kits, your own samples, a song mode you play with your hands, USB audio, MIDI in on the jack and MIDI clock — and now **physical models** (guitars, sitar, bells, hand drums), a **noise** engine, **six-operator FM with DX7 patches**, **parameter locks**, **micro timing**, **fills**, a **quick chain** of sections and the **sequencer to MIDI out**. House, techno, hip-hop, trap, drum & bass, amapiano, synthwave, lo-fi, ambient, chiptune — it does not pick a style for you. No factory patterns, nothing to load: everything you hear, you play.
 
 > **Status:** 2.5 (two new engines, PHYS and NOISE, 77 new sounds, a drum synth, DX7 cartridges in one go, MIDI CCs, 48 kHz USB audio, and the fixes of 2.4.1). Still a beta: install at your own risk, and please [report](../../issues) what you find. Your projects, presets, samples and settings are kept when you update, and you can go back at any time (see [Going back](#going-back)).
 
@@ -45,14 +46,14 @@ SLOOP turns the FM-1 into a four-track groovebox you play live: **three synths a
 
 - **PHYS: physical models.** An eleventh engine, from Felucca 1.0 (the models of DaisySP and Mutable Instruments Rings, by Emilie Gillet): plucked and struck strings, bars and bells, drum heads, and strings with sympathetic strings that ring along. Guitars (NYLON GTR, STEEL GTR, MUTED GTR), PLUCK BASS, KOTO, BANJO, SITAR and TANPURA, PHYS HARP, CHIMES, BIG BELL, VIBRA BAR, STEEL PAN, WOOD BLOCK, CELLO BOW, GLASS BOWL, TABLA, CONGA, TIMPANI and more: 26 sounds.
 - **NOISE.** A twelfth engine, from Felucca 1.0: noise from analogue to digital, through a resonant filter. WIND, RAIN, OCEAN, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO, NZ ARCADE, NZ METAL.
-- **153 factory sounds** (76 in 2.4): 77 new, every one level-matched. Besides PHYS and NOISE: bass guitar, mono and saw basses, harp, steel drum, glockenspiel, celesta, xylophone, tubular bell, pan flute, harmonica, accordion, a 70s string machine (ENSEMBLE), an 80s poly synth, rock and chapel organs, granular clouds (STR CLOUD, SHIMMER, DRONE, PNO FREEZE, HORN CLOUD), chip sounds (NES BASS, CHIP CHORD, WAVE LEAD…), CZ lead / pad / reso, ROBOT and VOX PAD. See [the sound bank](SLOOP.md#the-sound-bank).
+- **153 factory sounds** (76 in 2.4): 77 new, every one level-matched. Besides PHYS and NOISE: bass guitar, mono and saw basses, harp, steel drum, glockenspiel, celesta, xylophone, tubular bell, pan flute, harmonica, accordion, a 70s string machine (ENSEMBLE), an 80s poly synth, rock and chapel organs, granular clouds (STR CLOUD, SHIMMER, DRONE, PNO FREEZE, HORN CLOUD), chip sounds (NES BASS, CHIP CHORD, WAVE LEAD…), CZ lead / pad / reso, ROBOT and VOX PAD. See [the sound bank](FOXXY.md#the-sound-bank).
 - **Two engines, no memory more.** GRAIN, FM6 and PHYS keep their big per-track state in one shared area (a track plays one engine at a time), so the new engines cost no memory at all; the pitch table now takes 768 bytes instead of 8 KB. Every sound of 2.4 renders bit for bit as before.
 - **The web editor: piano roll, MIDI files, song.** On the **Sequencer** page: a **length** control (1–64 steps; the steps redraw at once), a **piano roll** to draw, delete and stretch notes and chords with the mouse, and **Export MIDI / Import MIDI** for the selected track (the drum track too, as GM drum notes), with a preview that says what moves or does not fit before anything is written. A new **Song** page edits the order of the sections A–D, as the FM-1's SONG screen does. Thanks to the viewer who suggested them!
 - **USB audio at 48 kHz too: record into your phone.** The FM-1's USB audio input now also runs at 48 kHz when the phone, tablet or app asks for it (many only take 48 kHz), resampled in the FM-1 (after Felucca 1.1.5). Plug it into your phone and record into a sampler app. At 44.1 kHz nothing changed.
 - **Drum synth: make your own drum kits.** A new page in the web editor changes every value of the synthesised drum sounds — the tone and its pitch drop, the click, the noise (white, the 808's metal, chip, clap), the filter, drive and level — and the FM-1 plays each change at once. Four kits of your own, **SYN1–SYN4**, after the others on the drum track's KIT, stored on the FM-1, in backups and as files.
 - **DX7 cartridges in one go.** Drop a .syx file on the editor's FM6 panel, tick up to 27 of its voices (the first 27 are ticked) and **Store cartridge in bank** puts them in B1, B2… in one write, asking before it replaces anything. Choose to add them to the user presets too, and the FM-1's PRESETS and SELECT find them by name; or pick them with PTCH. Thanks to the viewer who asked!
 - **A delay send for the drums.** GLO → DRUMS → **DLY** (next to REV) sends the drum track into the tempo delay: echoing hats, dub snares. CC 94 on the drum channel sets it too. Thanks to the viewer who asked!
-- **MIDI CCs (after Felucca 1.1.5).** A controller's knobs now set the sound: CC 7 level, 10 pan, 74 the track's filter, 71 resonance, 73 / 75 / 72 attack / decay / release, 5 glide, 91 / 93 / 94 the reverb, chorus and delay sends, on the track the channel plays (as the notes). Until now SLOOP ignored every CC.
+- **MIDI CCs (after Felucca 1.1.5).** A controller's knobs now set the sound: CC 7 level, 10 pan, 74 the track's filter, 71 resonance, 73 / 75 / 72 attack / decay / release, 5 glide, 91 / 93 / 94 the reverb, chorus and delay sends, on the track the channel plays (as the notes). Until now Foxxy FM ignored every CC.
 - **Swing reads 0 to 100.** 0 is straight, 100 the strongest (a step pair played 75 / 25, MPC's 75 %); it used to read 50–75 %. The swing itself and your projects did not change.
 - **SEL, as printed on the button.** The key / scale button between FX and ENV is now called SEL everywhere (its pages SEL and SEL 2, the calibration, the guides); it was written SCL. Not to be mixed up with the SELECT knob.
 - **The DRUMS page's level dial** goes from ghost on the left to hard on the right (its needle followed the wrong order; the levels were right).
@@ -74,7 +75,7 @@ Projects, autosaves and backups from 2.4 load as they are. Going back to 2.4: a 
 | **Your own drum kits** | A 4th sample slot (USR4). KIT USR1–USR4 or **USR3+4** (a big kit, about 15 s) on the drum track: 16 of your sounds, one per lane, built in the editor's new **Drum kit** page (drop WAVs on pads, sorted by name; pitch, gain, length; choose where; ZIP to share). |
 | **New web editor** | Rebuilt in the FM-1's own look (black, the four track colours, its pixel font): each button's pages as rows of four coloured knobs, values you drag like knobs, the steps as the device's tiles. |
 | **CHORD+** | In chord mode the black keys change the chord (major ↔ minor, 7th, sus4, 9th, inversion), even while it is held; STRUM strums the chords, VLEAD voices them smoothly. After HiChord and minichord. |
-| **The visualiser** | On the TRACKS screen, tap HOME: 12 full-screen styles (oscilloscope, spectrum, spectrogram, Lissajous, VU meters, circle, tape, LCD, bounce, orbit, wires, the SLOOP logo), SELECT to change. |
+| **The visualiser** | On the TRACKS screen, tap HOME: 12 full-screen styles (oscilloscope, spectrum, spectrogram, Lissajous, VU meters, circle, tape, LCD, bounce, orbit, wires, the Foxxy FM logo), SELECT to change. |
 | **A filter per track** | One knob, low-pass to the left, high-pass to the right, on each track and the drums: FX → FILTER, or FX held + KNOB 4. Lockable on a step. |
 | **Bigger values** | Pages without a graph (EDIT, VOICE, GLOBAL…) show their four values in large type in the middle of the screen. |
 | **SELECT turns the pages** | On a page (LFO, FX, EDIT…), SELECT goes to the next / previous page of its group. On HOME it is still the tempo. |
@@ -82,7 +83,7 @@ Projects, autosaves and backups from 2.4 load as they are. Going back to 2.4: a 
 | **Longer steps, dotted delays** | DIV goes to **1/2**, **1 bar** and **2 bars**; the delay has **1/8 dotted** and **1/16 dotted**. |
 | **Fixes** | A MIDI START during the REC count-in records at once; swing leaves triplets alone; turning DIV right after PLAY no longer skips a step; the SEQ layer's DIV reaches 1/2, 1 bar, 2 bars; the editor never writes flash while the song plays; *12 kHz* reads in full. |
 
-Projects, autosaves and backups from 2.3 load as they are. The full list, and what came before: [SLOOP.md](SLOOP.md#new-in-24).
+Projects, autosaves and backups from 2.3 load as they are. The full list, and what came before: [FOXXY.md](FOXXY.md#new-in-24).
 
 ## What's new in 2.3
 
@@ -90,7 +91,7 @@ Projects, autosaves and backups from 2.3 load as they are. The full list, and wh
 | --- | --- |
 | **USB audio** | On USB the FM-1 is also an audio input (*Felucca*, 44.1 or 48 kHz stereo, no driver): record it in your DAW, in Audacity or in a sampler app on your phone over the same cable. Its level follows the MASTER knob, or stays at a fixed full level (HOME menu → **USB AUDIO**). From Felucca 1.0. |
 | **MIDI keyboard on the jack** | The 3.5 mm TRS MIDI IN works: a keyboard or a pad controller through a TRS-to-DIN adapter. Channels 1–3 the synths, 10 the drums, 4–16 the selected track. No note left hanging. |
-| **MIDI clock in** | GLO → SYSTEM → **SYNC** = USB or TRS: SLOOP follows a DAW or a drum machine — tempo, START, CONTINUE, STOP — pulse by pulse, with no drift. |
+| **MIDI clock in** | GLO → SYSTEM → **SYNC** = USB or TRS: Foxxy FM follows a DAW or a drum machine — tempo, START, CONTINUE, STOP — pulse by pulse, with no drift. |
 | **Record your way** | The REC screen has three dials: **mode** (*free*: the tempo follows your playing, or *tempo*: the tempo you set), **length** (1, 2 or 4 bars), **start** (your first note, or a one-bar **count-in** after PLAY). |
 | **Lights for playing in the dark** | HOME menu: **LIGHTS** (every button glows, LOW / MID / HIGH), **KEYS** (the C keys or every white key), **NOTES** (the notes playing light their keys, by @renebohne). |
 | **Backup and restore** | The web editor saves everything on the FM-1 in one file — the music in progress, projects, user presets, samples, settings — and puts it all back. |
@@ -98,23 +99,23 @@ Projects, autosaves and backups from 2.3 load as they are. The full list, and wh
 | **Back to the official firmware** | From the installer page, with a backup first: select M-VAVE's FM-1 V15 file and install it. |
 | **Steadier** | Knobs that answer every click; no dropped notes over USB MIDI; one voice fades on overload, never the bass or the lead; keys a millisecond faster; no stuck note after a VOICE change; stricter checks of what is read back from flash. |
 
-The full list, and what came in 2.0, 2.1 and 2.2: [SLOOP.md](SLOOP.md#new-in-23). Release notes: [Releases](../../releases).
+The full list, and what came in 2.0, 2.1 and 2.2: [FOXXY.md](FOXXY.md#new-in-23). Release notes: [Releases](../../releases).
 
 ## Screenshots
 
-<p align="center"><img src="assets/screens/sloop-2.3-screens.png" alt="SLOOP 2.3 screens on the FM-1" width="760"></p>
+<p align="center"><img src="assets/screens/foxxy-2.3-screens.png" alt="Foxxy FM 2.3 screens on the FM-1" width="760"></p>
 
 <p align="center"><sub>The FM-1's screen in 2.3: the tracks, the REC screen and its count-in, the menu (lights and USB audio), MIDI clock, about.</sub></p>
 
-<p align="center"><img src="assets/screens/screens.png" alt="SLOOP screens on the FM-1" width="760"></p>
+<p align="center"><img src="assets/screens/screens.png" alt="Foxxy FM screens on the FM-1" width="760"></p>
 
 <p align="center"><sub>Start-up, the four tracks (recording), the drum grid and the acoustic kit, the sounds by kind, the layers (punch-in FX, steps, key and chords, mix, erase), a free take, the FX sends.</sub></p>
 
-<p align="center"><img src="assets/screens/editor-drums.png" alt="SLOOP web editor: the drum track" width="760"></p>
+<p align="center"><img src="assets/screens/editor-drums.png" alt="Foxxy FM web editor: the drum track" width="760"></p>
 
 <p align="center"><sub>The web editor: the drum track as a 16-lane grid, with levels and ratchets.</sub></p>
 
-<p align="center"><img src="assets/screens/editor-chop.png" alt="SLOOP web editor: CHOP" width="760"></p>
+<p align="center"><img src="assets/screens/editor-chop.png" alt="Foxxy FM web editor: CHOP" width="760"></p>
 
 <p align="center"><sub>CHOP: a 20 s recording cut into 16 chops, 8 kept, fitted to the slot.</sub></p>
 
@@ -192,7 +193,7 @@ Every button can glow so its label is readable on a black FM-1; the C keys or ev
 
 ### Memory and safety
 
-- **Autosave:** stop and leave it 2.5 s, your work is kept; at power-on SLOOP comes back exactly as you left it.
+- **Autosave:** stop and leave it 2.5 s, your work is kept; at power-on Foxxy FM comes back exactly as you left it.
 - **4 projects**, **32 user presets**, **27 FM6 patches**, **undo / redo**.
 - **Full backup and restore** from the web editor (2.3).
 - **Safe updates:** the installer checks the package (SHA-256) before writing it, the update loader checks it again (CRC) before starting it; an interrupted install finishes when you press Install again; **USB rescue** (OCT− at power-on).
@@ -201,25 +202,25 @@ Every button can glow so its label is readable on a black FM-1; the C keys or ev
 
 ### From the browser (recommended)
 
-1. Open **[the SLOOP installer](https://isod89.github.io/sloop-fm1/)** in **Chrome or Edge** on a computer.
+1. Open **[the Foxxy FM installer](https://spacefoxx.github.io/foxxy-fm/)** in **Chrome or Edge** on a computer.
 2. Connect the FM-1 by USB — a **data** cable, directly (no hub).
-3. Press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the SLOOP logo.
+3. Press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the Foxxy FM logo.
 
 Nothing to download or compile. Your projects, user presets, samples and settings are kept. After an install, **unplug and plug the FM-1 back in** once so the computer finds its USB audio input.
 
 ### Other ways
 
-- **Python:** the `.fwsc` of a [release](../../releases) with `python tools/fm1_install.py sloop-2.4.fwsc` (needs `pip install mido python-rtmidi`).
-- **Build it yourself:** see [Building and tests](#building-and-tests); on Windows, `INSTALL-SLOOP.bat` builds SLOOP and opens the installer locally.
+- **Python:** the `.fwsc` of a [release](../../releases) with `python tools/fm1_install.py foxxy-2.4.fwsc` (needs `pip install mido python-rtmidi`).
+- **Build it yourself:** see [Building and tests](#building-and-tests); on Windows, `INSTALL-FOXXY.bat` builds Foxxy FM and opens the installer locally.
 
 ### Going back
 
-- **To an earlier SLOOP:** install the `.fwsc` of its [release](../../releases) (for example [2.3](../../releases/tag/v2.3)). Your samples, user presets and settings stay. **Projects saved by 2.4** (format FUN5: locks, nudges, fills) **do not open in 2.3 or older** — 2.3 sees them as empty, and its autosave can write over the music in progress; a 2.4 backup restores into 2.4 only. **Save a backup before you go back**, and restore it once you are on 2.4 again.
-- **To the official firmware:** on the installer page, open **Return to the official firmware (V15)**. Save a backup with the editor first, download FM-1 V15 from m-vave.com and select its `FM-1.fwsc` — only that exact file is accepted. M-VAVE's updater, M-UPGRADE, works too. To come back, install SLOOP again and restore your backup.
+- **To an earlier Foxxy FM:** install the `.fwsc` of its [release](../../releases) (for example [2.3](../../releases/tag/v2.3)). Your samples, user presets and settings stay. **Projects saved by 2.4** (format FUN5: locks, nudges, fills) **do not open in 2.3 or older** — 2.3 sees them as empty, and its autosave can write over the music in progress; a 2.4 backup restores into 2.4 only. **Save a backup before you go back**, and restore it once you are on 2.4 again.
+- **To the official firmware:** on the installer page, open **Return to the official firmware (V15)**. Save a backup with the editor first, download FM-1 V15 from m-vave.com and select its `FM-1.fwsc` — only that exact file is accepted. M-VAVE's updater, M-UPGRADE, works too. To come back, install Foxxy FM again and restore your backup.
 
 ### Rescue
 
-- **The FM-1 no longer starts SLOOP:** hold **OCT−** alone while switching it on (*SLOOP USB RESCUE*), then install again.
+- **The FM-1 no longer starts Foxxy FM:** hold **OCT−** alone while switching it on (*Foxxy FM USB RESCUE*), then install again.
 - **An install was cut off:** the FM-1 stays in update mode; press INSTALL again and it finishes.
 - If an FM-1 no longer starts at all, recovery needs [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).
 
@@ -270,7 +271,7 @@ Hold **HOME**. The menu is in four sections, as the pages are: **SCREEN** (COLOR
 | **USB AUDIO** | MASTER / FULL | the level of the USB audio input: follows the MASTER knob, or a fixed full level |
 | **USB SERIAL** | OFF / ON | a serial console for developers; OFF (default) so macOS 13–15 show the USB audio input; at the next start |
 | **HARDWARE CALIBRATION** (SYSTEM) | | the panel table, if a key or a knob answers wrongly |
-| **ABOUT** | | the version (*SLOOP 2.4*) and its build date, the credits |
+| **ABOUT** | | the version (*Foxxy FM 2.4*) and its build date, the credits |
 
 Two more settings of the FM-1 live elsewhere: **SYNC** (GLO → SYSTEM: INT, USB or TRS) and the REC screen's **mode** and **start**.
 
@@ -278,7 +279,7 @@ Two more settings of the FM-1 live elsewhere: **SYNC** (GLO → SYSTEM: INT, USB
 
 ### MIDI in
 
-SLOOP takes MIDI from two places at once:
+Foxxy FM takes MIDI from two places at once:
 
 - **The MIDI IN jack** (3.5 mm TRS): a keyboard or a pad controller with a MIDI output, through a **TRS-to-DIN MIDI adapter**. If nothing plays, try the other adapter type (A / B).
 - **USB**, from a computer or a phone (a DAW, a MIDI routing app) or a USB MIDI host box.
@@ -289,7 +290,7 @@ SLOOP takes MIDI from two places at once:
 | 10 | the drum track (the nearest of its 16 sounds; GLO → DRUMS → CH changes the channel) |
 | 4–16 | the selected track: set your keyboard to channel 4 and it follows ALGORITHM |
 
-A USB keyboard plugged **straight into the FM-1** cannot work: both are USB devices, and a USB link needs a host (a computer, a phone, or a USB MIDI host box). Bluetooth MIDI is not supported: SLOOP, like Felucca, never switches the radio on.
+A USB keyboard plugged **straight into the FM-1** cannot work: both are USB devices, and a USB link needs a host (a computer, a phone, or a USB MIDI host box). Bluetooth MIDI is not supported: Foxxy FM, like Felucca, never switches the radio on.
 
 ### MIDI out
 
@@ -297,9 +298,9 @@ What you play on the keys always goes out on USB MIDI, each track on its channel
 
 ### MIDI clock in
 
-GLO → SYSTEM → **SYNC** = **USB** or **TRS** (INT: SLOOP's own tempo). START plays from the top, CONTINUE carries on, STOP stops; the tempo follows the master and the steps follow its 24 pulses a beat, so SLOOP never drifts. When the clock stops for half a second, PLAY on the FM-1 plays at its own tempo again.
+GLO → SYSTEM → **SYNC** = **USB** or **TRS** (INT: Foxxy FM's own tempo). START plays from the top, CONTINUE carries on, STOP stops; the tempo follows the master and the steps follow its 24 pulses a beat, so Foxxy FM never drifts. When the clock stops for half a second, PLAY on the FM-1 plays at its own tempo again.
 
-**Clock only (2.4):** GLO → SYSTEM → **IN** = **CLOCK**: SLOOP follows the clock and ignores incoming notes (and CCs), handy when a DAW or a sequencer also sends notes to other gear.
+**Clock only (2.4):** GLO → SYSTEM → **IN** = **CLOCK**: Foxxy FM follows the clock and ignores incoming notes (and CCs), handy when a DAW or a sequencer also sends notes to other gear.
 
 ### MIDI CCs (2.5)
 
@@ -317,6 +318,34 @@ The knobs of a MIDI controller set the sound, on the track the channel plays (as
 
 Other CCs (mod wheel, sustain…) are ignored.
 
+### MIDI learn in the dev screen
+
+You can prepare up to 48 controller mappings without owning an FM-1. Open the editor's
+DEV SCREEN in Chrome or Edge on localhost or HTTPS, then:
+
+1. Choose **ENABLE MIDI** and select the controller input.
+2. Turn **LEARN ON** to open the overlay. Click a highlighted panel button, key, or encoder,
+   then press a controller pad/button or move a CC knob. Encoder targets require CCs.
+   The overlay shows the selected target, existing mappings, and incoming MIDI activity.
+3. Choose **DONE** to try the mapping. Buttons support holds and layers; keys act as the
+   FM-1's keys, and encoders follow the current page. Choose absolute CC or the controller's
+   relative mode before learning a knob. The first absolute value sets the starting position;
+   subsequent movement turns the encoder one detent per CC unit.
+4. **SAVE SETUP** downloads a JSON file; **EXPORT SYSEX** downloads the hardware transfer.
+   **LOAD SETUP** accepts either file. Mappings also stay in this browser's local storage.
+5. When you have an FM-1, install the matching firmware build (`build/felucca.fwsc`, protocol
+   11 or later), select its MIDI input/output, and choose **CHECK FM-1**, then **SEND TO FM-1**
+   while playback is stopped. A successful send saves and verifies the mappings in flash.
+
+Both the dev screen and hardware run the same mapping code. The controller must send the
+same channels, note numbers, CCs, and knob mode on each. Connect its MIDI OUT to the FM-1's
+TRS MIDI IN, or route a USB controller through a computer to the FM-1's USB-MIDI input.
+Learned events replace normal note/CC routing for those controls; other MIDI events keep
+their normal behavior. Setups transfer controller mappings; projects, sounds, and the
+currently displayed page are separate. Existing firmware releases need updating to use
+these files. Keep the setup file: older firmware does not preserve the mapping extension,
+and the editor's existing full backup does not include MIDI mappings.
+
 ### USB audio: record the FM-1 on a computer
 
 On USB the FM-1 is also an **audio input named "Felucca"**: 44.1 or 48 kHz (2.5: phones and apps that only take 48 kHz), 16-bit stereo, class compliant — no driver on Windows, macOS or Linux. Choose it in your DAW or in Audacity and record: you get the master output, exactly what the headphones play (after DUST, DUCK and FILT). MIDI, the web editor and the installer keep working on the same cable.
@@ -327,7 +356,7 @@ On USB the FM-1 is also an **audio input named "Felucca"**: 44.1 or 48 kHz (2.5:
 
 ## The web editor
 
-Open it from the [installer page](https://isod89.github.io/sloop-fm1/) (or the [editor link](https://isod89.github.io/sloop-fm1/webapp/editor/)) in Chrome or Edge, with the FM-1 on USB, and press **Connect**. It follows the device live: turn a knob on the FM-1 and the editor moves.
+Open it from the [installer page](https://spacefoxx.github.io/foxxy-fm/) (or the [editor link](https://spacefoxx.github.io/foxxy-fm/webapp/editor/)) in Chrome or Edge, with the FM-1 on USB, and press **Connect**. It follows the device live: turn a knob on the FM-1 and the editor moves.
 
 - **Sound** — every parameter of the selected track, the engines and the presets; on an FM6 track the **FM6** panel: every operator, the bank, **Import / Export SysEx** (DX7 voices and banks).
 - **Sequencer** — the steps, as tiles or as a **piano roll**, and the track's length (1–64 steps); on the drum track a grid of 16 sounds × the steps, with levels and ratchets, and the kit. Click a step for its nudge, parameter locks and fill condition. **Export MIDI / Import MIDI**: the selected track as a MIDI file, and back.
@@ -339,7 +368,7 @@ Open it from the [installer page](https://isod89.github.io/sloop-fm1/) (or the [
 - **Projects** — the four projects, and **Backup**: *Save a backup* writes everything on the FM-1 to one file (with the FM6 bank); *Restore from a file* puts it all back (stop playback first).
 - **Settings** — global, master (DUST, DUCK, FILT, ROLL), drums.
 
-<p align="center"><img src="assets/screens/editor-backup.png" alt="SLOOP web editor: projects and backup" width="560"></p>
+<p align="center"><img src="assets/screens/editor-backup.png" alt="Foxxy FM web editor: projects and backup" width="560"></p>
 
 The protocol is documented in [web/EDITOR_PROTOCOL.md](web/EDITOR_PROTOCOL.md).
 
@@ -358,7 +387,7 @@ The protocol is documented in [web/EDITOR_PROTOCOL.md](web/EDITOR_PROTOCOL.md).
 
 **The installer or the editor does not find the FM-1.** Use Chrome or Edge, a data cable, no hub, and allow MIDI access. Close every other app or tab that uses MIDI (a DAW, M-UPGRADE, another editor tab), then reload the page.
 
-**An install stopped half-way.** The FM-1 waits in update mode: press INSTALL again. If SLOOP no longer starts, hold **OCT−** alone while switching on (*SLOOP USB RESCUE*) and install again.
+**An install stopped half-way.** The FM-1 waits in update mode: press INSTALL again. If Foxxy FM no longer starts, hold **OCT−** alone while switching on (*Foxxy FM USB RESCUE*) and install again.
 
 **The black keys make no sound on a synth track.** That track plays chords or the scale on the white keys (in chord mode the black keys change the chord: CHORD+): hold **SEL** (between FX and ENV) and set **KNOB 1 CHORD** to OFF and **KNOB 3 KEYS** to OFF. The drum track always uses the black keys.
 
@@ -368,13 +397,13 @@ The protocol is documented in [web/EDITOR_PROTOCOL.md](web/EDITOR_PROTOCOL.md).
 
 **The USB recording is too quiet, or follows the volume knob.** Set HOME menu → **USB AUDIO** to **FULL**, or turn MASTER up.
 
-**Recorded notes move to the grid.** SLOOP quantises what you record to the steps of the track (its **DIV**: 1/4 … 1/32, triplets). For finer timing, set DIV to 1/32, or hold the step and nudge it (KNOB 4); for groove, use SWING.
+**Recorded notes move to the grid.** Foxxy FM quantises what you record to the steps of the track (its **DIV**: 1/4 … 1/32, triplets). For finer timing, set DIV to 1/32, or hold the step and nudge it (KNOB 4); for groove, use SWING.
 
-**Notes fade out on a dense part.** The processor is at its limit: SLOOP fades one voice at a time (never the bass or the lead) rather than glitching. Fewer held notes or a lighter engine help.
+**Notes fade out on a dense part.** The processor is at its limit: Foxxy FM fades one voice at a time (never the bass or the lead) rather than glitching. Fewer held notes or a lighter engine help.
 
 **An FM6 sound changed after loading a project.** A project keeps the track's patch slot (PTCH), not the patch itself: store a patch you edited in the bank (editor → FM6 → Store in bank) and set PTCH to it.
 
-**The lights or SYNC went back to OFF / INT.** You went back to an earlier SLOOP, which does not keep them; set them again in 2.4.
+**The lights or SYNC went back to OFF / INT.** You went back to an earlier Foxxy FM, which does not keep them; set them again in 2.4.
 
 Something else? [Open an issue](../../issues): what you did, what you expected, what happened, and the version shown in HOME menu → ABOUT.
 
@@ -398,7 +427,7 @@ Something else? [Open an issue](../../issues): what you did, what you expected, 
 ## Documentation
 
 - [GUIDE.md](GUIDE.md) — **the complete guide**: every button, combination, layer, page, engine and editor page, with a one-page cheat sheet
-- [SLOOP.md](SLOOP.md) — the manual (every page, layer, sound and kit) and the history of each version
+- [FOXXY.md](FOXXY.md) — the manual (every page, layer, sound and kit) and the history of each version
 - [DEMARRAGE-RAPIDE-FR.md](DEMARRAGE-RAPIDE-FR.md) — guide de démarrage en français
 - [BUILDING.md](BUILDING.md) — building, build options and tests
 - [web/EDITOR_PROTOCOL.md](web/EDITOR_PROTOCOL.md) — the editor's SysEx protocol
@@ -406,7 +435,7 @@ Something else? [Open an issue](../../issues): what you did, what you expected, 
 
 ## Building and tests
 
-See [BUILDING.md](BUILDING.md). In short: the JieLi toolchain and three files of the AC79 SDK, then `./build.sh` (Linux / macOS) or `INSTALL-SLOOP.bat` (Windows with WSL), which builds the firmware and serves the installer and the editor on `http://localhost:8766`.
+See [BUILDING.md](BUILDING.md). In short: the JieLi toolchain and three files of the AC79 SDK, then `./build.sh` (Linux / macOS) or `INSTALL-FOXXY.bat` (Windows with WSL), which builds the firmware and serves the installer and the editor on `http://localhost:8766`.
 
 `tests/run_tests.sh` runs the host test suite with no hardware: audio renders against golden hashes, CPU budgets, the sequencer's timing (no drift, swing, ratchets, rolls, the REC modes and the count-in, MIDI clock), the UI pages and layers, the knobs, flash storage, the update loader, MIDI and USB audio, and the web pages (editor, backup, CHOP, installer).
 
@@ -414,17 +443,32 @@ See [BUILDING.md](BUILDING.md). In short: the JieLi toolchain and three files of
 
 - **Bugs and ideas:** [open an issue](../../issues) — what you did, what you expected, what happened, and the version in HOME menu → ABOUT.
 - **Pull requests** are welcome. Keep the style of the code around your change, add a host test when you can, and make sure `tests/run_tests.sh` passes. Contributions are credited in the release notes and the manual.
-- By contributing you agree that your code is released under GPL-3.0, like the rest of SLOOP.
+- By contributing you agree that your code is released under GPL-3.0, like the rest of Foxxy FM.
 
 ## Credits and thanks
 
+- **[Sloop](https://github.com/isod89/sloop-fm1)** by **isod89** — Foxxy FM is a fork of Sloop: the live groovebox layers, the twelve engines, the sounds and kits, the web editor and the installer all come from Sloop. Thank you.
 - **[Felucca](https://github.com/hugelton/Felucca)** by **Leo Kuroshita** (@kurogedelic) / **Hügelton Instruments** — the engines, the sequencer, the editor, the installer, in 2.3 the USB audio input, the MIDI clock, the knob reading and many fixes, and in 2.4 the FM6 engine and its DX7 patch editor (Felucca 1.0 / 1.0.1). Thank you.
 - **@renebohne** — the played-note key lights (pull request #11).
 - **ChanceTheMaker** and **keremimo** — the TRS MIDI input fix (Felucca Salt) and contributions to the MIDI clock.
-- **Everyone who installed SLOOP, made music with it, commented, reported a bug or asked for a feature** — most of 2.3 and 2.4 comes from your messages (parameter locks, DX7 patches, dotted delays, longer steps: you asked for them).
+- **Everyone who installs Foxxy FM, makes music with it, comments, reports a bug or asks for a feature** — you shape what comes next; most of 2.3 and 2.4 came from Sloop players' messages (parameter locks, DX7 patches, dotted delays, longer steps: you asked for them).
 - Samples: Versilian Studios VSCO-2 CE and VCSL, Sonic Pi (all CC0). Font: Terminus (SIL OFL 1.1). Icons: Fukiai (MIT, Hügelton Instruments). PHASE engine after CrispyZebra (GPL); VOICE after klattsch (MIT); FM6: msfa from Dexed by Google Inc. and Pascal Gauthier (Apache-2.0).
 - Interface ideas after teenage engineering's pocket operators and EP-133, Elektron's step entry and Akai's MPC (swing, note repeat, erase).
 
 ## Licence
 
-Code: GPL-3.0-only (see [LICENSE](LICENSE), and [LICENSING.md](LICENSING.md) for the assets). No warranty. M-VAVE and FM-1 are trademarks of their owners; SLOOP is not affiliated with M-VAVE, teenage engineering, Elektron or Akai. Drum kit names describe styles, not products.
+Code: GPL-3.0-only (see [LICENSE](LICENSE), and [LICENSING.md](LICENSING.md) for the assets). No warranty. M-VAVE and FM-1 are trademarks of their owners; Foxxy FM is not affiliated with M-VAVE, teenage engineering, Elektron or Akai. Drum kit names describe styles, not products.
+
+MIDI learn also covers MASTER volume (absolute CC, full 0–100% range). K1–K4 control the current page parameters; SELECT, ALGO, and PRES can also be learned. These targets export with the setup.
+
+The emulator has two views: `web/devscreen.html` keeps the development controls, and `web/fm1.html` opens the hardware-style web tool. The FM-1 / DEV switch moves the same live controls between layouts, preserving firmware state, sound, and MIDI mappings. On small screens, swipe across the instrument to reach the full panel.
+
+The FM-1 browser view offers Pink/Purple plus six stock-inspired finishes (Purple, Orange, Black, Black/Green, White/Blue, White/Grey) and a Custom finish with shell, knobs/keys, and accent colors. The finish picker also takes a custom backdrop image behind the instrument (stored locally, downscaled to fit). Appearance is saved locally in the browser, independently of MIDI setup exports. Stock-inspired palettes follow [product photographs](https://www.musicarms.net/m-vave-fm-1/) rather than calibrated paint values.
+
+Click the magnifying glass beside the instrument display to open an enlarged live screen. Close it with Escape, the close button, or a click outside; the firmware and MIDI input continue running.
+
+For a second MIDI assignment on the same pad or knob, choose **ASSIGN SHIFT** and press a spare note pad or CC button. In MIDI learn, choose the **Shift** mapping bank, click the desired FM-1 control, and move the controller control to assign it. Choose **DONE**, then hold the assigned Shift pad to use those second functions. Controls without a Shift mapping keep their Normal function. Switching banks releases mapped holds and resets absolute-knob baselines. **SAVE SETUP** includes both banks and the Shift assignment; they share the 48-mapping limit. Sending this setup to an FM-1 requires firmware with MIDI protocol 12.
+
+For incoming MIDI sync in either browser view, enable MIDI, select the controller, and set **clock source → Controller clock**. The status shows received clock, BPM, and transport state. MIDI Start restarts playback, Continue resumes it, and Stop stops it; clocks keep working during MIDI learn. After 500 ms without clock the existing firmware falls back to internal tempo. The browser uses MIDI event arrival timestamps ([Web MIDI specification](https://www.w3.org/TR/webmidi/#midiinput)), while audio runs at the firmware’s 44.1 kHz sample rate. The clock-source choice is separate from learned mapping exports.
+
+If Circuit Rhythm clock works but learn does not receive knobs or pads, check the independent transmit switches in Shift + Save: pad 26 enables Note Tx and pad 28 enables CC Tx (bright means enabled), then exit Setup with Play. [Novation setup reference](https://userguides.novationmusic.com/hc/en-gb/articles/25494352755730-Circuit-Rhythm-appendix). The browser activity line keeps received CC and note details visible while clock sync is enabled.

@@ -4,6 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FM-1 · DEV SCREEN</title>
+<script>
+  (() => {
+    const root = document.documentElement, storage = 'foxxy-app-appearance-v1';
+    let mode = 'dark';
+    try { const saved = localStorage.getItem(storage) ?? localStorage.getItem('sloop-app-appearance-v1'); if (saved === 'light' || saved === 'dark') mode = saved; } catch {}
+    const apply = () => {
+      root.dataset.appearance = mode;
+      const toggle = document.getElementById('appearance-toggle');
+      if (toggle) {
+        toggle.textContent = mode === 'dark' ? '☀ LIGHT MODE' : '☾ DARK MODE';
+        toggle.setAttribute('aria-pressed', String(mode === 'dark'));
+        toggle.setAttribute('aria-label', `Dark mode ${mode === 'dark' ? 'on' : 'off'}; switch to ${mode === 'dark' ? 'light' : 'dark'} mode`);
+      }
+    };
+    apply();
+    document.addEventListener('DOMContentLoaded', () => {
+      apply();
+      document.getElementById('appearance-toggle').addEventListener('click', () => {
+        mode = mode === 'dark' ? 'light' : 'dark'; apply();
+        try { localStorage.setItem(storage, mode); } catch {}
+        window.dispatchEvent(new Event('fm1viewchange'));
+      });
+    });
+  })();
+</script>
 <style>
   :root { --bg:#101213; --panel:#1a1d1f; --panel-2:#141719; --ink:#e8eaed; --ink-2:#9aa0a6; --line:#2b2f33;
           --accent:#ffe18a; --blue:#5a9cff; }
@@ -16,6 +41,9 @@
   header .sub { color:var(--ink-2); }
   header .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); }
   main { flex:1; display:flex; gap:14px; padding:14px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .controls { display:flex; flex-direction:column; gap:12px; width:520px; max-width:100%; min-width:0; }
+  .controls fieldset { min-width:0; }
+  @media (max-width:560px) { .btn-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
   .screenbox { background:#000; border:1px solid var(--line); border-radius:6px; padding:10px; }
   canvas#scr { width:360px; height:360px; image-rendering:pixelated; display:block; }
   .cap { margin-top:8px; color:var(--ink-2); font-size:11px; text-align:center; }
@@ -50,32 +78,99 @@
   .bed .wk.on { background:var(--accent); }
   .bed .bk { position:absolute; width:7px; height:36px; background:#202225; border-radius:0 0 2px 2px; z-index:2; }
   .bed .bk.on { background:var(--blue); }
+  /* Learn overlay keeps the real controls clickable above the dimmed page. */
+  #mlearn-overlay { display:contents; }
+  #mlearn-overlay::before { content:''; position:fixed; inset:0; z-index:50; background:#050913b8; pointer-events:none; }
+  #mlearn-overlay[hidden] { display:none; }
+  .learn-toolbar { position:fixed; z-index:1000; top:12px; left:50%; transform:translateX(-50%); width:min(880px,calc(100% - 32px)); box-sizing:border-box; padding:12px 16px; border:1px solid #a3baff; border-radius:12px; background:#192443; box-shadow:0 4px 14px #0005,0 1px 3px #0003; pointer-events:auto; }
+  .learn-toolbar .row { justify-content:space-between; }
+  .learn-toolbar strong { color:#cfdbff; letter-spacing:.08em; }
+  #mlprompt { color:white; font-size:14px; }
+  .midi-learning main { padding-top:140px; }
+  .midi-learning [data-midi-target] { position:relative; z-index:52; outline:2px dashed #9ab7ff; outline-offset:2px; cursor:pointer; }
+  .midi-learning [data-midi-target].learn-selected { outline:3px solid #ffe18a; box-shadow:0 0 16px #ffe18a80; }
+  .midi-learning [data-midi-target].learn-mapped { background-color:#294e75; }
+  .midi-layer-labels { display:none; }
+  .midi-learning .midi-layer-labels { display:flex; flex-direction:column; gap:2px; position:absolute; bottom:1px; left:1px; right:1px; pointer-events:none; z-index:3; font:9px/1.25 ui-monospace,monospace; text-align:left; white-space:normal; }
+  .midi-layer-labels > span { padding:2px 3px; border-radius:3px; overflow-wrap:anywhere; border:1px solid; }
+  .midi-layer-normal { background:#123957; color:#b9e3ff; border-color:#64bfff; }
+  .midi-layer-shift { background:#422450; color:#efc9ff; border-color:#d794fa; }
+  .midi-layer-legend { display:flex; flex-wrap:wrap; gap:12px; font:11px ui-monospace,monospace; margin:8px 0; }
+  .midi-layer-legend span { border-radius:4px; border:1px solid; padding:4px 7px; }
+  .midi-layer-editing { background:#483a12; color:#ffe18a; border-color:#ffe18a; }
+  .fm1-view.midi-learning .fm1-device button.pad { height:80px; padding-bottom:52px; }
+  .midi-learning .bed .wk { background:#34496b; }
+  .midi-learning .bed .bk { background:#172746; position:absolute; }
+  .midi-learning [data-midi-label=""]::after { display:none; }
+  .midi-learning .enc[data-midi-target] { border-radius:8px; background:#1b2c44; }
+  #mlsignal, #mlactivity { color:#aacbff; }
+  /* MIDI learn */
+  .armed { outline:2px solid var(--accent); outline-offset:1px; }
+  .armed-flash { outline:2px solid var(--blue); outline-offset:1px; }
+  .midi-list { max-height:168px; overflow:auto; margin-top:6px; }
+  .midi-list .b { display:flex; align-items:center; gap:6px; padding:2px 4px; border-bottom:1px solid var(--line); }
+  .midi-list .b span { flex:1; color:var(--ink-2); }
+  .midi-list .b button { padding:1px 6px; }
+  .midi-list .none { color:var(--ink-2); padding:2px 4px; }
 </style>
+<link rel="stylesheet" href="./fm1-view.css?v=tempo-tracks-44">
 </head>
 <body>
 <header>
   <span class="dot"></span><b>FELUCCA FM-1</b><span class="sub">dev screen — the real firmware UI, on canvas</span>
+  <nav class="view-switch" aria-label="Tool view"><button id="view-fm1" aria-pressed="false">FM-1</button><button id="view-dev" aria-pressed="true">DEV</button></nav>
+  <button id="open-scope" type="button" aria-pressed="false">SCOPE</button>
+  <button id="open-tape" type="button" aria-pressed="false">TAPE</button>
+  <select id="tape-view" aria-label="Tape mode"><option value="1">Web tape studio</option><option value="0">Firmware controls · 15 s</option></select>
+  <nav id="workflow-nav" aria-label="Tracks, song and mixer"><button id="open-tracks" type="button" aria-pressed="false">TRACKS</button><button id="open-song" type="button" aria-pressed="false">SONG</button><button id="open-mixer" type="button" aria-pressed="false">MIXER</button></nav><button id="expand-mixer" type="button" hidden>EXPAND MIXER</button>
+  <button id="open-fox" type="button">POCKET FOX</button>
+  <button id="play-meow" type="button">MEOW FX</button>
+  <button id="open-sampler" type="button">SAMPLER</button>
+  <button id="appearance-toggle" type="button" aria-pressed="true">☀ LIGHT MODE</button>
   <span id="err"></span>
 </header>
+<div id="mlearn-overlay" hidden>
+  <div class="learn-toolbar" role="region" aria-label="MIDI learn">
+    <div class="row"><strong>MIDI LEARN</strong><label>knob mode <select id="mlmode"><option value="0">Absolute CC</option><option value="1">Relative ±</option><option value="2">Relative 64</option></select></label><button id="mlremove">UNMAP TARGET</button><button id="mldone">DONE</button></div>
+    <div class="row"><label>mapping bank <select id="mlbank"><option value="0">Normal</option><option value="1">Shift</option></select></label><button id="mlshift">ASSIGN SHIFT</button><button id="mlclear">UNMAP ALL</button></div>
+    <div class="midi-layer-legend" aria-label="Mapping color legend"><span class="midi-layer-normal">Blue · Normal assignments</span><span class="midi-layer-shift">Purple · Shift assignments</span><span class="midi-layer-editing">Amber outline · Control being assigned</span></div>
+    <div id="mlshiftassignment" class="mono">Shift pad: not assigned</div>
+    <details><summary id="mlbanksummary">Normal mappings (0)</summary><div id="mlbanklist" style="max-height:120px;overflow:auto;font:11px/1.6 ui-monospace,monospace"></div></details>
+    <div id="mlprompt" role="status">Click a highlighted control, then press a pad or turn a knob.</div>
+    <div id="mlsignal" class="mono">No MIDI received yet.</div><div id="mlsignalcounts" class="mono"></div>
+  </div>
+</div>
 <main>
+  <section id="scope-controls" hidden aria-label="Oscilloscope controls">
+    <strong>OSCILLOSCOPE</strong>
+    <label>K1 · Time/div <select data-scope="0"><option value="0">100 µs</option><option value="1">200 µs</option><option value="2">500 µs</option><option value="3">1 ms</option><option value="4">2 ms</option></select></label>
+    <label>K2 · Gain/div <select data-scope="1"><option value="0">100% FS</option><option value="1">50% FS</option><option value="2">25% FS</option><option value="3">12.5% FS</option><option value="4">6.25% FS</option><option value="5">3.125% FS</option></select></label>
+    <label>K3 · Trigger <input data-scope="2" type="range" min="-90" max="90" value="0"><span id="scope-level">0%</span></label>
+    <label>K4 · Mode <select data-scope="3"><option value="0">Auto</option><option value="1">Normal</option><option value="2">Single</option><option value="3">Hold</option></select></label>
+    <button id="scope-rearm" type="button">ARM SINGLE</button><button id="scope-close" type="button">CLOSE</button>
+    <span class="scope-help">Blue: left · Amber: right · Rising-edge trigger on left · Signal before master volume · FS = full scale</span>
+  </section>
   <div class="screenbox">
     <canvas id="scr" width="240" height="240"></canvas>
     <div class="cap" id="cap">loading…</div>
   </div>
-  <div style="display:flex; flex-direction:column; gap:12px;">
+  <div class="controls">
     <fieldset>
       <legend>NAVIGATION</legend>
       <div class="row"><label>family <select id="fam"></select></label>
            <label>page <select id="pg"></select></label></div>
       <div class="row"><label>track <select id="trk"></select></label>
-           <label>bpm <input id="bpm" type="number" min="40" max="220" value="120" style="width:64px"></label>
+           <label>bpm <input id="bpm" type="number" min="40" max="240" value="120" style="width:64px"></label>
            <button id="play">PLAY</button></div>
     </fieldset>
     <fieldset>
       <legend>SOUND</legend>
       <div class="row">
         <button id="sound" class="pri">SOUND OFF</button>
-        <div class="enc"><canvas id="volc" width="46" height="46"></canvas><b>MASTER</b><span class="v" id="volv">50</span></div>
+        <button id="sound-test" type="button">TEST SOUND</button>
+        <span id="audio-status" role="status">Sound is off</span>
+        <span id="control-sounds-label"><label>Control sounds <select id="control-sounds"><option value="rubber">Soft rubber</option><option value="click">Muted click</option><option value="off">Off</option></select></label><label><input id="feedback-knobs" type="checkbox" checked> Knobs</label><label><input id="feedback-keys" type="checkbox" checked> Buttons / keys</label></span>
+        <div class="enc" data-midi-target="3:0"><canvas id="volc" width="46" height="46"></canvas><b>MASTER</b><span class="v" id="volv">50</span></div>
       </div>
     </fieldset>
     <fieldset>
@@ -87,13 +182,86 @@
       <div class="bed" id="bed"></div>
     </fieldset>
     <fieldset>
-      <legend>ENCODERS</legend>
+      <legend>KNOBS · K1–K4 FOLLOW THE CURRENT PAGE</legend>
       <div id="encs"></div>
+    </fieldset>
+    <fieldset>
+      <legend>MIDI · use a hardware controller</legend>
+      <div class="row"><button id="menable">ENABLE MIDI</button><label>controller <select id="mi"></select></label></div>
+      <p>Choose <strong>Computer Keyboard</strong>, turn <strong>LEARN ON</strong>, click a highlighted control, then press the typing key to assign. Letters, numbers, arrows, Space and Shift are supported. To play without mappings: Z S X D C V G B H N J M , L . ; /, then Q 2 W 3 E R 5 T 6 Y; notes start at F3.</p>
+      <details id="key-settings" class="key-settings">
+        <summary aria-label="Edit keyboard layout" title="Edit keyboard layout">⚙</summary>
+        <div class="key-settings-panel">
+          <b>KEYBOARD LAYOUT</b>
+          <label>Layout <select id="key-layout"><option value="auto">Automatic for controller</option><option value="full">FM-1 · 27 keys</option><option value="octave">One octave · 13 keys</option><option value="custom">Custom</option></select></label>
+          <div id="key-custom" hidden><label>First visible key <select id="key-first"></select></label><label>White keys <input id="key-count" type="number" min="1" max="16" value="16"></label></div>
+          <p id="key-layout-status" role="status"></p>
+          <p>Adjusts the visible keys. Use MIDI learn to assign your controller’s notes.</p>
+          <button id="key-settings-done" type="button">DONE</button>
+        </div>
+      </details>
+      <div class="row">
+        <button id="mlearn">LEARN OFF</button>
+        <button id="mshift">ASSIGN SHIFT</button>
+        <label>mapping bank <select id="mbank"><option value="0">Normal</option><option value="1">Shift</option></select></label>
+        <button id="mclear">UNMAP ALL</button>
+        <button id="marm" hidden>ARM</button>
+        <label hidden>target <select id="mtgt"></select></label>
+      </div>
+      <div class="row"><label>clock source <select id="msync"><option value="0">Internal</option><option value="1">Controller clock</option></select></label><span id="msyncstatus" role="status">Internal clock</span></div>
+      <div class="row"><label>knob mode <select id="mmode"><option value="0">Absolute CC</option><option value="1">Relative (two’s complement)</option><option value="2">Relative (64 = neutral)</option></select></label></div>
+      <p>Turn LEARN on, click a highlighted button, key or knob, then move a control on your controller. Choose DONE to play.</p>
+      <p>Assign a pad or CC button as Shift. Learn a second assignment in the Shift bank, then hold your Shift pad while playing to use it. Controls without a Shift assignment keep their Normal function.</p>
+      <div class="mono" id="mshiftstatus" role="status">Shift released</div>
+      <div class="mono" id="mshiftassignment">Shift pad: not assigned</div>
+      <div class="row"><button id="mexport">SAVE SETUP</button><button id="msyx">EXPORT SYSEX</button><button id="mimport">LOAD SETUP</button><input id="mfile" type="file" accept=".json,.syx" hidden></div>
+      <div class="mono" id="mist" role="status">Enable MIDI to connect your controller. Setups can be saved without an FM-1.</div>
+      <div class="mono" id="mlactivity" role="status">No MIDI received yet.</div>
+      <div class="mono" id="mlcounts">Notes: 0 · CC: 0 · Clock: 0</div>
+      <details id="circuit-input-help" hidden><summary>Circuit Rhythm input check</summary><p>In Shift + Save, the second pad in the bottom row (26) enables Note Tx; the fourth (28) enables CC Tx. Both should be brightly lit. Exit Setup with Play, select track 1, then press Note. Turn the Tune macro knob and tap the lower keyboard pads. Use the eight macro knobs for learning; the Circuit Master volume is not MIDI-supported.</p></details>
+      <div class="midi-list" id="mlist"></div>
+      <hr>
+      <div class="row"><label>FM-1 input <select id="mhwinput"></select></label><label>output <select id="mhwoutput"></select></label></div>
+      <div class="row"><button id="mcheck" disabled>CHECK FM-1</button><button id="msend" disabled>SEND TO FM-1</button></div>
+      <p>Send saves this controller setup on the FM-1. It requires the matching Foxxy FM firmware. Panel roles follow the page and held-button layers on both the dev screen and hardware; projects and sounds are saved separately.</p>
+      <div class="mono" id="mhwstatus" role="status">No FM-1 needed to prepare a setup.</div>
     </fieldset>
   </div>
 </main>
+<dialog id="mixer-dialog" aria-labelledby="mixer-title">
+  <strong id="mixer-title">GLOBAL MIXER</strong>
+  <div id="mixer-tracks"></div>
+  <div class="tempo-actions"><button id="mixer-clear-solo" type="button">CLEAR SOLO</button><button id="mixer-close" type="button">CLOSE</button></div>
+</dialog>
+<dialog id="tempo-dialog">
+  <form id="tempo-form"><label for="tempo-value">Tempo (40–240 BPM)</label>
+    <input id="tempo-value" type="number" min="40" max="240" step="1" required style="width:90px;margin:12px" />
+    <button id="tempo-tap" type="button" title="Tap repeatedly to set tempo">TAP TEMPO</button>
+    <div class="tempo-metronome"><label for="tempo-metronome">Metronome mode</label> <select id="tempo-metronome"><option value="0">Off</option><option value="1">Recording only</option><option value="2">On during playback</option></select></div>
+    <div class="tempo-actions"><button type="submit">SET</button><button id="tempo-cancel" type="button">CLOSE</button></div>
+  </form>
+</dialog>
+<dialog id="tracker-dialog" aria-labelledby="tracker-title">
+  <form id="tracker-form"><strong id="tracker-title">Edit tracker cell</strong>
+    <p id="tracker-instrument"></p>
+    <div class="row"><label><span id="tracker-note-label">Note</span> <select id="tracker-note" required style="min-width:160px"></select></label><label>Velocity <input id="tracker-velocity" type="number" min="1" max="127" required value="100" style="width:70px"></label></div>
+    <div id="tracker-chord" class="row"><label>Note 2 <select data-chord="1"></select></label><label>Note 3 <select data-chord="2"></select></label><label>Note 4 <select data-chord="3"></select></label></div>
+    <fieldset id="tracker-drum-chord" hidden><legend>Hits on this step</legend><div id="tracker-drum-hits"></div></fieldset>
+    <div class="row"><label>Time <select id="tracker-time"><option value="0">Note</option><option value="1">Tie</option><option value="2">Rest / clear</option></select></label></div>
+    <p id="tracker-status" role="status"></p><div class="tempo-actions"><button type="submit">WRITE</button><button id="tracker-delete" type="button">CLEAR</button><button id="tracker-close" type="button">CLOSE</button></div>
+  </form>
+</dialog>
+<dialog id="ratchet-dialog" aria-labelledby="ratchet-title"><strong id="ratchet-title">Step retrigger</strong><p>Hits evenly spaced within this step</p><div class="ratchet-options"><button type="button" data-hits="1">1 hit</button><button type="button" data-hits="2">2 hits</button><button type="button" data-hits="3">3 · triplet</button><button type="button" data-hits="4">4 hits</button><button type="button" data-hits="6">6 hits</button></div><p id="ratchet-status" role="status"></p><button id="ratchet-close" type="button">CLOSE</button></dialog>
 <script type="module">
-  import createDevScreen from "./devscreen.core.mjs";
+  import createDevScreen from "./devscreen.core.mjs?v=tempo-tracks-44";
+  import {setupTracker, populateTrackerNotes} from "./tracker-view.js?v=tracker-chords-3";
+  import {setupViews} from "./fm1-view.js?v=tracker-entry-23";
+  import {TYPING_KEYS} from "./computer-keyboard.js";
+  import {setupMidiLearn} from "./devscreen-midi.js?v=keyboard-learn-24";
+  import {createSequencerSelection} from "./sequencer-selection.js?v=selection-2";
+  import {createAudioStudio} from "./audio-studio.js?v=tempo-tracks-44";
+  import {setupControlFeedback} from "./control-feedback.js?v=tempo-tracks-44";
+  const controlFeedback = setupControlFeedback(document.getElementById('control-sounds'),{knobs:document.getElementById('feedback-knobs'),keys:document.getElementById('feedback-keys')});
 
   const NAME = "C: FM-1 · DEV SCREEN",
         canvas = document.getElementById("scr"),
@@ -103,12 +271,32 @@
         ENCS = ["SELECT", "ALGO", "PRES", "K1", "K2", "K3", "K4"];
 
   document.title = NAME;
-  let M = null, famSel, pgSel, trkSel, nonblack = 0;
+  let M = null, famSel, pgSel, trkSel, nonblack = 0, midiLearn = null, viewControls = null, trackerView = null, audioStudio = null, seqSelection = null;
 
   function title(p) { return M.UTF8ToString(M._ds_page_title(p)); }
 
   function refresh() {
     if (!M) return;
+    trackerView?.refresh();
+    audioStudio?.refresh();
+    const workflow=M._ds_workflow();for(const [i,id] of ['open-tracks','open-song','open-mixer'].entries())document.getElementById(id).setAttribute('aria-pressed',String(workflow===i));document.getElementById('expand-mixer').hidden=workflow!==2;
+    seqSelection?.refresh();
+    const scopeActive = !!M._ds_scope_active();
+    document.getElementById('scope-controls').hidden = !scopeActive;
+    document.getElementById('open-scope').setAttribute('aria-pressed', String(scopeActive));
+    document.getElementById('open-tape').setAttribute('aria-pressed', String(!!M._ds_tape_active()));
+    if (document.getElementById('mixer-dialog').open) refreshMixer();
+    if (scopeActive) {
+      for (const input of document.querySelectorAll('[data-scope]')) input.value = M._ds_scope_setting(+input.dataset.scope);
+      document.getElementById('scope-level').textContent = `${M._ds_scope_setting(2)}%`;
+      document.getElementById('scope-rearm').disabled = M._ds_scope_setting(3) !== 2;
+    }
+    if (M._ds_led) for (const el of document.querySelectorAll('[data-midi-target]')) {
+      const [kind, target] = el.dataset.midiTarget.split(':').map(Number);
+      if (kind === 0 || kind === 2) el.dataset.led = String(M._ds_led(kind === 0 ? target : 14 + target));
+    }
+    if (pgSel) pgSel.value = String(M._ds_cur_page());
+    if (trkSel) trkSel.value = String(M._ds_selected_track());
     document.getElementById("cap").textContent =
       `${M._ds_ms()} ms · page ${M._ds_cur_page()} · track ${M._ds_selected_track()} · ` +
       (M._ds_playing() ? "PLAYING" : "stopped") + ` · ${nonblack}% lit`;
@@ -130,6 +318,7 @@
       lit += v !== 0;
     }
     ctx.putImageData(img, 0, 0);
+    viewControls?.paintZoom(canvas);
     frames++;
     if (frames - lastSample >= 30) { lastSample = frames; nonblack = Math.round(lit * 100 / 57600); }
   }
@@ -168,8 +357,8 @@
     const box = document.getElementById("btns");
     PANEL.forEach((n, i) => {
       const b = document.createElement("button");
-      b.className = "pad"; b.textContent = n;
-      b.addEventListener("pointerdown", (e) => { e.preventDefault(); e.target.setPointerCapture(e.pointerId); M._ds_press(i); b.classList.add("on"); });
+      b.className = "pad"; b.textContent = n; b.dataset.midiTarget = `0:${i}`;
+      b.addEventListener("pointerdown", (e) => { e.preventDefault(); if (midiLearn?.arm(0, i)) return; controlFeedback.play('button'); e.target.setPointerCapture(e.pointerId); M._ds_press(i); b.classList.add("on"); });
       b.addEventListener("pointerup",   (e) => { e.preventDefault(); M._ds_release(i); b.classList.remove("on"); });
       b.addEventListener("pointercancel", () => { M._ds_release(i); b.classList.remove("on"); });
       box.appendChild(b);
@@ -179,20 +368,20 @@
         BED_BLACK = [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14];                      /* black keys, after white w */
   function buildKeys() {
     const bed = document.getElementById("bed");
-    const hit = (el, d) => { const k = +el.dataset.k; if (k >= 0) { M._ds_key(k, d); el.classList.toggle("on", !!d); } };
+    const hit = (el, d) => { const k = +el.dataset.k; if (d && midiLearn?.arm(2, k)) return; if (k >= 0) { if (d) {enableSoundForNote();controlFeedback.play('key');} M._ds_key(k, d); el.classList.toggle("on", !!d); } };
     for (let w = 0; w < 16; w++) {
       const wk = document.createElement("div");
-      wk.className = "wk"; wk.dataset.k = WK_OF(w);
-      wk.addEventListener("pointerdown", (e) => { e.preventDefault(); hit(wk, 1); });
+      wk.className = "wk"; wk.dataset.k = WK_OF(w); wk.dataset.midiTarget = `2:${WK_OF(w)}`;
+      wk.addEventListener("pointerdown", (e) => { e.preventDefault(); wk.setPointerCapture(e.pointerId); hit(wk, 1); });
       wk.addEventListener("pointerup",   (e) => { e.preventDefault(); hit(wk, 0); });
       wk.addEventListener("pointercancel", () => hit(wk, 0));
       bed.appendChild(wk);
     }
     for (const w of BED_BLACK) {
       const bk = document.createElement("div");
-      bk.className = "bk"; bk.dataset.k = WK_OF(w) + 1;
+      bk.className = "bk"; bk.dataset.k = WK_OF(w) + 1; bk.dataset.midiTarget = `2:${WK_OF(w) + 1}`;
       bk.style.left = `calc(${(w + 1) * 6.25}% - 4px)`;
-      bk.addEventListener("pointerdown", (e) => { e.preventDefault(); hit(bk, 1); });
+      bk.addEventListener("pointerdown", (e) => { e.preventDefault(); bk.setPointerCapture(e.pointerId); hit(bk, 1); });
       bk.addEventListener("pointerup",   (e) => { e.preventDefault(); hit(bk, 0); });
       bk.addEventListener("pointercancel", () => hit(bk, 0));
       bed.appendChild(bk);
@@ -203,7 +392,25 @@
     const g = c.getContext("2d"); g.clearRect(0, 0, 46, 46); g.lineCap = "round";
     g.strokeStyle = "#2b2f33"; g.lineWidth = 5;
     g.beginPath(); g.arc(23, 23, 18, 0, Math.PI * 2); g.stroke();
-    const a0 = -Math.PI * 0.75, a = a0 + a01 * Math.PI * 1.5;
+    const a0 = -Math.PI * (c.id === "volc" ? 1.25 : 0.75), a = a0 + a01 * Math.PI * 1.5;
+    if (document.body.classList.contains("fm1-view")) {
+      // Rotate the complete Master knob face so MIDI motion is visible in
+      // both the pointer and the highlight on the physical-looking cap.
+      const master = c.id === "volc";
+      c.style.transform = master ? `rotate(${(a + Math.PI / 2) * 180 / Math.PI}deg)` : "";
+      const pointerAngle = master ? -Math.PI / 2 : a;
+      g.clearRect(0, 0, 46, 46);
+      const finish = getComputedStyle(c);
+      const face = g.createRadialGradient(17, 14, 2, 23, 23, 17);
+      face.addColorStop(0, finish.getPropertyValue("--control-light").trim() || "#73776e"); face.addColorStop(0.7, finish.getPropertyValue("--control-base").trim() || "#40473e"); face.addColorStop(1, finish.getPropertyValue("--control-dark").trim() || "#272e26");
+      g.fillStyle = face; g.beginPath(); g.arc(23, 23, 15, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = finish.getPropertyValue("--control-light").trim() || "#858d7d"; g.lineWidth = 1; g.stroke();
+      g.strokeStyle = finish.getPropertyValue("--control-ink").trim() || "#e5e9d9"; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(23 + Math.cos(pointerAngle) * 8, 23 + Math.sin(pointerAngle) * 8);
+      g.lineTo(23 + Math.cos(pointerAngle) * 13, 23 + Math.sin(pointerAngle) * 13); g.stroke();
+      return;
+    }
+    c.style.transform = "";
     g.strokeStyle = gold ? "#ffe18a" : "#5a9cff";
     g.beginPath(); g.arc(23, 23, 18, a0, a); g.stroke();
     g.fillStyle = "#e8eaed"; g.beginPath(); g.arc(23, 23, 11, 0, Math.PI * 2); g.fill();
@@ -211,12 +418,12 @@
   }
   function dragKnob(c, set) {
     let drag = null;
-    c.addEventListener("pointerdown", (e) => { drag = e.clientY; c.setPointerCapture(e.pointerId); });
+    c.addEventListener("pointerdown", (e) => { if (c.dataset.encoder !== undefined && midiLearn?.arm(1, +c.dataset.encoder)) return; drag = e.clientY; c.setPointerCapture(e.pointerId); });
     c.addEventListener("pointermove", (e) => {
       if (drag == null) return;
       const nTurn = Math.trunc((drag - e.clientY) / KNOB_TURN);
       if (nTurn === 0) return;
-      drag = e.clientY; set(nTurn);
+      drag = e.clientY; set(nTurn); controlFeedback.play('knob');
     });
     const lift = () => { drag = null; };
     c.addEventListener("pointerup", lift); c.addEventListener("pointercancel", lift);
@@ -224,8 +431,14 @@
   function buildEncs() {
     const box = document.getElementById("encs"), ang = [0, 0, 0, 0, 0, 0, 0];
     ENCS.forEach((n, i) => {
-      const row = document.createElement("div"); row.className = "enc";
-      const c = document.createElement("canvas"); c.width = c.height = 46;
+      if (i === 0 || i === 3) {
+        const title = document.createElement("div");
+        title.textContent = i === 0 ? "DEDICATED CONTROLS · SELECT / ALGORITHM / PRESETS" : "FOUR PARAMETER KNOBS · CURRENT PAGE";
+        title.style.cssText = "grid-column:1/-1;font-size:10px;color:var(--ink-2);margin:8px 0 4px";
+        box.appendChild(title);
+      }
+      const row = document.createElement("div"); row.className = "enc"; row.dataset.midiTarget = `1:${i}`;
+      const c = document.createElement("canvas"); c.width = c.height = 46; c.dataset.encoder = i;
       const lab = document.createElement("b"); lab.textContent = n;
       const v = document.createElement("span"); v.className = "v"; v.textContent = "0";
       row.append(c, lab, v); box.appendChild(row);
@@ -233,49 +446,271 @@
         ang[i] += d; M._ds_turn(i, d); v.textContent = String(ang[i]);
         paintKnob(c, ((ang[i] % 90) + 90) % 90 / 90, i === 0);
       });
+      window.addEventListener("fm1viewchange", () => paintKnob(c, ((ang[i] % 90) + 90) % 90 / 90, i === 0));
       paintKnob(c, 0, i === 0);
     });
   }
   /* the mix, real time: the audio ISR (ds_audio) drives the device, so the JS loop stops calling
      ds_frame while the sound is on — what you see and what you hear stay in one clock. */
-  let ac = null, soundOn = false;
-  function startSound() {
-    if (ac) { ac.resume(); return; }
-    ac = new (window.AudioContext || window.webkitAudioContext)();
-    const src = ac.createScriptProcessor(2048, 0, 2);
-    const out = new Float32Array(M.HEAPU8.buffer, M._ds_out(), 2 * 2048);
+  let ac = null, audioSource = null, soundOn = false, soundExplicitlyOff = false, lastAudioSignal = -Infinity, testToneUntil = 0;
+  async function enableSoundForNote() {
+    if (soundOn || soundExplicitlyOff) return;
+    try {
+      await startSound();
+      const snd = document.getElementById("sound"); snd.textContent = "SOUND ON"; snd.classList.add("on");
+    } catch (err) { document.getElementById("audio-status").textContent = err.message; }
+  }
+  window.addEventListener('synthnote', enableSoundForNote);
+  document.addEventListener('pointerdown',()=>{if(M?._ds_fox_active())enableSoundForNote();},{capture:true});
+  function audioStatus() {
+    document.getElementById("audio-status").textContent = !soundOn ? "Sound is off"
+      : ac.state !== "running" ? "Audio paused · click SOUND to restart"
+      : performance.now() < testToneUntil ? "Playing test tone · checks browser output"
+      : M._ds_master_value() === 0 ? "Master volume is zero · turn MASTER up"
+      : performance.now() - lastAudioSignal < 300 ? "Sound enabled · audio signal detected"
+      : "Sound enabled · play a key";
+  }
+  async function startSound() {
+    if (!ac) {
+    ac = new (window.AudioContext || window.webkitAudioContext)({sampleRate:44100});
+    const src = audioSource = ac.createScriptProcessor(2048, 0, 2);
+    let out = new Float32Array(M.HEAPU8.buffer, M._ds_out(), 2 * 2048);
     src.onaudioprocess = (e) => {
+      M._ds_time(Math.floor(performance.now()));
       M._ds_audio(2048);
+      if (out.buffer !== M.HEAPU8.buffer) out = new Float32Array(M.HEAPU8.buffer, M._ds_out(), 2 * 2048);
       const L = e.outputBuffer.getChannelData(0), R = e.outputBuffer.getChannelData(1);
-      for (let i = 0, j = 0; i < 2048; i++, j += 2) { L[i] = out[j]; R[i] = out[j + 1]; }
+      let peak = 0;
+      for (let i = 0, j = 0; i < 2048; i++, j += 2) { L[i] = out[j]; R[i] = out[j + 1]; peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i])); }
+      if (peak > 0.0001) lastAudioSignal = performance.now();
     };
     src.connect(ac.destination);
+    }
+    await ac.resume();
+    if (ac.state !== "running") throw new Error("Browser audio is paused. Allow sound for this tab and retry.");
     M._ds_audio_enable(1); soundOn = true;
     paintVol();
+    audioStatus();
   }
-  function stopSound() { if (ac && ac.state === "running") ac.suspend(); }
+  function stopSound() {
+    soundOn = false; M._ds_audio_enable(0);
+    if (ac && ac.state === "running") ac.suspend();
+  }
   function paintVol() {
     const c = document.getElementById("volc");
-    document.getElementById("volv").textContent = String(vol);
-    paintKnob(c, vol / 100, true);
+    document.getElementById("volv").textContent = String(Math.round(vol));
+    paintKnob(c, displayVol / 100, true);
   }
-  let vol = 50;
+  let vol = 50, displayVol = 50;
   function buildSound() {
     const snd = document.getElementById("sound"), c = document.getElementById("volc");
     c.width = c.height = 46;
-    M._ds_master(Math.round(vol * 40.96));
+    M._ds_master(Math.round((vol / 100) ** 2 * 4096));
     dragKnob(c, (d) => {
       vol = Math.max(0, Math.min(100, vol + d));
-      M._ds_master(Math.round(vol * 40.96));
+      displayVol = vol;
+      M._ds_master(Math.round((vol / 100) ** 2 * 4096));
       paintVol();
     });
-    snd.addEventListener("click", () => {
-      if (!soundOn) { startSound(); snd.textContent = "SOUND ON"; snd.classList.add("on"); }
-      else { stopSound(); snd.classList.remove("on"); snd.textContent = ac.state === "suspended" ? "SOUND OFF" : "SOUND ON"; }
+    snd.addEventListener("click", async () => {
+      snd.disabled = true;
+      try {
+        if (!soundOn || ac.state !== "running") { soundExplicitlyOff = false; await startSound(); snd.textContent = "SOUND ON"; snd.classList.add("on"); }
+        else { soundExplicitlyOff = true; stopSound(); snd.classList.remove("on"); snd.textContent = "SOUND OFF"; audioStatus(); }
+      } catch (err) { document.getElementById("audio-status").textContent = err.message; }
+      finally { snd.disabled = false; }
     });
+    document.getElementById("sound-test").addEventListener("click", async () => {
+      try {
+        await startSound(); snd.textContent = "SOUND ON"; snd.classList.add("on");
+        const tone = ac.createOscillator(), gain = ac.createGain(), now = ac.currentTime;
+        tone.frequency.value = 440;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.08, now + 0.02);
+        gain.gain.linearRampToValueAtTime(0, now + 0.35);
+        tone.connect(gain); gain.connect(ac.destination); tone.start(now); tone.stop(now + 0.36);
+        tone.onended = () => { tone.disconnect(); gain.disconnect(); };
+        testToneUntil = performance.now() + 400;
+        document.getElementById("audio-status").textContent = "Playing test tone · checks browser output";
+      } catch (err) { document.getElementById("audio-status").textContent = err.message; }
+    });
+    window.addEventListener("fm1viewchange", paintVol);
     paintVol();
   }
+  function refreshMixer() {
+    for (const row of document.querySelectorAll('.mixer-track')) {
+      const track = +row.dataset.track, level = M._ds_mixer_read(track, 0);
+      row.querySelector('strong').textContent = `${track === 3 ? 'DRUMS' : 'TRACK ' + (track + 1)} · ${M.UTF8ToString(M._ds_tracker_track_name(track))}`;
+      row.querySelector('input').value = level; row.querySelector('output').textContent = `${Math.round(level * 100 / 127)}%`;
+      for (const button of row.querySelectorAll('button')) button.setAttribute('aria-pressed', String(!!M._ds_mixer_read(track, +button.dataset.mix)));
+    }
+  }
   function wireMix() {
+    document.getElementById('open-tape').addEventListener('click', () => M._ds_tape_active() ? M._ds_home() : M._ds_tape_open());
+    document.getElementById('play-meow').addEventListener('click', () => { enableSoundForNote(); M._ds_meow_active() ? M._ds_home() : M._ds_meow(); });
+    const mixer = document.getElementById('mixer-dialog');
+    for (let track = 0; track < 4; track++) {
+      const row = document.createElement('div'); row.className = 'mixer-track'; row.dataset.track = track;
+      row.innerHTML = `<strong></strong><label>Level <input type="range" min="0" max="127" data-mix="0"><output></output></label><button type="button" data-mix="1" aria-pressed="false">MUTE</button><button type="button" data-mix="2" aria-pressed="false">SOLO</button>`;
+      row.querySelector('input').addEventListener('input', e => { M._ds_mixer_set(track, 0, +e.target.value); refreshMixer(); });
+      for (const button of row.querySelectorAll('button')) button.addEventListener('click', () => { const field = +button.dataset.mix; M._ds_mixer_set(track, field, !M._ds_mixer_read(track, field)); refreshMixer(); });
+      document.getElementById('mixer-tracks').append(row);
+    }
+    document.getElementById('open-tracks').addEventListener('click',()=>{mixer.close();M._ds_home();});
+    document.getElementById('open-song').addEventListener('click',()=>{mixer.close();M._ds_song_open();});
+    document.getElementById('open-mixer').addEventListener('click',()=>M._ds_mixer_open());
+    document.getElementById('expand-mixer').addEventListener('click',()=>{refreshMixer();mixer.showModal();});
+    document.getElementById('mixer-close').addEventListener('click', () => mixer.close());
+    document.getElementById('mixer-clear-solo').addEventListener('click', () => { for (let track = 0; track < 4; track++) M._ds_mixer_set(track, 2, 0); refreshMixer(); });
+    document.getElementById('open-scope').addEventListener('click', () => M._ds_scope_active() ? M._ds_home() : M._ds_scope_open());
+    document.getElementById('scope-close').addEventListener('click', () => M._ds_home());
+    document.getElementById('scope-rearm').addEventListener('click', () => M._ds_scope_set(3, 2));
+    for (const input of document.querySelectorAll('[data-scope]')) input.addEventListener(input.type === 'range' ? 'input' : 'change', () => M._ds_scope_set(+input.dataset.scope, +input.value));
+    const trackerDialog = document.getElementById('tracker-dialog'); let trackerTarget = -1, trackerPrimary = 0;
+    const editTracker = target => {
+      trackerTarget = target;
+      const track = Math.floor(target/64), drum = track === 3;
+      document.getElementById('tracker-title').textContent = `Track ${Math.floor(target/64)+1} · Step ${target%64+1}`;
+      document.getElementById('tracker-instrument').textContent = `${drum ? 'Drum kit' : 'Instrument'} · ${M.UTF8ToString(M._ds_tracker_track_name(track))}`;
+      document.getElementById('tracker-note-label').textContent = drum ? 'Drum sound' : 'Note';
+      populateTrackerNotes(document.getElementById('tracker-note'), M, track, false);
+      document.getElementById('tracker-note').value = M._ds_tracker_read(target,0);
+      trackerPrimary = +document.getElementById('tracker-note').value;
+      document.getElementById('tracker-chord').hidden = drum;
+      document.getElementById('tracker-drum-chord').hidden = !drum;
+      for (const input of document.querySelectorAll('[data-chord]')) {
+        populateTrackerNotes(input, M, track); input.value = M._ds_tracker_voice(target, +input.dataset.chord);
+      }
+      if (drum) {
+        const hits = document.getElementById('tracker-drum-hits'); hits.replaceChildren();
+        const notes = Array.from({length:16}, (_, slot) => M._ds_tracker_voice(target, slot));
+        for (let lane = 0; lane < 16; lane++) {
+          const label = document.createElement('label'), input = document.createElement('input');
+          input.type = 'checkbox'; input.dataset.lane = lane; input.checked = notes.includes(M._ds_tracker_drum_note(lane));
+          label.append(input, M.UTF8ToString(M._ds_tracker_drum_name(lane))); hits.append(label);
+        }
+      }
+      document.getElementById('tracker-velocity').value = M._ds_tracker_read(target,1);
+      const time = M._ds_tracker_read(target,2);
+      document.getElementById('tracker-time').value = time === 2 ? 0 : time;
+      document.querySelector('#tracker-time [value="1"]').disabled = Math.floor(target/64) === 3;
+      document.getElementById('tracker-status').textContent = '';
+      trackerDialog.showModal(); document.getElementById('tracker-note').focus();
+    };
+    document.getElementById('tracker-note').addEventListener('change', e => {
+      if (Math.floor(trackerTarget/64) !== 3) return;
+      const next = +e.target.value;
+      for (const input of document.querySelectorAll('#tracker-drum-hits input')) {
+        const note = M._ds_tracker_drum_note(+input.dataset.lane);
+        if (note === trackerPrimary) input.checked = false;
+        if (note === next) input.checked = true;
+      }
+      trackerPrimary = next;
+    });
+    document.getElementById('tracker-drum-hits').addEventListener('change', () => {
+      const first = document.querySelector('#tracker-drum-hits input:checked');
+      if (first) { trackerPrimary = M._ds_tracker_drum_note(+first.dataset.lane); document.getElementById('tracker-note').value = trackerPrimary; }
+    });
+    const writeTracker = time => {
+      const note = +document.getElementById('tracker-note').value;
+      const vel = +document.getElementById('tracker-velocity').value, drum = Math.floor(trackerTarget/64) === 3;
+      const packed = [note, ...[...document.querySelectorAll('[data-chord]')].map(e => +e.value)].reduce((bits, n, slot) => bits | n << (slot*8), 0) >>> 0;
+      const mask = [...document.querySelectorAll('#tracker-drum-hits input:checked')].reduce((bits, e) => bits | 1 << +e.dataset.lane, 0);
+      const ok = drum ? M._ds_tracker_drum_mask(trackerTarget, mask, vel, time) : M._ds_tracker_chord(trackerTarget, packed, vel, time);
+      if (ok) trackerDialog.close();
+      else document.getElementById('tracker-status').textContent = 'Choose distinct notes (up to four), velocity 1–127, or at least one drum hit.';
+    };
+    window.addEventListener('trackeredit', e => editTracker(e.detail.target));
+    document.getElementById('tracker-form').addEventListener('submit', e => { e.preventDefault(); writeTracker(+document.getElementById('tracker-time').value); });
+    document.getElementById('tracker-delete').addEventListener('click', () => writeTracker(2));
+    document.getElementById('tracker-close').addEventListener('click', () => trackerDialog.close());
+    const tempoDialog = document.getElementById('tempo-dialog'), tempoInput = document.getElementById('tempo-value');
+    const ratchetDialog = document.getElementById('ratchet-dialog'); let ratchetTarget = -1, ratchetGroup = false;
+    for (const button of ratchetDialog.querySelectorAll('[data-hits]')) button.addEventListener('click', () => {
+      const result = ratchetGroup ? M._ds_seq_edit(3,+button.dataset.hits,0) : M._ds_step_ratchet(ratchetTarget, +button.dataset.hits);
+      if (result === 1) ratchetDialog.close();
+      else document.getElementById('ratchet-status').textContent = result < 0 ? 'No free step metadata slots. Free a parameter lock or reset another six-hit step.' : 'This step is empty. Add a note or drum hit first.';
+    });
+    document.getElementById('ratchet-close').addEventListener('click', () => ratchetDialog.close());
+    const editTempo = () => {
+      tempoInput.value = String(M._ds_bpm());
+      document.getElementById('tempo-metronome').value = String(M._ds_metronome());
+      if (!tempoDialog.open) tempoDialog.showModal();
+      tempoInput.focus(); tempoInput.select();
+    };
+    for (const screen of [canvas, document.getElementById('screen-zoom-canvas')].filter(Boolean)) {
+      screen.title = 'Double-click the BPM readout to edit tempo';
+      screen.addEventListener('dblclick', e => {
+        if (document.body.classList.contains('midi-learning')) return;
+        const [x,y] = point(e);
+        if(M._ds_bpm_hit(x,y)){e.preventDefault();editTempo();return;}
+        const target = M._ds_tracker_cell(x,y);
+        if (target >= 0) { e.preventDefault(); editTracker(target); return; }
+        const sequence=M._ds_seq_hit(x,y);
+        if(sequence>=0){const target=(sequence>>>11)*64+(sequence&63);editTracker(target);return;}
+
+      });
+      screen.addEventListener('contextmenu', e => {
+        if (document.body.classList.contains('midi-learning')) return;
+        const [x,y] = point(e), target = M._ds_screen_step(x,y);
+        if (target < 0) return;
+        e.preventDefault(); ratchetTarget = target;ratchetGroup=M._ds_seq_count()>1 && !!M._ds_seq_selected(target);
+        document.getElementById('ratchet-status').textContent = '';
+        if (!ratchetDialog.open) ratchetDialog.showModal();
+      });
+      screen.style.touchAction = 'none'; screen.tabIndex = 0;
+      screen.addEventListener('keydown', e => {
+        if (document.body.classList.contains('midi-learning') || e.ctrlKey || e.metaKey || e.altKey) return;
+        const target = M._ds_tracker_cell(-1,0); if (target < 0) return;
+        const key = TYPING_KEYS.indexOf(e.code);
+        if (key < 0 && !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Delete','Backspace','Enter'].includes(e.code)) return;
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (e.repeat && key >= 0) return;
+        if (e.code === 'Enter') { editTracker(target); return; }
+        if (e.code === 'ArrowUp' || e.code === 'ArrowDown') { M._ds_turn(0,e.code==='ArrowUp'?-1:1); return; }
+        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { M._ds_select_track(Math.max(0,Math.min(3,Math.floor(target/64)+(e.code==='ArrowLeft'?-1:1)))); return; }
+        if (M._ds_tracker_edit(target,key>=0?53+key:60,100,key>=0?0:2)) M._ds_turn(0,1);
+      });
+      const point = e => { const r = screen.getBoundingClientRect(); return [(e.clientX-r.left)*240/r.width, (e.clientY-r.top)*240/r.height].map(Math.floor); };
+      let drag = null;
+      screen.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || document.body.classList.contains('midi-learning')) return;
+        e.preventDefault(); screen.focus(); screen.setPointerCapture(e.pointerId);
+        const [x,y] = point(e);
+        if(M._ds_bpm_hit(x,y)){drag={tempo:true,y:e.clientY,role:-1,reel:null};return;}
+        const selected=M._ds_seq_hit(x,y);
+        if(selected>=0){drag={role:-1,reel:null,selection:true,selected,x,y,event:e,moved:false,startX:e.clientX,startY:e.clientY};if(e.shiftKey||e.ctrlKey||e.metaKey){drag.moved=true;seqSelection.start(selected,e);}return;}
+        const reel=M._ds_tape_active() && Math.hypot(x-(x<120?48:192),y-67)<=31;
+        drag = {y:e.clientY, role:M._ds_screen_encoder(x,y),reel:reel?(x<120?48:192):null,angle:Math.atan2(y-67,x-(x<120?48:192))};
+        if(reel)drag.role=-1;
+        M._ds_screen_pointer(x,y,1); enableSoundForNote();
+      });
+      screen.addEventListener('pointermove', e => {
+        if (!drag) return;
+        if(drag.tempo){const turns=Math.trunc((drag.y-e.clientY)/4);if(turns){drag.y=e.clientY;M._ds_set_bpm(M._ds_bpm()+turns);}return;}
+        if(drag.selection){const [x,y]=point(e);if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>5){drag.moved=true;seqSelection.start(drag.selected,drag.event);}if(drag.moved)seqSelection.move(M._ds_seq_hit(x,y));return;}
+        if(drag.reel!==null){const [x,y]=point(e),angle=Math.atan2(y-67,x-drag.reel);let delta=angle-drag.angle;if(delta>Math.PI)delta-=2*Math.PI;if(delta<-Math.PI)delta+=2*Math.PI;drag.angle=angle;M._ds_tape_reel(Math.round(delta*80));return;}
+        if(drag.role<0)return;
+        const turns = Math.trunc((drag.y-e.clientY)/4);
+        if (turns) { drag.y=e.clientY; M._ds_turn(drag.role,turns); controlFeedback.play('knob'); }
+      });
+      const release = () => { if (drag) {M._ds_screen_pointer(0,0,0);if(drag.reel!==null)M._ds_tape_reel(0);if(drag.selection){if(drag.moved)seqSelection.end();else{seqSelection.clear();M._ds_screen_pointer(drag.x,drag.y,1);M._ds_screen_pointer(0,0,0);enableSoundForNote();}}} drag=null; };
+      screen.addEventListener('pointerup',release); screen.addEventListener('pointercancel',release);
+      screen.addEventListener('wheel', e => {
+        if (document.body.classList.contains('midi-learning')) return;
+        e.preventDefault(); const [x,y]=point(e);
+        if(M._ds_bpm_hit(x,y)){if(e.deltaY)M._ds_set_bpm(M._ds_bpm()+(e.deltaY<0?1:-1));return;}
+        const role=M._ds_screen_encoder(x,y);
+        if (role >= 0 && e.deltaY) M._ds_turn(role,e.deltaY<0?1:-1);
+      }, {passive:false});
+    }
+    document.getElementById('tempo-form').addEventListener('submit', e => { e.preventDefault(); if (!tempoInput.reportValidity()) return; M._ds_set_bpm(+tempoInput.value); tempoDialog.close(); });
+    document.getElementById('tempo-cancel').addEventListener('click', () => tempoDialog.close());
+    document.getElementById('tempo-metronome').addEventListener('change', async e => {
+      M._ds_set_metronome(+e.target.value);
+      if (+e.target.value) await enableSoundForNote();
+    });
+    document.getElementById('tempo-tap').addEventListener('click', () => { M._ds_time(Math.floor(performance.now())); M._ds_tap_tempo(); tempoInput.value = String(M._ds_bpm()); controlFeedback.play('button'); });
     document.getElementById("play").addEventListener("click", (e) => {
       const on = !M._ds_playing();
       M._ds_play(on ? 1 : 0);
@@ -286,19 +721,48 @@
   }
 
   try {
-    M = await createDevScreen();
+    M = await createDevScreen({locateFile: path => {
+      const url = new URL(path, import.meta.url); url.searchParams.set("v", "tempo-tracks-44"); return url.href;
+    }});
     M._ds_init();
     document.getElementById("cap").textContent =
       `ready · ${M._ds_width()}x${M._ds_height()} · page ${M._ds_cur_page()} · ${M._ds_page_count()} pages`;
-    rebuildPages(); rebuildTracks(); buildPanel(); buildKeys(); buildEncs(); buildSound(); wireMix();
+    rebuildPages(); rebuildTracks(); buildPanel(); buildKeys(); buildEncs(); buildSound();
+    viewControls = setupViews();
+    wireMix();
+    try{const saved=JSON.parse(localStorage.getItem('fm1-pocket-fox') ?? localStorage.getItem('fm1-pocket-cat'));if(Array.isArray(saved)&&saved.length===5&&saved.every(v=>Number.isFinite(v)))saved.forEach((v,i)=>M._ds_fox_restore(i,v));}catch{}
+    document.getElementById('open-fox').addEventListener('click',()=>{enableSoundForNote();M._ds_fox_open();});
+    const saveCat=()=>{try{localStorage.setItem('fm1-pocket-fox',JSON.stringify(Array.from({length:5},(_,i)=>M._ds_fox_read(i))));}catch{}};
+    setInterval(saveCat,5000);window.addEventListener('pagehide',saveCat);
+    seqSelection = createSequencerSelection(M);
+    trackerView = setupTracker(M, enableSoundForNote, seqSelection);
+    audioStudio = createAudioStudio(M, {enableSound:enableSoundForNote,audioContext:()=>ac});
+    midiLearn = setupMidiLearn(M);
     const $play = document.getElementById("play");
-    let last = performance.now();
+    let last = performance.now(), lastFrame = last, lastVolumeTick = last;
+    M._ds_time(Math.floor(last));
     const loop = () => {
       if (!M) return;
       const t = performance.now();
-      if (t - last >= 33) { last = t; if (!soundOn) M._ds_frame(); paint(); refresh(); }
+      M._ds_time(Math.floor(t));
+      if (!soundOn) {
+        const steps = Math.min(8, Math.floor((t - lastFrame) / 16));
+        for (let i = 0; i < steps; i++) M._ds_frame();
+        lastFrame = steps === 8 ? t : lastFrame + steps * 16;
+      } else lastFrame = t;
+      midiLearn?.refreshSync();
+      const bpmInput = document.getElementById('bpm');
+      if (document.activeElement !== bpmInput) bpmInput.value = String(M._ds_bpm());
+      // Preserve the MIDI CC's full precision and ease only the displayed needle.
+      // Firmware volume changes immediately; the visual catches up in a few frames.
+      vol = Math.sqrt(M._ds_master_value() / 4096) * 100;
+      const dt = Math.min(100, t - lastVolumeTick); lastVolumeTick = t;
+      const nextVolume = Math.abs(vol - displayVol) < 0.05 ? vol
+        : displayVol + (vol - displayVol) * (1 - Math.exp(-dt / 40));
+      if (nextVolume !== displayVol) { displayVol = nextVolume; paintVol(); }
+      if (t - last >= 33) { last = t; paint(); refresh(); if (soundOn) audioStatus(); }
     };
-    setInterval(loop, 33);                          /* a timer, not rAF: virtual time drives it, no vblank race */
+    setInterval(loop, 16);                          /* Run the silent emulator at 16 ms; draw at ~30 Hz. */
     document.getElementById("err").textContent = "";
   } catch (e) {
     const err = document.getElementById("err");

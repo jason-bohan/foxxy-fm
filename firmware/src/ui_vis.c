@@ -1,22 +1,83 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* SLOOP 2.4: the full-screen visualiser. On HOME (the TRACKS screen), HOME tapped opens it; HOME again or
+/* FOXXY FM 2.4: the full-screen visualiser. On HOME (the TRACKS screen), HOME tapped opens it; HOME again or
  * any page closes it; SELECT steps through the twelve styles (the name shows a second); a layer held shows
  * its screen as ever, then the visualiser comes back. The keys, PLAY and REC work as always.
  *   1 OSCILLOSCOPE  2 SPECTRUM  3 SPECTROGRAM  4 LISSAJOUS  5 VU METERS  6 CIRCLE
- *   7 TAPE  8 LCD  9 BOUNCE  10 ORBIT  11 WIRES  12 SLOOP (the logo: the sail's bands are the tracks)
+ *   7 TAPE  8 LCD  9 BOUNCE  10 ORBIT  11 WIRES  12 SPACEFOXX (audio-synced flight:
+ *   a ship weaving to the beat and the melody, rings to fly through, lasers fired by
+ *   kicks and notes, patrol ships to blast, score and combo)
  * It reads what the audio already leaves for the UI: the scope buffers (audio.c, the mix at 22 kHz, left and
  * right, as if MASTER were all the way up: the picture does not follow the volume knob, even at 0), the tracks' peaks (fx.c / drums.c, as the TRACKS meters read them), the notes that started
  * (voice.c vis_hit) and the transport clock. Everything is drawn in the main loop, every other frame, in two
  * bands of 120 rows (the canvas holds 124): no cost to the audio. */
 #define VIS_N 12u
 static const char *const VIS_NAME[VIS_N] = {"OSCILLOSCOPE", "SPECTRUM", "SPECTROGRAM", "LISSAJOUS", "VU METERS",
-                                            "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SLOOP"};
+                                            "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SPACEFOXX"};
 /* vis_on, vis_shown_last, vis_name_t: ui_draw.c; vis_style: panel.c (kept with the settings) */
 #define VIS_FFT 512u
 #define VIS_SG_W 48u                                /* spectrogram: 48 columns of 5 px, 72 rows of 3 px */
 #define VIS_SG_H 72u
 static int16_t vis_re[VIS_FFT] __attribute__((section(".pool"))), vis_im[VIS_FFT] __attribute__((section(".pool")));
 static int16_t vis_l[VIS_FFT], vis_r[VIS_FFT];      /* this frame's scope snapshot */
+static const uint16_t OSC_US[5] = {100, 200, 500, 1000, 2000};
+static const char *const OSC_TIME[5] = {".1ms", ".2ms", ".5ms", "1ms", "2ms"};
+static const int32_t OSC_GAIN[6] = {32768, 16384, 8192, 4096, 2048, 1024};
+static const char *const OSC_SCALE[6] = {"100%", "50%", "25%", "12.5%", "6.25%", "3.1%"};
+static const char *const OSC_MODE[4] = {"AUTO", "NORMAL", "SINGLE", "HOLD"};
+static struct {
+    int16_t low[2][224], high[2][224];
+    uint8_t time, gain, mode, ready, triggered, captured_time;
+    int16_t level;
+    uint32_t crossing_q16;
+} osc = {.time = 2, .gain = 2};
+static int osc_setting(uint32_t slot)
+{
+    return slot == 0 ? osc.time : slot == 1 ? osc.gain : slot == 2 ? osc.level : osc.mode;
+}
+static void osc_set(uint32_t slot, int value)
+{
+    if (slot == 0) osc.time = (uint8_t)clamp(value, 0, 4);
+    if (slot == 1) osc.gain = (uint8_t)clamp(value, 0, 5);
+    if (slot == 2) osc.level = (int16_t)clamp(value, -90, 90);
+    if (slot == 3) { osc.mode = (uint8_t)clamp(value, 0, 3); if (osc.mode != 3) osc.ready = 0; }
+    ui.force = 1;
+}
+/* Fractional edge triggering, with pretrigger samples and hysteresis. Fixed gain never
+ * makes a fading note grow to fill the screen. Each pixel retains transient peaks. */
+static void osc_acquire(void)
+{
+    if (osc.mode == 3 || (osc.mode == 2 && osc.ready)) return;
+    uint32_t span = (uint32_t)OSC_US[osc.time] * (FS / 2u) * 8u / 1000000u;
+    uint32_t pre = span / 4u, end = VIS_FFT - span + pre - 2u, edge = 0, i;
+    int32_t level = osc.level * 32768 / 100, peak = 0, armed = 0;
+    for (i = 0; i < VIS_FFT; i++) { int32_t a = vis_l[i]; if (a < 0) a = -a; if (a > peak) peak = a; }
+    int32_t hysteresis = peak / 128; if (hysteresis < 16) hysteresis = 16;
+    for (i = 1; i <= end; i++) {
+        if (vis_l[i-1] <= level - hysteresis) armed = 1;
+        if (armed && vis_l[i-1] < level && vis_l[i] >= level) {
+            if (i > pre) {
+                edge = ((i-1u) << 16) + (uint32_t)(((int64_t)(level-vis_l[i-1]) << 16) / (vis_l[i]-vis_l[i-1]));
+                break;
+            }
+            armed = 0;
+        }
+    }
+    osc.triggered = edge != 0;
+    if (!edge && osc.mode != 0) return;
+    osc.crossing_q16 = edge;
+    uint32_t start = edge ? edge - (pre << 16) : (VIS_FFT - span - 2u) << 16;
+    for (uint32_t ch = 0; ch < 2; ch++) {
+        const int16_t *samples = ch ? vis_r : vis_l;
+        for (uint32_t x = 0; x < 224; x++) {
+            uint32_t pos = start + (uint32_t)((uint64_t)x * span * 65536u / 223u), at = pos >> 16, frac = pos & 65535u;
+            int32_t value = samples[at] + (int32_t)(((int64_t)(samples[at+1]-samples[at]) * frac) >> 16), lo = value, hi = value;
+            uint32_t next = (start + (uint32_t)((uint64_t)(x+1u) * span * 65536u / 223u)) >> 16;
+            if (span >= 224u) for (uint32_t k = at+1u; k <= next && k < VIS_FFT; k++) { if (samples[k]<lo) lo=samples[k]; if(samples[k]>hi) hi=samples[k]; }
+            osc.low[ch][x] = (int16_t)lo; osc.high[ch][x] = (int16_t)hi;
+        }
+    }
+    osc.captured_time = osc.time; osc.ready = 1;
+}
 static uint8_t vis_sg[VIS_SG_H][VIS_SG_W] __attribute__((section(".pool")));
 static uint8_t vis_lj[3][256][2];                   /* Lissajous: the last three frames' points */
 static struct {
@@ -28,6 +89,17 @@ static struct {
     uint8_t flash[4], kick;                         /* frames since a note started (0 = none) / a kick, fading */
     int16_t wamp[4];                                /* WIRES: each string's swing (0..1000) */
     uint8_t wn[4];                                  /* its wave count (from the note) */
+    /* SPACEFOXX: the ship (1/16 px), score, combo, ring-pass flash */
+    int16_t sx_x, sx_y;
+    uint16_t sx_score;
+    uint8_t sx_combo, sx_pop, sx_on, sx_tm;
+    uint8_t sx_ring[3];                             /* ring depth 0..200 (200 = far) */
+    int8_t sx_rx[3], sx_ry[3];                      /* ring centre, px from (120, 100) */
+    uint8_t sx_rg[3];                               /* ring already counted this pass */
+    int16_t sx_bx[4], sx_by[4];                     /* laser bolts (y <= 0 = empty) */
+    int16_t sx_fx[2], sx_fy[2];                     /* patrol ships (y < -20 = empty) */
+    uint8_t sx_bm[2];                               /* explosion timers */
+    uint32_t sx_seed;
     uint32_t free_q8, last_ms, wph;                 /* beats (1/256) when stopped; the wires' phase */
     uint8_t lj_n;
 } vs;
@@ -215,6 +287,7 @@ static void vis_update(void)
         if (vis_l[i] > mpk) mpk = vis_l[i];
         if (-vis_l[i] > mpk) mpk = -vis_l[i];
     }
+    if (vis_style % VIS_N == 0) osc_acquire();
     /* the tracks' peaks since the last look (as the TRACKS meters take them) and the notes that started */
     fm1_irq_off();
     for (i = 0; i < NPART; i++) {
@@ -325,10 +398,95 @@ static void vis_update(void)
             }
         }
         break;
-    case 11:                                        /* SLOOP: the sail's bands and the dial fall slowly */
-        for (i = 0; i < 5u; i++)
-            vs.vu[i] = (int16_t)(vs.lvl[i] > vs.vu[i] - 30 ? vs.lvl[i] : vs.vu[i] - 30);
+    case 11: {                                       /* SPACEFOXX: fly the scene a step */
+        uint32_t bq = vis_beat_q8();
+        int32_t spd = 2 + (song.playing ? 2 : 0) + vs.lvl[4] / 250;
+        int32_t tx, ty, k;
+        if (!vs.sx_on) {                            /* a fresh run the first time in */
+            vs.sx_on = 1;
+            vs.sx_x = 120 * 16; vs.sx_y = 150 * 16;
+            vs.sx_score = 0; vs.sx_combo = 0; vs.sx_pop = 0; vs.sx_tm = 40;
+            for (k = 0; k < 3; k++) {
+                vs.sx_ring[k] = (uint8_t)(70 + k * 65);
+                vs.sx_rx[k] = 0; vs.sx_ry[k] = 0; vs.sx_rg[k] = 0;
+            }
+            for (k = 0; k < 4; k++) vs.sx_by[k] = 0;
+            for (k = 0; k < 2; k++) { vs.sx_fy[k] = -99; vs.sx_bm[k] = 0; }
+            vs.sx_seed = 0x193af31u;
+        }
+        /* the ship weaves to the beat; a fresh note bends it toward its pitch */
+        tx = 120 + ((isin(bq) * 72) >> 15);
+        ty = 148 + ((isin(bq * 2u + 256u) * 40) >> 15);
+        for (k = 0; k < 4; k++)
+            if (vs.flash[k] > 5) { tx += (vis_note[k] % 12 - 6) * 5; ty -= (vis_note[k] / 12 % 3) * 6; }
+        vs.sx_x += (int16_t)((tx * 16 - vs.sx_x) / 6);
+        vs.sx_y += (int16_t)((ty * 16 - vs.sx_y) / 6);
+        /* kicks and synth notes fire the lasers (kick still fresh: just set above) */
+        if (vs.kick >= 235)
+            for (k = 0; k < 4; k++)
+                if (vs.sx_by[k] <= 0) { vs.sx_bx[k] = vs.sx_x; vs.sx_by[k] = vs.sx_y - 320; break; }
+        for (k = 0; k < 3; k++)
+            if (vs.flash[k] == 8) {
+                int32_t b;
+                for (b = 0; b < 4; b++)
+                    if (vs.sx_by[b] <= 0) { vs.sx_bx[b] = vs.sx_x; vs.sx_by[b] = vs.sx_y - 320; break; }
+            }
+        for (k = 0; k < 4; k++)
+            if (vs.sx_by[k] > 0) {
+                vs.sx_by[k] -= 192;                 /* ~12 px a frame, upward */
+                if (vs.sx_by[k] <= 0) vs.sx_by[k] = 0;
+            }
+        /* the patrol drifts down; lasers blast it */
+        if (vs.sx_tm) vs.sx_tm--;
+        for (k = 0; k < 2; k++) {
+            if (vs.sx_bm[k]) vs.sx_bm[k]--;
+            if (vs.sx_fy[k] < -20) {
+                if (!vs.sx_tm) {
+                    vs.sx_seed = vs.sx_seed * 1664525u + 1013904223u;
+                    vs.sx_fx[k] = (int16_t)(50 + (vs.sx_seed >> 16) % 140u);
+                    vs.sx_fy[k] = -16; vs.sx_tm = 90;
+                }
+                continue;
+            }
+            vs.sx_fy[k] += 3;                           /* px a frame, downward */
+            vs.sx_fx[k] += isin(bq * 4u + (uint32_t)k * 512u) >> 15;
+            if (vs.sx_fx[k] < 20) vs.sx_fx[k] = 20;
+            if (vs.sx_fx[k] > 220) vs.sx_fx[k] = 220;
+            for (int32_t b = 0; b < 4; b++)
+                if (vs.sx_by[b] > 0 && vs.sx_bx[b] > vs.sx_fx[k] * 16 - 192 &&
+                    vs.sx_bx[b] < vs.sx_fx[k] * 16 + 192 && vs.sx_by[b] > vs.sx_fy[k] * 16 - 224 &&
+                    vs.sx_by[b] < vs.sx_fy[k] * 16 + 224) {
+                    vs.sx_by[b] = 0; vs.sx_fy[k] = -99; vs.sx_bm[k] = 10;
+                    vs.sx_score += 150;
+                }
+            if (vs.sx_fy[k] > 230) vs.sx_fy[k] = -99;   /* slipped past */
+        }
+        /* rings fly at the ship; threading one scores, missing breaks the combo */
+        for (k = 0; k < 3; k++) {
+            vs.sx_ring[k] = (uint8_t)(vs.sx_ring[k] > spd ? vs.sx_ring[k] - spd : 0);
+            if (vs.sx_ring[k] <= 10 && !vs.sx_rg[k]) {
+                int32_t r = 6 + (200 - vs.sx_ring[k]) * 50 / 200;
+                int32_t dx = vs.sx_x / 16 - (120 + vs.sx_rx[k]), dy = vs.sx_y / 16 - (100 + vs.sx_ry[k]);
+                vs.sx_rg[k] = 1;
+                if (dx * dx + dy * dy < (r * 45 / 100) * (r * 45 / 100)) {
+                    if (vs.sx_combo < 9) vs.sx_combo++;
+                    vs.sx_score += (uint16_t)(100 + 50 * vs.sx_combo);
+                    vs.sx_pop = 12;
+                } else {
+                    vs.sx_combo = 0;
+                }
+            }
+            if (!vs.sx_ring[k]) {
+                vs.sx_seed = vs.sx_seed * 1664525u + 1013904223u;
+                vs.sx_ring[k] = 200;
+                vs.sx_rx[k] = (int8_t)((int32_t)((vs.sx_seed >> 16) % 73u) - 36);
+                vs.sx_ry[k] = (int8_t)((int32_t)((vs.sx_seed >> 8) % 49u) - 24);
+                vs.sx_rg[k] = 0;
+            }
+        }
+        if (vs.sx_pop) vs.sx_pop--;
         break;
+    }
     default:
         break;
     }
@@ -337,26 +495,36 @@ static void vis_update(void)
 /* ---- the styles (each draws the whole screen; called once per band) ---- */
 static void vis_scope(void)
 {
-    uint32_t i0 = 0, i;
-    int32_t py = 0;
-    for (i = 1; i + 240u < VIS_FFT; i++)            /* a rising zero crossing: the wave stands still */
-        if (vis_l[i - 1u] < 0 && vis_l[i] >= 0) {
-            i0 = i;
-            break;
+    int32_t gain = OSC_GAIN[osc.gain];
+    const uint16_t colors[2] = {TE_COL[0], TE_COL[2]};
+    for (int32_t x = 8; x <= 232; x += 28) cv_line(x, 32, x, 208, C_LINE);
+    for (int32_t y = 32; y <= 208; y += 22) cv_line(8, y, 232, y, C_LINE);
+    cv_line(8, 120, 232, 120, C_DIM);
+    int32_t ty = clamp(120 - (osc.level * 32768 / 100) * 22 / gain, 32, 208);
+    for (int32_t x = 8; x < 232; x += 8) cv_line(x, ty, x+2, ty, TE_DIM[2]);
+    cv_line(64, 32, 64, 208, TE_DIM[2]); /* Trigger at one quarter of the sweep. */
+    for (uint32_t ch = 0; ch < 2; ch++) {
+        int32_t previous = 120;
+        for (uint32_t x = 0; x < 224; x++) {
+            int32_t top = clamp(120 - osc.high[ch][x] * 22 / gain, 32, 208);
+            int32_t bottom = clamp(120 - osc.low[ch][x] * 22 / gain, 32, 208);
+            if (x) cv_line(7+(int32_t)x, previous, 8+(int32_t)x, top, colors[ch]);
+            cv_line(8+(int32_t)x, top, 8+(int32_t)x, bottom, colors[ch]);
+            previous = bottom;
         }
-    cv_rect(0, 120, 240, 1, C_LINE);
-    for (i = 0; i < 240u; i += 40u)
-        cv_rect((int32_t)i, 116, 1, 9, C_LINE);
-    for (i = 0; i < 240u; i++) {
-        int32_t y = 120 - vis_l[i0 + i] * 100 / (vs.scale ? vs.scale : 1);
-        y = clamp(y, 2, 237);
-        if (i) {
-            cv_line((int32_t)i - 1, py - 1, (int32_t)i, y - 1, TE_DIM[0]);
-            cv_line((int32_t)i - 1, py + 2, (int32_t)i, y + 2, TE_DIM[0]);
-            vis_thick((int32_t)i - 1, py, (int32_t)i, y, TE_COL[0]);
-        }
-        py = y;
     }
+    char label[24];
+    str_cpy(label, OSC_TIME[osc.ready ? osc.captured_time : osc.time], sizeof label);
+    str_cpy(label + str_len(label), "/d ", sizeof label - str_len(label));
+    str_cpy(label + str_len(label), OSC_SCALE[osc.gain], sizeof label - str_len(label));
+    str_cpy(label + str_len(label), "/d", sizeof label - str_len(label));
+    str_cpy(label + str_len(label), " PRE", sizeof label - str_len(label));
+    cv_text(4, 216, &FONT_S, label, TE_G4);
+    cv_text(4, 2, &FONT_S, "L", colors[0]); cv_text(20, 2, &FONT_S, "R", colors[1]);
+    cv_text(40, 2, &FONT_S, OSC_MODE[osc.mode], TE_G4);
+    const char *status = osc.mode == 3 ? "FROZEN" : osc.mode == 2 && osc.ready ? "CAPTURED" : osc.triggered ? "TRIG" : "WAIT";
+    if (!osc.triggered && osc.mode == 0) status = "FREE";
+    cv_text(236-text_w(&FONT_S, status), 2, &FONT_S, status, osc.triggered ? TE_COL[1] : TE_G3);
 }
 static void vis_spectrum(void)
 {
@@ -551,48 +719,79 @@ static void vis_wires(void)
         cv_text(10, y0 - 22, &FONT_S, lab, TE_COL[i]);
     }
 }
-/* the logo (tools/gen_logo.py at 0.86, centred on 120, 112), alive: the dial is the master, the sail's four
- * bands the tracks (growing with their level, flashing on a note), the boat rocks on the master's wave */
-static void vis_sloop(void)
+/* SPACEFOXX: an audio-synced flight. The ship weaves to the beat and bends toward
+ * fresh melody notes, its engine flaring with the drums; kicks and synth notes fire
+ * lasers; golden rings fly at the ship (threading one scores, missing breaks the
+ * combo); patrol ships drift down to be blasted. Score and combo ride along. */
+static void vis_spacefoxx(void)
 {
-    static const int16_t BAND[4][4] = {{691, 1035, 1659, 1938}, {1118, 1462, 2006, 2285}, {1544, 1888, 2353, 2632},
-                                       {1971, 2315, 2700, 2980}};   /* y0, y1, x right at y0, at y1 (1/16 px) */
-    static const uint16_t DIMC[4] = {RGB(9, 27, 56), RGB(7, 45, 25), RGB(56, 44, 5), RGB(56, 22, 6)};
-    uint32_t bq = vis_beat_q8(), i;
-    int32_t ang = (isin(bq) * 11) >> 15;            /* +-4 degrees (1024 a turn), a sway every four beats */
-    int32_t sn = isin((uint32_t)ang), cs = icos((uint32_t)ang);
-    int32_t px[4], py[4], x, sc = vs.scale > 1600 ? vs.scale : 1600, end;
-#define ROT(X, Y, I) do { int32_t dx_ = (X) - 120 * 16, dy_ = (Y) - 170 * 16;                       \
-        px[I] = 120 * 16 + ((dx_ * cs - dy_ * sn) >> 15); py[I] = 170 * 16 + ((dx_ * sn + dy_ * cs) >> 15); } while (0)
-    /* the dial: 270 degrees, lit to the master's level */
-    end = vs.vu[4] * 768 / 1000;
-    for (x = 0; x <= 768; x += 6) {
-        uint32_t a = (uint32_t)(384 + x) & 1023u;
-        vis_ellipse(120 + ((icos(a) * 99) >> 15), 112 + ((isin(a) * 99) >> 15), 5, 5, x <= end && vs.vu[4] ? C_WHITE : RGB(40, 40, 46));
+    uint32_t bq = vis_beat_q8();
+    int32_t i, k, sx = vs.sx_x / 16, sy = vs.sx_y / 16;
+    int32_t bank = clamp(isin(bq + 256u) / 8192, -4, 4);   /* wing tilt into the weave */
+    char b[16];
+    /* starfield: three depths, scrolling with the beat */
+    for (i = 0; i < 26u; i++) {
+        int32_t layer = i % 3, off = (int32_t)((bq >> 2) * (uint32_t)(layer + 1) + (uint32_t)i * 89u);
+        int32_t x = (i * 61 + 37) % 240, y = (off + i * 53) % 240;
+        cv_pset(x, y, layer == 2 ? C_GRAY : C_DIM);
+        if (layer == 2) cv_pset(x, (y + 1) % 240, C_DIM);
     }
-    /* the mast */
-    ROT(1443, 627, 0); ROT(1571, 627, 1); ROT(1571, 2507, 2); ROT(1443, 2507, 3);
-    vis_poly(px, py, 4, C_WHITE);
-    /* the sail: each band dim, then lit to its track's level */
-    for (i = 0; i < 4u; i++) {
-        int32_t g = 256 * (250 + 750 * vs.vu[i] / 1000) / 1000, xr0 = 1659 + (BAND[i][2] - 1659) * g / 256,
-                xr1 = 1659 + (BAND[i][3] - 1659) * g / 256;
-        uint16_t col = vs.flash[i] ? mix565(TE_COL[i], C_WHITE, vs.flash[i] * 13) : TE_COL[i];
-        ROT(1659, BAND[i][0], 0); ROT(BAND[i][2], BAND[i][0], 1); ROT(BAND[i][3], BAND[i][1], 2); ROT(1659, BAND[i][1], 3);
-        vis_poly(px, py, 4, DIMC[i]);
-        ROT(1659, BAND[i][0], 0); ROT(xr0, BAND[i][0], 1); ROT(xr1, BAND[i][1], 2); ROT(1659, BAND[i][1], 3);
-        vis_poly(px, py, 4, col);
+    /* a ringed planet for the backdrop */
+    vis_circle(196, 52, 26, C_LINE);
+    cv_rect(171, 46, 50, 3, C_LINE);
+    cv_rect(171, 60, 50, 3, C_LINE);
+    /* the rings, far first */
+    for (k = 2; k >= 0; k--) {
+        int32_t r = 6 + (200 - vs.sx_ring[k]) * 50 / 200;
+        int32_t cx = 120 + vs.sx_rx[k], cy = 100 + vs.sx_ry[k];
+        uint16_t col = (vs.sx_pop && vs.sx_ring[k] < 30) ? C_WHITE : TE_COL[2];
+        vis_circle(cx, cy, r, col);
+        vis_circle(cx, cy, r * 6 / 10, RGB(120, 90, 10));
     }
-    /* the hull */
-    ROT(62 * 16, 2635, 0); ROT(178 * 16, 2635, 1); ROT(170 * 16, 2811, 2); ROT(70 * 16, 2811, 3);
-    vis_poly(px, py, 4, C_WHITE);
-#undef ROT
-    /* the sea: the master's wave */
-    for (x = 0; x < 240; x++) {
-        int32_t s = x ? (vis_l[x - 1] + 2 * vis_l[x] + vis_l[x + 1]) / 4 : vis_l[0];   /* (smoothed: a sea, not a hiss) */
-        int32_t y = 182 + s * 5 / sc + ((isin((uint32_t)(x * 9) + bq) * 3) >> 15);
-        cv_rect(x, y, 1, 240 - y, RGB(12, 34, 76));
-        cv_rect(x, y, 1, 2, TE_COL[0]);
+    /* patrol ships and their explosions */
+    for (k = 0; k < 2; k++) {
+        if (vs.sx_bm[k]) {
+            int32_t r = (10 - vs.sx_bm[k]) * 3 + 4;
+            vis_ellipse(vs.sx_fx[k], vs.sx_fy[k], r, r, TE_COL[3]);
+            vis_ellipse(vs.sx_fx[k], vs.sx_fy[k], r / 2, r / 2, C_WHITE);
+        } else if (vs.sx_fy[k] >= -20) {
+            int32_t x = vs.sx_fx[k], y = vs.sx_fy[k];
+            int32_t px[4] = {x * 16, (x + 10) * 16, x * 16, (x - 10) * 16};
+            int32_t py[4] = {(y - 12) * 16, y * 16, (y + 10) * 16, y * 16};
+            vis_poly(px, py, 4, RGB(255, 44, 52));
+            vis_ellipse(x, y - 3, 3, 3, C_WHITE);
+        }
+    }
+    /* laser bolts, upward */
+    for (k = 0; k < 4; k++)
+        if (vs.sx_by[k] > 0) {
+            int32_t x = vs.sx_bx[k] / 16, y = vs.sx_by[k] / 16;
+            vis_thick(x, y - 12, x, y, C_WHITE);
+        }
+    /* the ship: orange wings tilted into the turn, cyan cockpit, engine flare */
+    {
+        int32_t wy = bank * 2;
+        int32_t wl[4] = {(sx - 7) * 16, (sx - 20) * 16, (sx - 20) * 16, (sx - 7) * 16};
+        int32_t wly[4] = {(sy + 2 + wy) * 16, (sy + 12 + wy) * 16, (sy + 16 + wy) * 16, (sy + 12 + wy) * 16};
+        int32_t wr[4] = {(sx + 7) * 16, (sx + 20) * 16, (sx + 20) * 16, (sx + 7) * 16};
+        int32_t wry[4] = {(sy + 2 - wy) * 16, (sy + 12 - wy) * 16, (sy + 16 - wy) * 16, (sy + 12 - wy) * 16};
+        int32_t bd[5] = {sx * 16, (sx + 7) * 16, (sx + 5) * 16, (sx - 5) * 16, (sx - 7) * 16};
+        int32_t bdy[5] = {(sy - 18) * 16, (sy + 2) * 16, (sy + 12) * 16, (sy + 12) * 16, (sy + 2) * 16};
+        int32_t er = 3 + (vs.kick + vs.lvl[3]) / 64;
+        vis_poly(wl, wly, 4, TE_COL[3]);
+        vis_poly(wr, wry, 4, TE_COL[3]);
+        vis_poly(bd, bdy, 5, C_WHITE);
+        vis_ellipse(sx, sy - 4, 3, 6, TE_COL[0]);
+        vis_ellipse(sx, sy + 14, er, er + 2, TE_COL[3]);
+        vis_ellipse(sx, sy + 14, er / 2, er / 2 + 1, C_WHITE);
+    }
+    /* score and combo */
+    fmt_int(b, vs.sx_score);
+    cv_text(4, 224, &FONT_S, b, C_WHITE);
+    if (vs.sx_combo > 1) {
+        b[0] = 'x';
+        fmt_int(b + 1, vs.sx_combo);
+        cv_text(4, 210, &FONT_S, b, TE_COL[2]);
     }
 }
 
@@ -622,7 +821,7 @@ static void vis_draw(void)
         case 8: vis_bounce(); break;
         case 9: vis_orbit(); break;
         case 10: vis_wires(); break;
-        default: vis_sloop(); break;
+        default: vis_spacefoxx(); break;
         }
         if (!pass && (vis_name_t || ui.msg_t)) {    /* the style's name a second (or a message) */
             char n[8];

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* The FM6 patch bank (eng_fm6.c PTCH B1..B27): 27 packed 128-byte patches in one storage.c object
- * (OBJ_FM6BANK, A/B: 0xE5000 / 0xE6000). Unlike Felucca 1.0 (a RAM mirror in the pool) SLOOP reads it in
+ * (OBJ_FM6BANK, A/B: 0xE5000 / 0xE6000). Unlike Felucca 1.0 (a RAM mirror in the pool) FOXXY reads it in
  * place through the plain XIP window, as the user sample slots: the device has little RAM left, and a PTCH
  * turn only copies 128 bytes out of flash (main loop). The current copy is found and checked once, at boot
  * and after every write (st_current: headers, CRC): fm6_bank_cur says which, fm6_bank_used which slots hold

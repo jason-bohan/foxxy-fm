@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
-/* SLOOP (based on FELUCCA): one compilation unit (the HAL is header-only). Order matters. */
+/* FOXXY FM (a Sloop fork, based on FELUCCA): one compilation unit (the HAL is header-only). Order matters. */
 #include <stdint.h>
 #include "fm1_time.h"
 #include "fm1_sys.h"
@@ -56,6 +56,10 @@
 #include "ui.c"
 #include "ui_song.c"
 #include "ui_studio.c"
+#include "ui_tracker.c"
+#include "ui_tape.c"
+#include "ui_mixer.c"
+#include "ui_fox.c"
 #include "icons.c"           /* parameter icons (FELUCCA_ICONS), used by ui_draw.c */
 #include "ui_draw.c"
 #include "ui_vis.c"           /* the full-screen visualiser (HOME on HOME, 2.4) */
@@ -189,5 +193,5 @@ static void ota_commit(const uint8_t *parm)
 #if FELUCCA_OTA
 #include "recovery.c"        /* early, polled USB updater; no synth or settings */
 #endif
-#include "splash.c"          /* SLOOP boot logo (build/gen/sloop_logo.h) */
+#include "splash.c"          /* FOXXY boot logo (build/gen/foxxy_logo.h) */
 #include "main.c"

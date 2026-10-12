@@ -1,48 +1,77 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""The SLOOP logo: a four-colour sail (the four tracks: blue, green, yellow, orange) on the
-mast of a 270-degree dial (the knobs of the UI), a hull, and a geometric monoline wordmark.
+"""The Foxxy FM logo: a fox head (the spaceFoxx mascot) in a 270-degree dial
+(the knobs of the UI), plus a geometric wordmark.
 
   tools/gen_logo.py OUT.h          firmware boot splash (RLE, 16-colour palette, RGB565)
-  tools/gen_logo.py --assets DIR   sloop-logo.svg, sloop-logo.png, sloop-icon.svg/png, sloop-splash.png
+  tools/gen_logo.py --assets DIR   foxxy-logo.svg, foxxy-logo.png, foxxy-icon.svg/png, foxxy-splash.png
 """
 import math
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
-BLUE, GREEN, YELLOW, ORANGE = (40, 124, 255), (30, 204, 112), (255, 198, 24), (255, 98, 26)
+WORD = "FOXXY FM"                            # the wordmark, set in a rounded bold sans
+_FONT_CANDIDATES = ("Arial Rounded Bold.ttf", "Arial Bold.ttf", "Arial.ttf",
+                    "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf")
+_FONT_DIRS = ("/System/Library/Fonts/Supplemental", "/System/Library/Fonts",
+              "/Library/Fonts", "/usr/share/fonts")
+_font_cache = {}
+
+
+def _word_font(px):
+    """a rounded bold sans at px em-size, cached (falls back to PIL's default)"""
+    px = max(8, int(px))
+    if px in _font_cache:
+        return _font_cache[px]
+    for d in _FONT_DIRS:
+        for name in _FONT_CANDIDATES:
+            p = Path(d) / name
+            if p.exists():
+                try:
+                    return _font_cache.setdefault(px, ImageFont.truetype(str(p), px))
+                except OSError:
+                    continue
+    try:
+        return _font_cache.setdefault(px, ImageFont.load_default(size=px))
+    except TypeError:
+        return _font_cache.setdefault(px, ImageFont.load_default())
+
+BLUE, GREEN = (40, 124, 255), (30, 204, 112)    # splash palette only now
+YELLOW = (241, 196, 15)                          # forehead diamond base
+FUR = (232, 124, 36)                             # primary orange fur
+LIGHT_FUR = (245, 161, 76)                       # lighter accent orange
+DARK_FUR = (198, 90, 21)                         # shading / darker fur
+CHEST = (244, 164, 96)                           # mid-tone neck/chest
+RED = (255, 44, 52)                              # first X of the wordmark
+DARK = (42, 24, 16)                              # nose, eyes & outer ear accents
 WHITE, BLACK = (242, 242, 242), (0, 0, 0)
 HEX = lambda c: "#%02X%02X%02X" % c
-SAIL = [BLUE, GREEN, YELLOW, ORANGE]
+ORANGE = (255, 98, 26)                           # the track orange (splash palette only)
 
-# ---- geometry (units: the icon is 240 x 240, the wordmark x-height is 72) -------------------
-ICON = dict(r=106, w=12, mast_dx=-30, top=-80, bot=38, sail_w=96, gap=6, hull=64)
-XH, SW = 72, 12                                  # wordmark x-height, stroke
+# ---- geometry (units: the icon is 240 x 240) --------------------------------
+ICON = dict(r=106, w=12)
 
-
-def sail_bands(cx, cy, k):
-    g = ICON
-    mx, top, bot = cx + g["mast_dx"] * k, cy + g["top"] * k, cy + g["bot"] * k
-    sx, h, wmax, gap = mx + 11 * k, bot - top, g["sail_w"] * k, g["gap"] * k
-    bh = (h - 3 * gap) / 4
-    out = []
-    for i, c in enumerate(SAIL):
-        y0 = top + i * (bh + gap)
-        y1 = y0 + bh
-        out.append((c, [(sx, y0), (sx + wmax * (y0 - top) / h, y0), (sx + wmax * (y1 - top) / h, y1), (sx, y1)]))
-    return mx, top, bot, out
-
-
-def rrect(d, box, r, fill):
-    """rounded rectangle (ImageDraw.rounded_rectangle needs Pillow 8.2)"""
-    x0, y0, x1, y1 = box
-    r = min(r, (x1 - x0) / 2, (y1 - y0) / 2)
-    d.rectangle([x0 + r, y0, x1 - r, y1], fill=fill)
-    d.rectangle([x0, y0 + r, x1, y1 - r], fill=fill)
-    for cx, cy in ((x0 + r, y0 + r), (x1 - r, y0 + r), (x0 + r, y1 - r), (x1 - r, y1 - r)):
-        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=fill)
+# low-poly vector fox head, in icon-box coordinates (dial arc as drawn before)
+EAR_L_OUTER = [(58, 104), (64, 28), (116, 78)]
+EAR_R_OUTER = [(182, 104), (176, 28), (124, 78)]
+EAR_L_INNER = [(68, 94), (70, 46), (106, 76)]
+EAR_R_INNER = [(172, 94), (170, 46), (134, 76)]
+HEAD_TOP = [(80, 72), (160, 72), (150, 102), (90, 102)]
+HEAD_LEFT = [(90, 102), (120, 102), (120, 172), (98, 158), (88, 148), (94, 118), (70, 118), (78, 102)]
+HEAD_RIGHT = [(150, 102), (120, 102), (120, 172), (142, 158), (152, 148), (146, 118), (170, 118), (162, 102)]
+CHEEK_L = [(94, 120), (112, 120), (108, 150), (90, 146)]
+CHEEK_R = [(146, 120), (128, 120), (132, 150), (150, 146)]
+DIAMOND = [(120, 84), (130, 96), (120, 108), (110, 96)]
+DIAMOND_SHINE = [(115, 89), (121, 89), (117, 101)]
+MUZZLE_TOP = [(106, 122), (134, 122), (130, 136), (110, 136)]
+MUZZLE_L = [(106, 136), (120, 136), (120, 164), (104, 160)]
+MUZZLE_R = [(134, 136), (120, 136), (120, 164), (136, 160)]
+CHIN = [(112, 160), (128, 160), (120, 172)]
+NOSE = [(112, 134), (128, 134), (120, 145)]
+EYE_L_SLOPE = [(90, 110), (106, 105)]
+EYE_R_SLOPE = [(150, 110), (134, 105)]
 
 
 def draw_icon(d, ox, oy, k):
@@ -53,46 +82,58 @@ def draw_icon(d, ox, oy, k):
         x = cx + (r - w / 2) * math.cos(math.radians(a))
         y = cy + (r - w / 2) * math.sin(math.radians(a))
         d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=WHITE)
-    mx, top, bot, bands = sail_bands(cx, cy, k)
-    rrect(d, [mx - 5 * k, top - 4 * k, mx + 5 * k, bot + 14 * k], 5 * k, WHITE)
-    for c, poly in bands:
-        d.polygon(poly, fill=c)
-    rrect(d, [cx - g["hull"] * k, bot + 24 * k, cx + g["hull"] * k, bot + 36 * k], 6 * k, WHITE)
+
+    def poly(pts, fill):
+        d.polygon([(ox + x * k, oy + y * k) for x, y in pts], fill=fill)
+
+    poly(EAR_L_OUTER, DARK_FUR)
+    poly(EAR_R_OUTER, DARK_FUR)
+    poly(EAR_L_INNER, FUR)
+    poly(EAR_R_INNER, FUR)
+
+    poly(HEAD_TOP, DARK_FUR)
+    poly(HEAD_LEFT, FUR)
+    poly(HEAD_RIGHT, FUR)
+    poly(CHEEK_L, LIGHT_FUR)
+    poly(CHEEK_R, LIGHT_FUR)
+
+    poly(DIAMOND, YELLOW)
+    poly(DIAMOND_SHINE, WHITE)
+
+    poly(MUZZLE_TOP, LIGHT_FUR)
+    poly(MUZZLE_L, WHITE)
+    poly(MUZZLE_R, WHITE)
+    poly(CHIN, WHITE)
+
+    poly(NOSE, DARK)
+
+    # Eyes (geometric low-poly accents)
+    ew = max(1, round(2 * k))
+    for x0, y0, x1, y1 in (EYE_L_SLOPE[0] + EYE_L_SLOPE[1], EYE_R_SLOPE[0] + EYE_R_SLOPE[1]):
+        d.line([ox + x0 * k, oy + y0 * k, ox + x1 * k, oy + y1 * k], fill=DARK, width=ew)
 
 
 def word_width(k):
-    rx = 0.29 * XH
-    return (2 * rx + 20 + SW + 20 + 3 * XH + 2 * 18) * k
+    f = _word_font(84 * k)
+    try:
+        return sum(f.getlength(ch) for ch in WORD)
+    except AttributeError:
+        return int(len(WORD) * 55 * k)
+
+
+# letter colors of "FOXXY FM": first X red, second X orange, Y yellow, rest white
+WORD_FILLS = {2: RED, 3: FUR, 4: YELLOW}
 
 
 def draw_word(d, ox, oy, k, col=WHITE):
-    w, xh = SW * k, XH * k
-
-    def cap(x, y):
-        d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=col)
-
-    def line(x0, y0, x1, y1):
-        d.line([(x0, y0), (x1, y1)], fill=col, width=max(1, round(w)))
-        cap(x0, y0)
-        cap(x1, y1)
-
-    base, x = oy + xh, ox
-    ry, rx = (xh + w) / 4, 0.29 * xh
-    b1, b2 = [x, oy, x + 2 * rx, oy + 2 * ry], [x, base - 2 * ry, x + 2 * rx, base]
-    d.arc(b1, start=90, end=335, fill=col, width=max(1, round(w)))
-    d.arc(b2, start=270, end=515, fill=col, width=max(1, round(w)))
-    for b, a in ((b1, 335), (b2, 155)):
-        cx, cy, a = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2, math.radians(a)
-        cap(cx + (rx - w / 2) * math.cos(a), cy + (ry - w / 2) * math.sin(a))
-    x += 2 * rx + 20 * k
-    line(x + w / 2, oy - 32 * k, x + w / 2, base - w / 2)
-    x += w + 20 * k
-    R = xh / 2
-    for _ in range(3):
-        d.ellipse([x, oy, x + 2 * R, oy + 2 * R], outline=col, width=max(1, round(w)))
-        if _ < 2:
-            x += 2 * R + 18 * k
-    line(x + w / 2, oy + R, x + w / 2, base + 36 * k)
+    f = _word_font(84 * k)
+    x = ox
+    for i, ch in enumerate(WORD):
+        d.text((x, oy), ch, font=f, fill=WORD_FILLS.get(i, col))
+        try:
+            x += f.getlength(ch)
+        except AttributeError:
+            x += 55 * k
 
 
 def render(kind, W, H, k, bg=BLACK, ss=4):
@@ -120,43 +161,41 @@ def svg_icon(ox, oy):
     p1 = (cx + r * math.cos(a1), cy + r * math.sin(a1))
     s = [f'<path d="M{p0[0]:.2f} {p0[1]:.2f} A{r:.2f} {r:.2f} 0 1 1 {p1[0]:.2f} {p1[1]:.2f}" fill="none" '
          f'stroke="{HEX(WHITE)}" stroke-width="{w}" stroke-linecap="round"/>']
-    mx, top, bot, bands = sail_bands(cx, cy, k)
-    s.append(f'<rect x="{mx - 5:.2f}" y="{top - 4:.2f}" width="10" height="{bot + 14 - top + 4:.2f}" rx="5" fill="{HEX(WHITE)}"/>')
-    for c, poly in bands:
-        s.append('<polygon points="' + " ".join(f"{x:.2f},{y:.2f}" for x, y in poly) + f'" fill="{HEX(c)}"/>')
-    s.append(f'<rect x="{cx - g["hull"]:.2f}" y="{bot + 24:.2f}" width="{2 * g["hull"]}" height="12" rx="6" fill="{HEX(WHITE)}"/>')
+    def poly(pts, fill):
+        s.append('<polygon points="' + " ".join(f"{ox + x:.2f},{oy + y:.2f}" for x, y in pts) +
+                 f'" fill="{fill}"/>')
+
+    poly(EAR_L_OUTER, HEX(DARK_FUR))
+    poly(EAR_R_OUTER, HEX(DARK_FUR))
+    poly(EAR_L_INNER, HEX(FUR))
+    poly(EAR_R_INNER, HEX(FUR))
+    poly(HEAD_TOP, HEX(DARK_FUR))
+    poly(HEAD_LEFT, HEX(FUR))
+    poly(HEAD_RIGHT, HEX(FUR))
+    poly(CHEEK_L, HEX(LIGHT_FUR))
+    poly(CHEEK_R, HEX(LIGHT_FUR))
+    poly(DIAMOND, HEX(YELLOW))
+    poly(DIAMOND_SHINE, HEX(WHITE))
+    poly(MUZZLE_TOP, HEX(LIGHT_FUR))
+    poly(MUZZLE_L, HEX(WHITE))
+    poly(MUZZLE_R, HEX(WHITE))
+    poly(CHIN, HEX(WHITE))
+    poly(NOSE, HEX(DARK))
+    for (x0, y0), (x1, y1) in (EYE_L_SLOPE, EYE_R_SLOPE):
+        s.append(f'<line x1="{ox + x0:.2f}" y1="{oy + y0:.2f}" x2="{ox + x1:.2f}" y2="{oy + y1:.2f}" '
+                 f'stroke="{HEX(DARK)}" stroke-width="2" stroke-linecap="round"/>')
     return s
 
 
 def svg_word(ox, oy):
-    w, xh, col = SW, XH, HEX(WHITE)
-    base, x = oy + xh, ox
-    ry, rx = (xh + w) / 4 - w / 2, 0.29 * xh - w / 2
-    c1 = (x + 0.29 * xh, oy + (xh + w) / 4)
-    c2 = (x + 0.29 * xh, base - (xh + w) / 4)
-
-    def pt(c, a):
-        a = math.radians(a)
-        return c[0] + rx * math.cos(a), c[1] + ry * math.sin(a)
-    s = []
-    # top bowl 90 -> 335 (clockwise on screen), bottom bowl 270 -> 515
-    for c, a, b in ((c1, 90, 335), (c2, 270, 515)):
-        p, q = pt(c, a), pt(c, b)
-        large = 1 if (b - a) > 180 else 0
-        s.append(f'<path d="M{p[0]:.2f} {p[1]:.2f} A{rx:.2f} {ry:.2f} 0 {large} 1 {q[0]:.2f} {q[1]:.2f}" fill="none" '
-                 f'stroke="{col}" stroke-width="{w}" stroke-linecap="round"/>')
-    x += 2 * 0.29 * xh + 20
-    s.append(f'<line x1="{x + w / 2:.2f}" y1="{oy - 32 + w / 2:.2f}" x2="{x + w / 2:.2f}" y2="{base - w / 2:.2f}" '
-             f'stroke="{col}" stroke-width="{w}" stroke-linecap="round"/>')
-    x += w + 20
-    R = xh / 2
-    for i in range(3):
-        s.append(f'<circle cx="{x + R:.2f}" cy="{oy + R:.2f}" r="{R - w / 2:.2f}" fill="none" stroke="{col}" stroke-width="{w}"/>')
-        if i < 2:
-            x += 2 * R + 18
-    s.append(f'<line x1="{x + w / 2:.2f}" y1="{oy + R:.2f}" x2="{x + w / 2:.2f}" y2="{base + 36 - w / 2:.2f}" '
-             f'stroke="{col}" stroke-width="{w}" stroke-linecap="round"/>')
-    return s
+    # oy: top of the wordmark box (as in draw_word); the baseline sits ~64 units below it.
+    # First X red, second X orange, Y yellow, the rest white.
+    fills = {2: HEX(RED), 3: HEX(FUR), 4: HEX(YELLOW)}
+    out = []
+    for i, ch in enumerate(WORD):
+        out.append(f'<tspan fill="{fills[i]}">{ch}</tspan>' if i in fills else ch)
+    return [f'<text x="{ox:.2f}" y="{oy + 64:.2f}" font-family="\'Arial Rounded MT Bold\', \'Arial Bold\', Arial, sans-serif" '
+            f'font-size="84" font-weight="bold" letter-spacing="1" fill="{HEX(WHITE)}">{"".join(out)}</text>']
 
 
 def svg(kind):
@@ -167,15 +206,15 @@ def svg(kind):
         W, H = 240, 240
         body = svg_icon(0, 0)
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" '
-            f'aria-label="SLOOP">\n<rect width="{W}" height="{H}" fill="#000"/>\n' + "\n".join(body) + "\n</svg>\n")
+            f'aria-label="Foxxy FM">\n<rect width="{W}" height="{H}" fill="#000"/>\n' + "\n".join(body) + "\n</svg>\n")
 
 
 # ---- firmware splash ---------------------------------------------------------------------------
 SPLASH_W, SPLASH_H = 240, 188
-# the scale: the icon (240), the gap (22), the wordmark's x-height (72), the p's descender (36) and its round
-# end (6): 376 units in SPLASH_H rows. At 0.56 (before 2.4) the p's tail ran past row 188 and was cut
+# the scale: the icon (240) over the "FOXXY FM" wordmark (~60 tall at 0.5).
+# At 0.5 the wordmark stays inside the 188 rows with room for the version line.
 SPLASH_K = 0.5
-assert (262 + 72 + 36 + 6) * SPLASH_K <= SPLASH_H, "the wordmark's p must fit the splash"
+assert 262 * SPLASH_K + 84 * SPLASH_K + 6 <= SPLASH_H, "the wordmark must fit the splash"
 
 
 def rgb565(c):
@@ -185,10 +224,13 @@ def rgb565(c):
 
 def splash_header(path):
     im = render("v", SPLASH_W, SPLASH_H, SPLASH_K)
-    # a fixed palette: black, and each logo colour at 1/3, 2/3 and full (the anti-aliased edges)
+    # a fixed palette: black, the logo whites/furs/yellows at 1/3, 2/3 and full
+    # (the anti-aliased edges), then the flat dark/shading tones and the wordmark red
     cols = [BLACK]
-    for c in (WHITE, BLUE, GREEN, YELLOW, ORANGE):
+    for c in (WHITE, FUR, YELLOW):
         cols += [tuple(round(v * f) for v in c) for f in (1 / 3, 2 / 3, 1.0)]
+    cols += [DARK_FUR, LIGHT_FUR, CHEST, DARK,
+             tuple(round(v * 2 / 3) for v in RED), RED]
     src = im.tobytes()
     px = []
     cache = {}
@@ -205,10 +247,10 @@ def splash_header(path):
             j += 1
         rle.append(((j - i - 1) << 4) | px[i])
         i = j
-    L = ["/* generated by tools/gen_logo.py: the SLOOP boot splash */", "#pragma once", "#include <stdint.h>",
-         f"#define SLOOP_SPLASH_W {SPLASH_W}", f"#define SLOOP_SPLASH_H {SPLASH_H}",
-         "static const uint16_t SLOOP_SPLASH_PAL[16] = {" + ", ".join(f"0x{rgb565(c):04X}" for c in cols) + "};",
-         f"static const uint8_t SLOOP_SPLASH_RLE[{len(rle)}] = {{"]
+    L = ["/* generated by tools/gen_logo.py: the Foxxy FM boot splash */", "#pragma once", "#include <stdint.h>",
+         f"#define FOXXY_SPLASH_W {SPLASH_W}", f"#define FOXXY_SPLASH_H {SPLASH_H}",
+         "static const uint16_t FOXXY_SPLASH_PAL[16] = {" + ", ".join(f"0x{rgb565(c):04X}" for c in cols) + "};",
+         f"static const uint8_t FOXXY_SPLASH_RLE[{len(rle)}] = {{"]
     for k in range(0, len(rle), 24):
         L.append("    " + ", ".join(str(b) for b in rle[k:k + 24]) + ",")
     L.append("};")
@@ -219,11 +261,11 @@ def splash_header(path):
 def assets(out):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "sloop-logo.svg").write_text(svg("h"))
-    (out / "sloop-icon.svg").write_text(svg("i"))
-    render("h", 1520, 520, 2.0).save(out / "sloop-logo.png")
-    render("i", 512, 512, 512 / 240).save(out / "sloop-icon.png")
-    render("v", SPLASH_W, SPLASH_H, SPLASH_K).resize((SPLASH_W * 2, SPLASH_H * 2), Image.NEAREST).save(out / "sloop-splash.png")
+    (out / "foxxy-logo.svg").write_text(svg("h"))
+    (out / "foxxy-icon.svg").write_text(svg("i"))
+    render("h", 1520, 520, 2.0).save(out / "foxxy-logo.png")
+    render("i", 512, 512, 512 / 240).save(out / "foxxy-icon.png")
+    render("v", SPLASH_W, SPLASH_H, SPLASH_K).resize((SPLASH_W * 2, SPLASH_H * 2), Image.NEAREST).save(out / "foxxy-splash.png")
     print(f"logo: assets in {out}")
 
 

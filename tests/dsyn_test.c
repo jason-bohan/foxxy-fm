@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* SLOOP 2.5: the drum track's SYN1..SYN4, your own synthesised kits (drum_synth.c dsu), and the editor's DRUM
+/* FOXXY FM 2.5: the drum track's SYN1..SYN4, your own synthesised kits (drum_synth.c dsu), and the editor's DRUM
  * SYNTH commands (editor_dsyn.c, protocol v10), through hostsim.c:
  *   the kits list ends with SYN1..SYN4; never stored they are copies of 808, 909, TRAP, TECHNO
  *   SYN1 (a copy of 808) plays every lane bit for bit as the 808 kit; an edit is heard at once, undone it is the same

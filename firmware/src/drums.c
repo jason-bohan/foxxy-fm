@@ -15,7 +15,7 @@
 #define DRUM_SAMPLED 5u
 #define DRUM_USR (DRUM_SAMPLED + DS_NKITS)
 #define DRUM_PAIR (DRUM_USR + SMP_USER_SLOTS)   /* USR3+4: one kit in two slots (the editor splits it), ~15 s */
-#define DRUM_SYN (DRUM_PAIR + 1u)                /* SLOOP 2.5: SYN1..SYN4, your synthesised kits (drum_synth.c dsu) */
+#define DRUM_SYN (DRUM_PAIR + 1u)                /* FOXXY FM 2.5: SYN1..SYN4, your synthesised kits (drum_synth.c dsu) */
 #define DRUM_KITS (DRUM_SYN + DSU_N)
 static const char *const DRUM_KIT_NAMES[] = {"ACOUSTIC", "DEEP", "TIGHT", "BRIGHT", "DUST", DS_KIT_NAME_LIST,
                                              "USR1", "USR2", "USR3", "USR4", "USR3+4",
@@ -68,6 +68,7 @@ static const char *const LANE_NAME[DRUM_LANES] = {
 static const char *const LANE_SHORT[DRUM_LANES] = {           /* 5 characters: tiles, dials */
     "kick", "kick2", "snare", "clap", "hat", "open", "pedal", "rim",
     "snr 2", "tom l", "tom h", "crash", "ride", "shake", "conga", "bell"};
+const char *drum_lane_short(uint32_t lane) { return LANE_SHORT[lane % DRUM_LANES]; }   /* ui_tracker.c */
 /* a GM note (MIDI in, old projects) -> its lane: the nearest sound of the 16 (35..81; below: kick, above: shaker) */
 static const uint8_t LANE_OF_GM[81 - 35 + 1] = {
     /* 35 */ 1, 0, 7, 2, 3, 8, 9, 4, 9, 6,

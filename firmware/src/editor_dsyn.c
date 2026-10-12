@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* Editor protocol v10 (SLOOP 2.5): the DRUM SYNTH page, your synthesised kits SYN1..SYN4 (drum_synth.c dsu).
+/* Editor protocol v10 (FOXXY FM 2.5): the DRUM SYNTH page, your synthesised kits SYN1..SYN4 (drum_synth.c dsu).
  * A sound travels as its 22 dsnd_t bytes (pack7), in the struct's order. The editor changes the kits in RAM
  * (heard at once), STORE writes them to flash with the settings (only while the song is stopped: rc 3).
  *   72 DSYN_LIST  -> factory count, user count, stored (0: an edit not stored yet), the factory names,

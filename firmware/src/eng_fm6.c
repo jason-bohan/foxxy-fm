@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
-/* FM6: classic 6-operator FM (SLOOP 2.4, from Felucca 1.0.1). The synthesis is msfa (Dexed's core), ported to
+/* FM6: classic 6-operator FM (FOXXY FM 2.4, from Felucca 1.0.1). The synthesis is msfa (Dexed's core), ported to
  * integer C in fm6_core.c (Apache-2.0); this file is the engine around it.
  *
  * The patch is the sound: every synth part has one (fm6_patch, the generic 155-byte single-voice layout: six
  * operators with their 4-rate / 4-level envelopes, keyboard level and rate scaling, velocity, ratio or fixed
  * frequency, detune; 32 algorithms, feedback, LFO, pitch envelope, transpose). It is edited in the web editor
- * (EDITOR_PROTOCOL.md FM6_*) and loaded from the PTCH slots. Unlike Felucca 1.0, a SLOOP project does not hold
+ * (EDITOR_PROTOCOL.md FM6_*) and loaded from the PTCH slots. Unlike Felucca 1.0, a FOXXY project does not hold
  * it (project_t is full): the project keeps PTCH (P_E7) as it keeps every macro, and a load (project, preset,
  * user preset, PTCH turned) puts the slot's patch back on the track (fm6_track_loaded / fm6_poll). A patch the
  * editor sent is the track's own until the track loads another; "Store in bank" (fm6_bank.c) keeps it.

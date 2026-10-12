@@ -130,7 +130,7 @@ static const preset_t DIGITAL_PRESETS[] = {
     {"PLUGG BELL", {4, 3, 1, 4, 56, 60, 0, 0}, {0, 90, 0, 82}, 0, 0, FX(0, 22, 36, 56)},
     {"GLASS PAD", {4, 2, 1, 5, 34, 100, 0, 0}, {62, 92, 112, 92}, 0, 0, FX(0, 50, 26, 62), XP(P_LD_PIT + 1, 1, P_LRATE + 1, 40)},
     {"FM BASS", {0, 1, 1, 1, 34, 40, 8, 0}, {0, 60, 70, 25}, 0, 1, FX(0, 0, 0, 6), XP(P_GLIDE + 1, 36, P_TRANS + 1, -24)},
-    /* SLOOP 2.5: mallets, steel drum, harp, a finger bass */
+    /* FOXXY FM 2.5: mallets, steel drum, harp, a finger bass */
     {"STEEL DRUM", {4, 2, 2, 2, 45, 45, 0, 0}, {0, 88, 0, 66}, 0, 0, FX(0, 12, 18, 30)},
     {"GLOCKEN", {4, 5, 1, 8, 40, 60, 0, 0}, {0, 95, 0, 85}, 0, 0, FX(0, 0, 24, 40), XP(P_TRANS + 1, 12)},
     {"CELESTA", {4, 2, 1, 4, 30, 50, 0, 0}, {0, 84, 0, 70}, 0, 0, FX(0, 15, 20, 40), XP(P_TRANS + 1, 12)},

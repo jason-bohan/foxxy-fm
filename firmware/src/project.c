@@ -3,13 +3,13 @@
 /* Projects: four slots in .noinit RAM (the song sections A..D), so they survive resets and UBOOT
  * entry. With FELUCCA_FLASH every save also goes to flash through storage.c, and an empty RAM slot
  * is filled from flash on load. The working project is also kept in flash by itself (autosave, when
- * the transport is stopped and nothing sounds) and comes back at power-on: SLOOP starts where you
+ * the transport is stopped and nothing sounds) and comes back at power-on: FOXXY starts where you
  * left it.
  *
- * Formats: 5 ("FUN5", written, SLOOP 2.4): format 4 plus, per track, the nudge of each step (micro), NLOCK
+ * Formats: 5 ("FUN5", written, FOXXY FM 2.4): format 4 plus, per track, the nudge of each step (micro), NLOCK
  * parameter locks, the steps' fill conditions (2 bits each) and P_TFLT (one parameter more, just before P_E0).
- * Read and converted: 4 ("FUN4", SLOOP 2.0 .. 2.3: PROJ_NP_V4 parameters, today's G_COUNT, 10-byte
- * steps with levels and ratchets, the drum track's 16 lanes; no nudge, no lock), 3 ("FUN3", SLOOP 1.x: 8-byte
+ * Read and converted: 4 ("FUN4", FOXXY FM 2.0 .. 2.3: PROJ_NP_V4 parameters, today's G_COUNT, 10-byte
+ * steps with levels and ratchets, the drum track's 16 lanes; no nudge, no lock), 3 ("FUN3", FOXXY FM 1.x: 8-byte
  * steps, the drum track's notes become its lanes, the swings x 0.8 for the MPC scale), 2 ("FUN2") and 1
  * ("FUN1"), which held PROJ_NP_V2 parameters per track, mapped by count as user presets are (the first
  * PROJ_NP_V2 - 8 are P_LEVEL.. in order, the last 8 P_E0..P_E7; the parameters added since take their
@@ -18,9 +18,9 @@
  *
  * Built on the host too (tests/project_test.c, -DPROJ_HOST): the part above the #ifndef
  * PROJ_HOST needs core.h, params.c (TP), drums.c (the lanes), the engines and trk_def_engine (ui.c). */
-#define PROJ_MAGIC 0x46554E35u                 /* "FUN5": format 4 + per-step nudge, parameter locks, fill conditions (SLOOP 2.4) */
+#define PROJ_MAGIC 0x46554E35u                 /* "FUN5": format 4 + per-step nudge, parameter locks, fill conditions (FOXXY FM 2.4) */
 #define PROJ_MAGIC_V4 0x46554E34u              /* "FUN4": four tracks, P_COUNT parameters each, 10-byte steps; read only */
-#define PROJ_MAGIC_V3 0x46554E33u              /* "FUN3": SLOOP 1.x; read only */
+#define PROJ_MAGIC_V3 0x46554E33u              /* "FUN3": FOXXY FM 1.x; read only */
 #define PROJ_MAGIC_V2 0x46554E32u              /* "FUN2": four tracks, PROJ_NP_V2 parameters; read only */
 #define PROJ_MAGIC_V1 0x46554E31u              /* "FUN1": one instrument; loads into track 1 */
 #define PROJ_NP_V4 58u                         /* P_COUNT of format 4 (P_E0 was 50) */
@@ -28,7 +28,7 @@
 #define PROJ_NG_V3 27u                         /* G_COUNT of formats 1..3 */
 #define PROJ_NP_V2 53u                         /* P_COUNT of formats 1 and 2 (P_E0 was 45) */
 #define PROJ_NG_V2 27u                         /* G_COUNT of formats 1 and 2 */
-#define PROJ_NG 32u                            /* the globals of formats 4 and 5 (G_COUNT until 2.4). SLOOP 2.5's
+#define PROJ_NG 32u                            /* the globals of formats 4 and 5 (G_COUNT until 2.4). FOXXY FM 2.5's
                                                 * G_DRDLY rides in the byte after sel (0 in older projects: off),
                                                 * so the format and its size do not change */
 _Static_assert(G_DRDLY == PROJ_NG && G_COUNT == PROJ_NG + 1u, "the globals a project holds, then G_DRDLY");
@@ -39,7 +39,7 @@ typedef struct {                               /* one track; the drum track igno
         step_t step[NSTEP];
         dstep_t dstep[NSTEP];                  /* (the drum track: 16 lanes, the same size) */
     };
-    int8_t micro[NSTEP];                       /* SLOOP 2.4: each step's nudge (core.h) */
+    int8_t micro[NSTEP];                       /* FOXXY FM 2.4: each step's nudge (core.h) */
     plock_t lock[NLOCK];                       /* and its parameter locks (step LOCK_FREE = none) */
     uint8_t fill[NSTEP / 4];                   /* and its fill condition, 2 bits a step (FC_*) */
 } proj_trk_t;
@@ -50,7 +50,7 @@ typedef struct {
     proj_trk_t t[NTRK];
     uint32_t sum;
 } project_t;
-typedef struct {                               /* a track of format 4 (SLOOP 2.0 .. 2.3), read only */
+typedef struct {                               /* a track of format 4 (FOXXY FM 2.0 .. 2.3), read only */
     int16_t p[PROJ_NP_V4];
     uint8_t engine, preset;
     union {
@@ -71,7 +71,7 @@ typedef struct {                               /* a track of format 3, read only
     uint8_t engine, preset;
     step8_t step[NSTEP];
 } proj_trk_v3_t;
-typedef struct {                               /* format 3 (SLOOP 1.x), read only */
+typedef struct {                               /* format 3 (FOXXY FM 1.x), read only */
     uint32_t magic, size;
     int16_t g[PROJ_NG_V3];
     uint8_t sel, rsv[3];
@@ -327,6 +327,7 @@ static void proj_capture(project_t *p)        /* what is playing now, as a proje
 static void proj_apply(const project_t *p, int all)
 {
     uint32_t i, k;
+    if (all) memset(tape_region, 0, sizeof tape_region);
     for (i = 0; i < PROJ_NG; i++)
         if (all ? i != G_SLOT && i != G_LOAD && i != G_SAVE && i != G_SYNC && i != G_MIDI && i != G_ROUTE : i == G_DRLVL || i == G_DRREV)
             song.g[i] = (int16_t)clamp(p->g[i], GP[i].min, GP[i].max);
@@ -357,7 +358,9 @@ static void proj_apply(const project_t *p, int all)
         for (i = 0; i < NLOCK; i++) {
             const plock_t *l = &s->lock[i];
             uint32_t id = l->param;
-            if (l->step < NSTEP && id < P_COUNT && p_lockable(id)) {
+            if (l->step < NSTEP && id == LOCK_RATCHET6) {
+                t->lock[i] = *l;
+            } else if (l->step < NSTEP && id < P_COUNT && p_lockable(id)) {
                 const param_desc_t *d = k == TRK_DRUM && id == P_E0 ? &DRUM_KIT_DESC :
                                         id >= P_E0 && id <= P_E7 ? &ENGINES[e]->edit[id - P_E0] : &TP[id];
                 t->lock[i].step = l->step;
@@ -526,7 +529,7 @@ typedef struct {
 #if FELUCCA_ARRANGER
     arr_config_t arrangement;
 #endif
-    uint32_t lights;                               /* SLOOP 2.3: the backlight (panel.c lights_word); appended,
+    uint32_t lights;                               /* FOXXY FM 2.3: the backlight (panel.c lights_word); appended,
                                                     * so 2.2 still reads its part (st_load cuts at its size) */
 } persist_t;
 #define PERSIST_SIZE_V22 __builtin_offsetof(persist_t, lights)   /* the settings as 2.2 wrote them (no lights) */
@@ -615,7 +618,7 @@ static void persist_boot(void)                    /* before settings_init / pane
                     sec_dirty |= (uint8_t)(1u << i);
             }
     }
-    dsu_boot();                                    /* SLOOP 2.5: the SYN kits (after the settings) */
+    dsu_boot();                                    /* FOXXY FM 2.5: the SYN kits (after the settings) */
     up_boot();                                     /* user presets */
     fm6_bank_boot();                               /* the FM6 patch bank (fm6_bank.c) */
 #endif
@@ -624,30 +627,9 @@ static void persist_boot(void)                    /* before settings_init / pane
 static int project_used(uint32_t slot) { return proj_ok(&proj_slot[slot & 3u]); }
 
 #if FELUCCA_FLASH
-/* SLOOP 2.5: the settings object holds the SYN kits after persist_t (drum_synth.c dsu): firmware before 2.5 reads
+/* FOXXY FM 2.5: the settings object holds the SYN kits after persist_t (drum_synth.c dsu): firmware before 2.5 reads
  * its persist_t and leaves the rest (st_load cuts at its size); its own next save drops them */
-static int settings_write(const persist_t *p)
-{
-    if (!dsu_valid(&dsu))
-        dsu_defaults();
-    if (st_save2(OBJ_SETTINGS, p, sizeof *p, &dsu, sizeof dsu))
-        return -1;
-    dsu_dirty = 0;
-    return 0;
-}
-static void dsu_boot(void)                          /* the SYN kits from the settings object, else the defaults */
-{
-    st_hdr_t h;
-    dsu_defaults();
-    if (st_current(OBJ_SETTINGS, &h) >= 0 && h.len == sizeof(persist_t) + sizeof(dsu_bank_t) &&
-        dsu_valid((const dsu_bank_t *)(st_buf + sizeof(persist_t)))) {
-        uint32_t k;
-        memcpy(&dsu, st_buf + sizeof(persist_t), sizeof dsu);
-        for (k = 0; k < DSU_N; k++)
-            dsu_fix_kit(&dsu.k[k]);
-    }
-    dsu_dirty = 0;
-}
+#include "settings_banks.c"
 #endif
 
 static void persist_fill(persist_t *p)              /* the settings as they are now */
@@ -714,7 +696,7 @@ static uint32_t settings_restore(const void *raw, uint32_t n)
     if (!arr_valid(&p.arrangement, 15u))
         return 2;
     if ((song.playing || transport_req) && memcmp(&p.arrangement, &arrangement, sizeof arrangement))
-        return 3;                                    /* SLOOP 2.5: a new song order only when stopped (as on the SONG screen) */
+        return 3;                                    /* FOXXY FM 2.5: a new song order only when stopped (as on the SONG screen) */
 #endif
     if (!flash_ok || settings_write(&p))
         return 4;

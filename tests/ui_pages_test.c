@@ -37,7 +37,14 @@ static int32_t fm1_enc_take(uint32_t e) { int32_t s = encs[e]; encs[e] = 0; retu
 static uint8_t fm1_led[16], fm1_led_dim[16], fm1_led_bg[16];
 static volatile uint16_t fm1_led_bg_ns;
 #define FM1_NCOL 16u
-static const int8_t FM1_KEYMAP[5][16];
+/* Hardware LED matrix, padded to the host's sixteen columns. */
+static const int8_t FM1_KEYMAP[5][16] = {
+    {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
+    {5,11,4,10,3,9,2,8,-1,-1,-1,-1,-1,-1,-1,-1},
+    {34,35,36,37,38,40,39,13,7,6,12,-1,-1,-1,-1,-1},
+    {23,24,25,26,27,28,29,30,31,32,33,-1,-1,-1,-1,-1},
+    {0,1,15,14,17,16,19,18,20,21,22,-1,-1,-1,-1,-1}
+};
 static void fm1_led_key(uint32_t id, int on) { (void)id; (void)on; }
 static uint32_t edges_btn, notes_seen;
 static uint32_t fm1_input_edges(int x) { uint32_t e = edges_btn; (void)x; edges_btn = 0; return e; }
@@ -76,6 +83,10 @@ static void up_ui(uint32_t op, uint32_t k) { (void)op; (void)k; }
 static void settings_save(void) {}
 #include "../firmware/src/ui_song.c"
 #include "../firmware/src/ui_studio.c"
+#include "../firmware/src/ui_tracker.c"
+#include "../firmware/src/ui_tape.c"
+#include "../firmware/src/ui_mixer.c"
+#include "../firmware/src/ui_fox.c"
 #include "../firmware/src/icons.c"
 #include "../firmware/src/ui_draw.c"
 #include "../firmware/src/ui_vis.c"
@@ -95,7 +106,12 @@ static void frame(void)
 {
     uint32_t q;
     static int32_t o[CTL * 2];
-    for (q = 0; q < 22u; q++) {
+    /* Interactive devtool changes must not render/discard extra audio while its
+     * audio callback owns the clock. Standalone host simulation still advances. */
+#ifndef UI_FRAME_AUDIO_BLOCKS
+#define UI_FRAME_AUDIO_BLOCKS() 22u
+#endif
+    for (q = 0; q < UI_FRAME_AUDIO_BLOCKS(); q++) {
         uint32_t i;
         mix_block(o, CTL);
         for (i = 1; i < CTL; i += 2u) {             /* the scope, as audio.c fills it (the visualiser) */
@@ -103,7 +119,12 @@ static void frame(void)
             scope_buf[scope_w++ & (SCOPE_N - 1u)] = vis_tap[2u * i];
         }
     }
-    ui_input(); ui_leds(); ui_draw(); fm1_ms += 16;
+    ui_input(); ui_leds(); ui_draw();
+#ifdef UI_FRAME_CLOCK_ADVANCE
+    UI_FRAME_CLOCK_ADVANCE();
+#else
+    fm1_ms += 16;
+#endif
 }
 static void frames(uint32_t n) { while (n--) frame(); }
 static uint32_t BT(uint32_t b) { return 1u << panel.btn[b]; }
@@ -140,12 +161,12 @@ int main(int argc, char **argv)
     }
     panel = PANEL_DEFAULT;
     layers_init();
-    settings.palette = 4;
-    palette_set(4);
+    settings.palette = PALETTE_MONO;
+    palette_set(PALETTE_MONO);
     host_tracks_init();
     for (i = 0; i < NPART; i++) { set_engine_of(&trk[i], TRK_DEF[i][0]); apply_preset_to(&trk[i], TRK_DEF[i][1]); trk[i].engine = trk[i].eng_req; }
     TDRUM->p[P_E0] = DRUM_DEFAULT_KIT;
-    sloop_splash(); ppm("page-splash");
+    foxxy_splash(); ppm("page-splash");
     ui.menu = 2; ui.force = 1; frame(); ppm("page-about"); ui.menu = 0;
     go_home(); ui.force = 1; frame(); ppm("page-tracks");
     open_family(FAM_ENV); ui.force = 1; ui.hot_col = 1; ui.hot_t = 30; frame(); ppm("page-env");
@@ -155,6 +176,18 @@ int main(int argc, char **argv)
     open_family(FAM_GLO); ui.force = 1; frame(); ppm("page-global");
     open_family(FAM_GLO); ui.force = 1; frame(); ppm("page-master");
     open_family(FAM_SCL); ui.force = 1; frame(); ppm("page-scale");
+    {   /* the TRACKER page (FAM_TRC): a full-screen hex view of the four tracks, reachable from the menu */
+        uint32_t i;
+        for (i = 0; i < NPAGES; i++) if (!strcmp(PAGES[i].title, "TRACKER")) break;
+        check(i < NPAGES && PAGES[i].scope == SC_TRC && PAGES[i].fam == FAM_TRC, "TRACKER page: its own family");
+        open_family(FAM_TRC); ui.force = 1; frame(); ppm("page-tracker");
+        check(cur_fam() == FAM_TRC && cur_page()->scope == SC_TRC, "open_family(FAM_TRC): the tracker page");
+        check(page_for_drum(cur_page()), "TRACKER: shown on the drum track too");
+        {
+            int16_t *vp;
+            check(page_desc(cur_page(), 0, &vp) == 0 && vp == 0, "TRACKER: no editable columns");
+        }
+    }
     {   /* (2.4) GLO > SYSTEM: KNOB 1 is MIDI OUT (KEYS / SEQ), shown as such; the USB status in the third column */
         uint32_t i, m0 = (uint32_t)song.g[G_MIDI];
         for (i = 0; i < NPAGES; i++) if (!strcmp(PAGES[i].title, "SYSTEM")) break;
@@ -692,7 +725,7 @@ int main(int argc, char **argv)
         encs[panel.enc[EN_SELECT]] = 5; frame();
         sec = mi_sec(ui.menu_sel);
         check(sec == MS_SYSTEM, "menu: SELECT stops at the last section, SYSTEM");
-        encs[panel.enc[EN_K2]] = 1; frame();
+        encs[panel.enc[EN_K1 + mi_row(MI_ABOUT)]] = 1; frame();
         check(ui.menu == 1 && ui.menu_sel == MI_ABOUT, "menu SYSTEM: a knob does not open ABOUT, it moves the cursor");
         tap(B_OCTUP);
         check(ui.menu == 2, "menu SYSTEM: OCT+ on ABOUT opens it");
@@ -919,7 +952,7 @@ int main(int argc, char **argv)
         }
         check(vis_style == 0u, "visualiser: SELECT goes round (12 -> 1)");
         encs[panel.enc[EN_SELECT]] = -1; frames(2);
-        check(vis_style == 11u && (lights_word() >> 17 & 15u) == 11u, "visualiser: SELECT left: SLOOP (12), kept in the settings word");
+        check(vis_style == 11u && (lights_word() >> 17 & 15u) == 11u, "visualiser: SELECT left: SPACEFOXX (12), kept in the settings word");
         lights_from_word(lights_word());
         check(vis_style == 11u, "visualiser: the style read back");
         { int16_t bpm = song.g[G_BPM], lv = trk[0].p[P_LEVEL];

@@ -32,7 +32,7 @@ def main(path):
     for p in range(128 * 16):
         f = 440.0 * 2 ** ((p / 16 - 69) / 12)
         inc.append(min(int(f / FS * 2 ** 32), 0x7FFFFFFF))
-    # (SLOOP 2.5: only the top octave is stored, 192 entries instead of 2048: 7.4 KiB of flash. Exact: each
+    # (Foxxy FM 2.5: only the top octave is stored, 192 entries instead of 2048: 7.4 KiB of flash. Exact: each
     # entry is floor(f / FS * 2^32), and floor(floor(x) / 2^k) = floor(x / 2^k): every golden render is unchanged)
     L += arr("PITCH_OCT", "uint32_t", inc[2048 - 192:], 8)
     L += ["/* phase increment of pitch p, 1/16 semitone 0..2047: the top octave's entry, k octaves down */",

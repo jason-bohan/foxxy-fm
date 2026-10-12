@@ -36,6 +36,33 @@ mkdir -p build/gen
 [ build/gen/felucca_tables.h -nt tools/gen_tables.py ] || python3 tools/gen_tables.py build/gen/felucca_tables.h
 [ build/gen/felucca_fm6.h -nt tools/gen_fm6_patches.py ] || python3 tools/gen_fm6_patches.py build/gen/felucca_fm6.h
 
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/settings_banks_test" tests/settings_banks_test.c -lm
+run "settings: MIDI persistence and old-bank compatibility" "$OUT/settings_banks_test"
+$CC -o "$OUT/midi_learn_test" tests/midi_learn_test.c
+run "MIDI learn: mapping validation, modes and transfer protocol" "$OUT/midi_learn_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/midi_learn_ui_test" tests/midi_learn_ui_test.c -lm
+run "MIDI learn: dev screen / panel behavior" "$OUT/midi_learn_ui_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/tape_mixer_test" tests/tape_mixer_test.c -lm
+run "Audio tape, global mixer, tracker chords and Meow effects" "$OUT/tape_mixer_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/tape_modes_test" tests/tape_modes_test.c -lm
+run "Studio and compact tape isolation and capacity" "$OUT/tape_modes_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/sequencer_selection_test" tests/sequencer_selection_test.c -lm
+run "Sequencer mouse selection and grouped edits" "$OUT/sequencer_selection_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/pocket_fox_test" tests/pocket_fox_test.c -lm
+run "Pocket fox care and controls" "$OUT/pocket_fox_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/devscreen_clock_test" tests/devscreen_clock_test.c -lm
+run "Devtool controls preserve playback timing" "$OUT/devscreen_clock_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/ui_return_home_test" tests/ui_return_home_test.c -lm
+run "Module exit redraws Home" "$OUT/ui_return_home_test"
+$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/workflow_navigation_test" tests/workflow_navigation_test.c -lm
+run "Tracks, Song and Mixer navigation" "$OUT/workflow_navigation_test"
+if command -v node >/dev/null 2>&1; then
+  run "MIDI setup files and transfer replies" node web/test_midi_map.mjs
+  run "Tactile sound controls" node web/test_control_feedback.mjs
+  run "Instrument theme and backdrop image" node web/test_fm1_theme.mjs
+  run "spaceFoxx game wiring and MIDI builders" node web/test_spacefoxx.mjs
+fi
+
 $CC -o "$OUT/storage_test" tests/storage_test.c
 run "flash storage (A/B, torn writes)" "$OUT/storage_test"
 

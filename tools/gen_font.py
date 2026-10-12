@@ -88,10 +88,13 @@ def render_bdf(path, scale, first, last):
     out = []
     for c in range(first, last + 1):
         dw, cell = glyphs.get(c, glyphs[ord("?")])
-        bw = cw + 2 * PAD                              # keep the PAD convention of the TTF path
+        # Keep the pen/left-bearing convention and advance, but omit empty
+        # columns at the right. cv_text only paints nonzero pixels.
+        right = max((x for y in range(ch) for x in range(cw) if cell[y * cw + x]), default=-1)
+        bw = PAD + right + 1
         px_ = []
         for y in range(ch):
-            px_ += [0] * PAD + cell[y * cw:(y + 1) * cw] + [0] * PAD
+            px_ += [0] * PAD + cell[y * cw:y * cw + right + 1]
         out.append((dw * scale, bw * scale, upscale(px_, bw, ch, scale)))
     return ch * scale, out
 
@@ -124,7 +127,7 @@ def main(out):
     for name, ttf, px, scale, pixel, first, last in SIZES:
         h, glyphs = render(ttf, px, scale, pixel, first, last)
         if scale > 1 and pixel and base is not None:
-            # SLOOP 2.4: a pixel font at 2x is the 1x font's own bitmaps, enlarged while drawing (gfx.c
+            # Foxxy FM 2.4: a pixel font at 2x is the 1x font's own bitmaps, enlarged while drawing (gfx.c
             # cv_text): no second copy in flash (24 KB). Same glyphs, same pixels: checked here.
             bname, bfirst, bh, bglyphs = base
             assert scale == 2 and first == bfirst and h == bh * 2, "L must be S at 2x, same first glyph"
@@ -140,13 +143,21 @@ def main(out):
             print(f"font {name}: {ttf} {px}px h {h}, digit adv {glyphs[ord('0') - first][0]}, "
                   f"the {bname} bitmaps at {scale}x (0 B)")
             continue
-        data, offs = [], []
+        data, offs, shared = [], [], {}
         for adv, bw, g in glyphs:
-            offs.append(len(data))
+            packed = []
             for y in range(h):
                 row = g[y * bw:(y + 1) * bw] + [0]
                 for x in range(0, bw, 2):
-                    data.append((row[x] << 4) | row[x + 1])
+                    packed.append((row[x] << 4) | row[x + 1])
+            # Many Latin-1 control codes use the same fallback glyph. Keep
+            # every character and metric, but store identical pixels once.
+            key = (bw, bytes(packed))
+            if key not in shared:
+                shared[key] = len(data)
+                data.extend(packed)
+            offs.append(shared[key])
+            assert data[offs[-1]:offs[-1] + len(packed)] == packed
         assert len(data) < 65536
         lines.append(f"static const uint8_t FONT_{name}_DATA[{len(data)}] = {{")
         for i in range(0, len(data), 24):

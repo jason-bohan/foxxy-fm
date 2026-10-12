@@ -10,7 +10,7 @@ a bass line, held chords, comping or a melody).
   tools/level_presets.py build/host/presets.raw build/host/presets.txt [ENGINE]
   (rebuild and run it again until nothing moves: the trims add to the ones in preset_trim.h)
   ENGINE: only that engine's presets are measured again (a new engine: the others keep their trims, so
-  their golden renders do not move; SLOOP 2.4: FM6 = 9).
+  their golden renders do not move; Foxxy FM 2.4: FM6 = 9).
 Needs numpy and scipy."""
 import re
 import sys

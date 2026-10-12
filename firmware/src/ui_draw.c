@@ -638,7 +638,7 @@ static void graph_scope(uint16_t c)
     }
 }
 
-/* SLOOP 2.4: a page without a graph (EDIT, VOICE, the DEST pages, GLOBAL, MASTER, SYSTEM...): its values
+/* FOXXY FM 2.4: a page without a graph (EDIT, VOICE, the DEST pages, GLOBAL, MASTER, SYSTEM...): its values
  * large in the empty space, 2 x 2 as the knobs (KNOB 1 2 / KNOB 3 4), the one turned in white; one value
  * alone (FILTER) across the width. The columns (draw_columns, drawn first) fill ui.big_* */
 static void graph_big(void)
@@ -1042,6 +1042,24 @@ static void ui_draw(void)
     }
     if (!ui.home && cur_page()->scope == SC_TRK) {
         studio_tracks_draw();
+        ui_timers();
+        ui.force = 0;
+        return;
+    }
+    if (!ui.home && cur_page()->scope == SC_FOX) {
+        fox_draw(); ui_timers(); ui.force=0; return;
+    }
+    if (!ui.home && cur_page()->scope == SC_MEOW) {
+        meow_draw(); ui_timers(); ui.force = 0; return;
+    }
+    if (!ui.home && cur_page()->scope == SC_TAPE) {
+        tape_draw(); ui_timers(); ui.force = 0; return;
+    }
+    if (!ui.home && cur_page()->scope == SC_MIX) {
+        mixer_draw(); ui_timers(); ui.force = 0; return;
+    }
+    if (!ui.home && cur_page()->scope == SC_TRC) {
+        tracker_draw();
         ui_timers();
         ui.force = 0;
         return;

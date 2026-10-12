@@ -296,7 +296,7 @@ static void duck_block(uint32_t adv)
 
 /* ---- the DJ filter: v < 0 a low-pass closing, > 0 a high-pass opening, 0 off. The cutoff glides
  * to the knob (no zipper); at 0 it opens fully, then the filter is bypassed. On the master (G_FILT)
- * and, SLOOP 2.4, on each track (P_TFLT: a synth part's mono signal, the drum track's left, right,
+ * and, FOXXY FM 2.4, on each track (P_TFLT: a synth part's mono signal, the drum track's left, right,
  * reverb send and, 2.5, delay send) */
 typedef struct {
     int32_t cut;                                        /* now, 0..127 << 8 (CUTOFF_HZ index) */
@@ -409,7 +409,7 @@ static void mix_part(track_t *t, uint32_t n)
 /* ---- DUST: the master through an old sampler and a record. G_DUST 0..127 turns up together: drive
  * into a soft clip, a lower sample rate (held samples, 44.1 -> 11 kHz), fewer bits (15 -> 8), a
  * one-pole low-pass (open -> ~3 kHz), a little hiss and crackle. The hiss and the crackle are the
- * record turning: they fade in with PLAY and out (~0.1 s) at STOP, so a stopped SLOOP is silent.
+ * record turning: they fade in with PLAY and out (~0.1 s) at STOP, so a stopped FOXXY is silent.
  * Stereo, ~25 ops a sample. */
 static struct {
     int32_t hl, hr, hn;                                 /* held samples, samples left to hold */
@@ -474,8 +474,13 @@ static void djf_process(int32_t *l, int32_t *r, uint32_t n)
 }
 
 #include "punch.c"            /* PUNCH-IN FX on the whole mix (FX held + a white key) */
+#include "audio_tape.c"
+#include "meow.c"
+#include "fox_audio.c"
 static int32_t master_cur = -1;                        /* the volume knob, ramped per sample (no zipper) */
-static void mix_block(int32_t *out, uint32_t n)
+/* Keep the render as a separate call: input/mapping changes must not pull the
+ * entire mix into the audio ISR when the target compiler changes its inlining. */
+static void __attribute__((noinline)) mix_block(int32_t *out, uint32_t n)
 {
     uint32_t i;
     int32_t m0, m1;
@@ -516,8 +521,11 @@ static void mix_block(int32_t *out, uint32_t n)
         mix_r[i] += wet_r[i];
     }
     dust_process(mix_l, mix_r, n);
+    at_process(mix_l, mix_r, n);
     punch_process(mix_l, mix_r, n);
+    meow_render(mix_l, mix_r, n);
     djf_process(mix_l, mix_r, n);
+    fox_audio(mix_l, mix_r, n);
     m1 = (int32_t)song.master_q12;
     m0 = master_cur < 0 ? m1 : master_cur;
     master_cur = m1;

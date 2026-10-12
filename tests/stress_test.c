@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* SLOOP 2.4 stress test: the real UI and audio (the ui_pages_test harness) pushed hard on what 2.4 added.
+/* FOXXY FM 2.4 stress test: the real UI and audio (the ui_pages_test harness) pushed hard on what 2.4 added.
  *   font    FONT_L is FONT_S's bitmaps drawn at 2x (no copy in flash): every L glyph, drawn by the real
  *           cv_text, is checked pixel for pixel against the same glyph enlarged from S here; then
  *           random text (every byte 1..255) at random places, partly or wholly off random canvases
@@ -340,7 +340,7 @@ static void t_bench(void)
 {
     double off, on, home, v[VIS_N], a = 0, b = 0;
     uint32_t s, i;
-    static const char *const TXT[] = {"120.0", "-64", "FILTER", "SLOOP", "C#m7", "2BAR"};
+    static const char *const TXT[] = {"120.0", "-64", "FILTER", "FOXXY", "C#m7", "2BAR"};
     for (i = 0; i < NPART; i++) host_preset(&trk[i], ENGI_FM6, i);
     off = bench_blocks(0, 6000);
     on = bench_blocks(1, 6000);
@@ -375,8 +375,8 @@ int main(int argc, char **argv)
     bank_resolve();
     panel = PANEL_DEFAULT;
     layers_init();
-    settings.palette = 4;
-    palette_set(4);
+    settings.palette = PALETTE_MONO;
+    palette_set(PALETTE_MONO);
     host_tracks_init();
     for (i = 0; i < NPART; i++) { set_engine_of(&trk[i], TRK_DEF[i][0]); apply_preset_to(&trk[i], TRK_DEF[i][1]); trk[i].engine = trk[i].eng_req; }
     TDRUM->p[P_E0] = DRUM_SAMPLED;

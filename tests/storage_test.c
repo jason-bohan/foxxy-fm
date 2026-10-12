@@ -104,7 +104,7 @@ int main(void)
         bad += check("data stays in the Felucca regions (autosave too)", inside);
         bad += check("every object copy has its own sector", apart);
     }
-    {   /* SLOOP 2.5: the settings in two parts (persist_t, then the SYN kits): one record, A/B as any other */
+    {   /* FOXXY FM 2.5: the settings in two parts (persist_t, then the SYN kits): one record, A/B as any other */
         static char p1[88], p2[1464], all[88 + 1464], got2[88 + 1464];
         memset(p1, 'P', sizeof p1);
         memset(p2, 'K', sizeof p2);

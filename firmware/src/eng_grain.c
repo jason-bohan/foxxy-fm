@@ -114,7 +114,7 @@ static inline uint32_t gr_scale(uint32_t n, uint32_t f16) { return (n >> 16) * f
 /* one IMA ADPCM sample of zone z at index pos */
 static inline int32_t gr_dec(const smp_zone_t *z, uint32_t pos, int32_t *pred, int32_t *idx)
 {
-    uint32_t b = SMP_DATA[z->off + (pos >> 1)], code = (pos & 1u) ? (b >> 4) : (b & 15u);
+    uint32_t b = sample_byte(z,pos >> 1), code = (pos & 1u) ? (b >> 4) : (b & 15u);
     int32_t step = IMA_STEP[*idx], vd = step >> 3;
     if (code & 4u)
         vd += step;
@@ -425,7 +425,7 @@ static const preset_t GRAIN_PRESETS[] = {
     {"LOFI CLOUD", {0, 45, 95, 85, 0, 35, 12, 80}, {70, 90, 120, 90}, 0, 0, FX(0, 45, 20, 70)},
     {"VIBE HAZE", {2, 30, 100, 90, 0, 25, 10, 90}, {50, 100, 120, 95}, 0, 0, FX(0, 40, 25, 75)},
     {"FLUTE DUST", {5, 50, 108, 72, 0, 10, 10, 85}, {50, 100, 127, 100}, 0, 0, FX(0, 30, 20, 70)},
-    /* SLOOP 2.5: strings as a cloud, a piano shimmer an octave up, a dark horn drone */
+    /* FOXXY FM 2.5: strings as a cloud, a piano shimmer an octave up, a dark horn drone */
     {"STR CLOUD", {4, 40, 100, 90, 0, 30, 12, 80}, {70, 100, 120, 95}, 0, 0, FX(0, 50, 20, 75)},
     {"SHIMMER", {0, 30, 90, 95, 12, 40, 15, 110}, {60, 100, 120, 100}, 0, 0, FX(0, 40, 35, 85)},
     {"DRONE", {3, 50, 115, 80, -12, 20, 20, 50}, {90, 100, 127, 100}, 0, 0, FX(0, 30, 15, 70)},

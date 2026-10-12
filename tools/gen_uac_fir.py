@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 """The polyphase FIR of the USB audio input's 44.1 -> 48 kHz resampler (firmware/src/usb.c, FELUCCA_UAC_48K).
-After Felucca 1.1.5's tools/gen_uac_fir.py (Leo Kuroshita), made smaller for SLOOP 2.5: 12 taps per phase in Q15
+After Felucca 1.1.5's tools/gen_uac_fir.py (Leo Kuroshita), made smaller for Foxxy FM 2.5: 12 taps per phase in Q15
 (1920 bytes of flash instead of 7680).
 
 48000 / 44100 = 160 / 147: up by L = 160, low-pass, down by M = 147. Output frame k sits at input time

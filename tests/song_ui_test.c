@@ -72,7 +72,7 @@ int main(int argc,char **argv)
     arrangement.entry[1]=(arr_entry_t){1,8};
     arrangement.entry[2]=(arr_entry_t){2,8};
     arrangement.entry[3]=(arr_entry_t){3,4};
-    palette_set(2);song_screen_draw();
+    palette_set(PALETTE_CYAN);song_screen_draw();
     if(argc>1) {
         FILE *f=fopen(argv[1],"wb");assert(f);
         fprintf(f,"P6\n240 240\n255\n");

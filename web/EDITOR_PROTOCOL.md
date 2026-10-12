@@ -1,11 +1,11 @@
-# SLOOP editor protocol (SysEx over USB-MIDI)
+# Foxxy FM editor protocol (SysEx over USB-MIDI)
 
-The firmware side is `firmware/src/editor.c` (SLOOP is based on Felucca: the frames keep its "FL"
+The firmware side is `firmware/src/editor.c` (Foxxy FM is based on Felucca: the frames keep its "FL"
 header). Commands 16-26 (user presets and live sync) form protocol v2; commands 27-30 (tracks) form
 protocol v3; commands 31-32 (any track's parameters) form protocol v4; command 33 and the extra step,
-`INFO` and `TRACK` bytes form protocol v5 (SLOOP 2.0); commands 34-36 (backup / restore) form protocol v6
-(SLOOP 2.3); commands 37-40 (the steps' nudges and parameter locks) form protocol v7, commands 41-42 (the
-steps' fill conditions) protocol v8 and commands 68-71 (the FM6 engine's patches) protocol v9 (all SLOOP 2.4).
+`INFO` and `TRACK` bytes form protocol v5 (Foxxy FM 2.0); commands 34-36 (backup / restore) form protocol v6
+(Foxxy FM 2.3); commands 37-40 (the steps' nudges and parameter locks) form protocol v7, commands 41-42 (the
+steps' fill conditions) protocol v8 and commands 68-71 (the FM6 engine's patches) protocol v9 (all Foxxy FM 2.4).
 
 **v3 (four tracks):** the device has four tracks: 1..3 are synth parts, 4 is the drum track. One
 of them is *selected* (the TRACKS page on the device, or `TRACK`). Every v1 / v2 command acts on the
@@ -16,10 +16,58 @@ selected track (its parameters, engine, preset, steps, the user presets it store
 the selection, and the `TRACK_CHANGED` push follows level, pan and mute of the tracks that are not
 selected. The v1-v3 commands are byte for byte as before; v4 is asked for with bit 1 of `WATCH`.
 
-**v5 (SLOOP 2.0):** the drum track has 16 lanes (one sound per white key) with a level and a ratchet per
+**v5 (Foxxy FM 2.0):** the drum track has 16 lanes (one sound per white key) with a level and a ratchet per
 hit; `DRUM_STEP` reads and writes them. Synth steps carry a level and a ratchet per note. `INFO` ends with
 the protocol version (5) and `TRACK` with the solo mask. Every addition is a byte appended at the end of
 a reply or a request, so v1-v4 editors keep working (they see the drum lanes as GM notes, below).
+
+## MIDI controller mappings (v12; base mappings introduced in v11)
+
+Command **77 MIDI_MAP** uses the usual `FL` framing. `INFO` ends with protocol 12.
+
+| Request args | Reply args |
+| --- | --- |
+| `0` (get) | `rc, count, count × binding` |
+| `1, count, count × binding` (replace and save) | `rc, count, count × binding` |
+
+There are at most 48 bindings. Each is six 7-bit bytes: `source, channel, number,
+kind, target, mode`. Source is 0 for notes (both note-off forms release), 1 for CC;
+channel is 0..15; number is 0..127. Kind 0 targets panel buttons 0..13 in the dev
+screen's order (FX, SEL, ENV, LFO, EDIT, GLO, HOME, SAVE, ARP, SEQ, PLAY, REC,
+OCT-, OCT+). Kind 1 targets encoders 0..6 (SELECT, ALGO, PRES, K1..K4); kind 2
+targets key indices 0..26 (F3 = 0). Kind 3, target 0 is master volume: absolute CC only, 0..127 scales to 0..4096. Moving the hardware master pot takes control back from MIDI. Targets are logical roles, independent of panel
+calibration. Kind 4, target 0 assigns a single global, momentary Shift control
+(note pad or CC button, mode 0). Kind bit 3 (`kind | 8`) selects the Shift bank
+for kinds 0..3. Each source/channel/number may appear once per bank; the Shift
+control cannot also have a normal or shifted assignment. Older six-byte base
+mappings and settings remain valid. Multiple sources can
+hold the same button/key; releasing one does not lift another or a physical hold.
+
+Encoder bindings require CCs. Mode 0 is absolute: the first value establishes a
+baseline, then each CC unit of movement produces one encoder detent. Mode 1 uses
+signed two's complement (-64..63); mode 2 uses 64 as neutral (-64..63). The regular
+UI's encoder acceleration applies. Buttons/keys require mode 0; CC values 64..127
+press and 0..63 release, notes press on positive velocity and release on note-off
+or zero velocity. Matched events are consumed before normal track routing, including
+when `IN = CLOCK`; unmatched events retain existing behavior.
+
+Hold the assigned Shift control to use Shift mappings; controls without a Shift
+mapping fall back to their Normal mapping. Bank changes release mapped holds and
+reset encoder baselines to prevent stuck notes and absolute-knob jumps. Inactive
+Shift-only mappings are consumed. Shift state is momentary and is never saved;
+SAVE SETUP and command 77 preserve both banks and the Shift assignment. The 48
+binding limit is shared between both banks and the modifier. v11 firmware rejects
+extended mappings; install v12 firmware before sending them to hardware.
+
+`rc` is 0 on success, 2 for invalid input, 3 when playback or a transport request
+prevents a write, 4 for unavailable/failed flash. Errors return the current map.
+PUT validates the entire map, writes the settings A/B object, then replaces the
+live map and releases its held controls. GET is read-only. The mapping bank follows
+the existing settings and SYN-kit bank in flash, preserving their byte offsets;
+old settings load with no mappings. Existing settings/SYN backup restores preserve
+the current MIDI map; backup commands 34..36 do not export it. Export mappings
+separately with command 77. Sending a `.syx` file is a single PUT request. The browser
+requires a successful GET and an exact PUT reply before reporting a saved setup.
 
 ## Framing
 
@@ -52,7 +100,7 @@ after an engine change.
 | 2 GET | scope, id | scope, id, v14 |
 | 3 SET | scope, id, v14 | scope, id, v14 (the value after clamping). Setting global `G_ENGSEL` (id from DESC label "ENG") changes the engine with its defaults |
 | 4 DUMP | — | engine, preset, then P_COUNT × v14 (the selected track), then G_COUNT × v14 (globals) |
-| 5 DESC | scope, id | scope, id, fmt, min v14, max v14, def v14, label string, unit string, then for an enum (fmt 8) one name string per value (at most 64; firmware before SLOOP sent at most 16) |
+| 5 DESC | scope, id | scope, id, fmt, min v14, max v14, def v14, label string, unit string, then for an enum (fmt 8) one name string per value (at most 64; firmware before Foxxy FM sent at most 16) |
 | 6 STEP_GET | index 0..NSTEP−1 | index, n (0..4 notes), note0..note3, time (0 NOTE, 1 TIE, 2 REST), flags (1 accent, 2 slide), vel, then (v5) lvl, hi, rat |
 | 7 STEP_SET | index, n, note0..3, time, flags, vel [, lvl, hi, rat (v5)] | same as STEP_GET (after the write). Without the v5 bytes the step's levels and ratchets become 0 |
 | 8 PRESET | engine, preset | engine, preset (applies the preset: sound, sends, arp; never the pattern, the mix or the key: `LEVEL PAN MUTE`, `LEN DIV SWG GATE`, `ROOT SCL QNT CHORD` stay) |
@@ -117,7 +165,7 @@ An absent status byte retains the original reply format.
 **pack7:** groups of up to 7 bytes, each preceded by one byte holding their top bits
 (bit j = bit 7 of byte j).
 
-**User sample slot** (80 KiB each: USR1..USR3 at flash 0xA0000, 0xB4000, 0xC8000 and, from SLOOP 2.4, USR4 at
+**User sample slot** (80 KiB each: USR1..USR3 at flash 0xA0000, 0xB4000, 0xC8000 and, from Foxxy FM 2.4, USR4 at
 0xE7000 — SMP_INFO says how many; SAMPLE / GRAIN sets USR1..USR4, the drum track's KIT USR1..USR4 and USR3+4; reference uploader
 `tools/fm1_sample_upload.py`, slot builder `sampleio.user_slot`; the editor's port of it is
 checked byte for byte by `web/test_web.mjs`): header at 0, ADPCM data at 512.
@@ -180,9 +228,9 @@ presets.
 slot count; a mismatch reads as an empty bank). A record keeps its layout version (mismatch: empty)
 and the P_COUNT it was stored with; another count is mapped by count (last 8 values = P_E0..P_E7, the
 first ones = P_LEVEL.. in order, missing ones = defaults). P_COUNT was 53 (P_E0 45) until the SLICER
-parameters (SLCR, PAT, RATE, DEPTH: ids 45..48) went in just before P_E0: P_COUNT 57, P_E0 49; SLOOP 2.0
+parameters (SLCR, PAT, RATE, DEPTH: ids 45..48) went in just before P_E0: P_COUNT 57, P_E0 49; Foxxy FM 2.0
 added CHORD (id 49): P_COUNT 58, P_E0 50 (and G_COUNT 32: DUST, DUCK, FILT, ROLL, NEW at 27..31). An
-editor takes them from `INFO`; older records load with the SLICER off and CHORD off. SLOOP 2.5 adds `G_DRDLY` (id 32,
+editor takes them from `INFO`; older records load with the SLICER off and CHORD off. Foxxy FM 2.5 adds `G_DRDLY` (id 32,
 GLO > DRUMS DLY, the drums' delay send): G_COUNT 33 (a 2.4 device says 32; the editor takes both). A project keeps it in
 the byte after `sel` (format 5 unchanged; 0 in older projects).
 
@@ -216,8 +264,8 @@ the byte after `sel` (format 5 unchanged; 0 in older projects).
 - Level and mute are also `P_LEVEL` / `P_MUTE` of the selected track (`SET`); `TRACK_MIX` reaches the
   others. Presets and user presets change a part's sound but keep its mix (`P_LEVEL`, `P_PAN`,
   `P_MUTE`), its pattern parameters (`LEN DIV SWG GATE`) and its key (`ROOT SCL QNT`, `CHORD`).
-- Projects (`PROJECT`) save and load all four tracks and the selection (SLOOP 2.4: project format 5,
-  "FUN5", format 4 + nudges and locks; formats 4 ("FUN4", SLOOP 2.0: the drum lanes, levels and ratchets),
+- Projects (`PROJECT`) save and load all four tracks and the selection (Foxxy FM 2.4: project format 5,
+  "FUN5", format 4 + nudges and locks; formats 4 ("FUN4", Foxxy FM 2.0: the drum lanes, levels and ratchets),
   3, 2 and 1 from older firmware are converted when loaded, a format 1 project into track 1).
 - Older firmware (no NTRK in `INFO`): one instrument; skip the track UI.
 
@@ -237,7 +285,7 @@ the byte after `sel` (format 5 unchanged; 0 in older projects).
   `TRACK_PARAM` / `TRACK_MIX` writes. After a selection change (`RELOAD`, or the editor's `TRACK`) the
   device takes the current values as known.
 
-## v5: drum lanes, levels, ratchets (SLOOP 2.0)
+## v5: drum lanes, levels, ratchets (Foxxy FM 2.0)
 
 - **Finding out:** `INFO` ends with 5. Older firmware ends after NTRK (or the engine names): use the
   v1-v4 commands only.
@@ -265,13 +313,13 @@ the byte after `sel` (format 5 unchanged; 0 in older projects).
   `KIT` (34 kits: ORIGINAL..DUST, the GM sample kit and its treatments, then the synthesised kits from
   808). `DESC` of `P_E1..P_E7` there still describes engine 0 (unused).
 
-## v6: backup / restore (SLOOP 2.3)
+## v6: backup / restore (Foxxy FM 2.3)
 
 `INFO` ends with 6. Objects: **0** the working project (a `project_t`, as the autosave), **1** the settings
 (`persist_t`: colours, low cut, zoom, the panel calibration, the song order, the lights word: lights, SYNC,
 the REC screen's mode and start, USB AUDIO and, since 2.4, MIDI OUT = SEQ (bit 14) and IN = CLOCK (bit 15)),
 **2..5** the projects 1..4 (song sections A..D; length 0 = empty), **6..7** the user preset banks (`up_bank_t`,
-16 records each; 0 = empty), **32..35** the user sample slots USR1..4 (35: SLOOP 2.4) (header + ADPCM data, as in flash; 0 =
+16 records each; 0 = empty), **32..35** the user sample slots USR1..4 (35: Foxxy FM 2.4) (header + ADPCM data, as in flash; 0 =
 empty). Numbers are 5 × 7 bit (u35, LSB first); data is pack7.
 
 | cmd | Request args | Reply args |
@@ -285,17 +333,17 @@ A restore stages one object in RAM (the project load buffer), checks it at the c
 magic, palette, a permutation of the buttons and knobs, a valid song order) and writes it through the usual
 A/B commit; the working project is loaded at once (the song must be stopped). Samples are restored with
 `SMP_BEGIN` / `SMP_WRITE` / `SMP_END` (the header is the first 480 bytes of the object, the data from byte
-512), an empty slot with `SMP_ERASE`. The editor's file is JSON: `{format: "sloop-backup", version: 1,
+512), an empty slot with `SMP_ERASE`. The editor's file is JSON: `{format: "foxxy-backup", version: 1,
 firmware, date, objects: [{id, len, crc, data (base64)}]}`; it is checked (lengths, CRCs) before anything is
 written.
 
-**The song order (SLOOP 2.5, the editor's Song page)** is bytes 48..83 of the settings object: `arr_config_t`
+**The song order (Foxxy FM 2.5, the editor's Song page)** is bytes 48..83 of the settings object: `arr_config_t`
 (`firmware/src/arranger.h`): count (1..16), loop (0/1), 2 reserved, then 16 × {section 0..3 = A..D, bars
 1..64}; bytes 0..3 are the magic "PER3" (0x50455233, little-endian). The editor reads object 1 (BK_LIST, BK_GET),
 changes those 36 bytes only and writes it back (BK_PUT). The commit answers rc 2 for an invalid order and,
 since 2.5, rc 3 while the song plays if the order changed (as the SONG screen saves only when stopped).
 
-## v7: step nudge and parameter locks (SLOOP 2.4)
+## v7: step nudge and parameter locks (Foxxy FM 2.4)
 
 `INFO` ends with 7. Each step of a track has a **nudge** (micro timing, `track_t.micro`): −32..31 in 1/64 of the
 step's length, negative = early (the step fires inside the previous grid step), positive = late, 0 = on the grid.
@@ -319,7 +367,7 @@ device while a lock is in force wins: the value found is kept as the new base. S
   requests) with the step. The editor's own `LOCK_SET` / `MICRO_SET` push nothing. While a lock is in force the
   parameter's live value is what `GET` / `DUMP` return and `CHANGED` reports (coalesced, as any knob).
 - **Projects** (`PROJECT`, the backup object 0 and 2..5) are format 5 ("FUN5", 3816 bytes): format 4 plus, per
-  track, 64 nudge bytes, 24 × 4-byte locks and 16 bytes of fill conditions (v8, below). Format 4 projects (SLOOP
+  track, 64 nudge bytes, 24 × 4-byte locks and 16 bytes of fill conditions (v8, below). Format 4 projects (Foxxy FM
   2.0 .. 2.3) load with no nudge, no lock and no condition.
 - A device that does not know these commands (v6 and older) sends no reply: use `INFO`'s version byte.
 - **On the device:** SEQ held + a step key held: KNOB 1 sound / note, KNOB 2 LEVEL, KNOB 3 RATCHET, KNOB 4 the
@@ -327,7 +375,7 @@ device while a lock is in force wins: the value found is kept as the new base. S
   power-on; ALGORITHM steps through the lockable ones), made at the track's value, then moved; the title shows it
   ("lock dst 14"); OCT− clears the held steps' nudges and locks. A tile with a nudge or a lock carries a dot in its corner.
 
-## v8: fill conditions and quick chain (SLOOP 2.4)
+## v8: fill conditions and quick chain (Foxxy FM 2.4)
 
 `INFO` ends with 8. Each step of a track has a **fill condition** (`track_t.fill`, 2 bits per step, `core.h FC_*`):
 0 **normal** (plays always), 1 **FILL ONLY** (plays only during a fill), 2 **NO FILL** (silent during a fill); 3 is read
@@ -356,7 +404,7 @@ armed fill.
   plays as it records any section change. A device that does not know these commands (v7 and older) sends no reply:
   use `INFO`'s version byte.
 
-## v9: FM6 patches (SLOOP 2.4)
+## v9: FM6 patches (Foxxy FM 2.4)
 
 `INFO` ends with 9; the engine list gains **FM6** (engine 9, after GRAIN; SLICE, when built, is 10). The commands keep
 Felucca 1.0's numbers (68–71) so the two editors stay close; firmware `editor_fm6.c`.
@@ -373,7 +421,7 @@ Felucca 1.0's numbers (68–71) so the two editors stay close; firmware `editor_
 - A **PUT to a track** plays at once and is that track's patch until the track loads another (a project, a preset, a user
   preset, PTCH turned). A project keeps PTCH (P_E7: F1–F8 = 0–7, B1–B27 = 8–34), not the patch: to keep an edited patch,
   PUT it to a bank slot and set PTCH to it. User presets work the same way.
-- **The bank:** 27 packed records, one flash object (A/B sectors at 0xE5000 / 0xE6000, as every SLOOP object); in the
+- **The bank:** 27 packed records, one flash object (A/B sectors at 0xE5000 / 0xE6000, as every Foxxy FM object); in the
   backup it is object **8** (27 × 128 bytes; 0 = empty), restored before the projects. A backup from 2.3 has no object 8:
   the bank is left as it is.
 - **SysEx files** are the editor's business, not the device's: a single voice (`F0 43 0n 00 01 1B`, 155 bytes, checksum,
@@ -388,7 +436,7 @@ Felucca 1.0's numbers (68–71) so the two editors stay close; firmware `editor_
 - A device that does not know these commands (v8 and older) sends no reply: use `INFO`'s version byte (the editor hides
   its FM6 panel).
 
-## v10: the SYN drum kits (SLOOP 2.5)
+## v10: the SYN drum kits (Foxxy FM 2.5)
 
 `INFO` ends with 10. The drum track's kits end with **SYN1..SYN4** (drums.c `DRUM_SYN`): synthesised kits of the user's,
 kept in RAM (the drum voices play them from there) and in flash after the settings (`persist_t`, then `dsu_bank_t`:
@@ -419,13 +467,15 @@ begin of object 9 with rc 5: the editor skips it (as object 8 on a v8 device).
   The device holds only one incoming SysEx frame.
 - **Following the device.** With v2 firmware, `WATCH` and `PING` (above). Older firmware pushes
   nothing (no reply to `PING`): poll `DUMP` about every 300–500 ms while the page is visible.
-- **Port.** The device's MIDI port is named "Felucca" (USB 1209:0001; SLOOP keeps the name so editors
+- **Port.** The device's MIDI port is named "Felucca" (USB 1209:0001; Foxxy FM keeps the name so editors
   and installers find it). Updates use the same
   port with other SysEx (the `F0 22 24 35 …` keys, `00 59 …` frames); never send those
-  from the editor. Since SLOOP 2.3 (after Felucca 1.0) the same USB device also has an audio input
+  from the editor. Since Foxxy FM 2.3 (after Felucca 1.0) the same USB device also has an audio input
   ("Felucca", 44.1 kHz stereo; bcdDevice 3.11): the MIDI port and this protocol are unchanged, and both
   work while the computer records.
 - **Safety.** Only `PROJECT` save, the sample-slot commands and `UP_PUT` / `UP_STORE` / `UP_ERASE` write flash, and only in
-  Felucca's own storage; never the app or the update area. Since SLOOP 2.4 every one of them, and
+  Felucca's own storage; never the app or the update area. Since Foxxy FM 2.4 every one of them, and
   `BK_PUT` of a preset bank, answers rc 3 while the song plays (as the panel refuses to save then): a
   flash erase silences the audio for about 50 ms.
+
+Hardware control reference: [FM-1 user manual](https://device.report/m/69bfea10c942797408c00f72adca51485cf91913f0ddc0e4f4dda3c7b8b715da), English pages 1–3: separate MASTER potentiometer, SELECT / PRESETS / ALGORITHM encoders, and four page-dependent parameter encoders. The dev screen runs Foxxy FM firmware, so stock-firmware page ranges and actions are not substituted for Foxxy FM behavior.

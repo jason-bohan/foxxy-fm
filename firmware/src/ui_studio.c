@@ -387,8 +387,8 @@ static void drum_screen_draw(void)
                     cv_rect(12 + (int32_t)j * 14, y, 12, 5, c);
                     if (dstep_has(s, i) && dstep_rat(s, i)) {   /* a ratchet: a notch per extra hit */
                         uint32_t r;
-                        for (r = 0; r < dstep_rat(s, i); r++)
-                            cv_rect(13 + (int32_t)j * 14 + (int32_t)r * 3, y + 2, 2, 1, C_BLACK);
+                        for (r = 0; r + 1u < ratchet_hits(TDRUM, p, i, dstep_rat(s, i)); r++)
+                            cv_rect(13 + (int32_t)j * 14 + (int32_t)r * 2, y + 2, 1, 1, C_BLACK);
                     }
                     if (p == drum_cursor && i == drum_lane) {
                         cv_rect(11 + (int32_t)j * 14, y - 1, 14, 1, C_WHITE);
@@ -471,6 +471,7 @@ static void grid_key(uint32_t k)
     st = &TDRUM->dstep[idx];
     fm1_irq_off();
     if (dstep_has(st, drum_lane)) {
+        ratchet_clear6(TDRUM, idx, 1u << drum_lane);
         dstep_clr(st, drum_lane);
         if (!dstep_mask(st)) {                          /* an empty step keeps no lock, no nudge, no condition */
             lock_del(TDRUM, idx, P_COUNT);

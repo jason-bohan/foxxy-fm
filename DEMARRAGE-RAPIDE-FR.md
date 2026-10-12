@@ -1,10 +1,10 @@
-<p align="center"><img src="assets/logo/sloop-logo.png" alt="SLOOP" width="360"></p>
+<p align="center"><img src="assets/logo/foxxy-logo.png" alt="Foxxy FM" width="360"></p>
 
-# SLOOP 2.5 — démarrage rapide
+# Foxxy FM 2.5 — démarrage rapide
 
-**SLOOP** transforme le M-VAVE FM-1 en groovebox à jouer en live, pour tous les styles : trois synthés et une batterie de 16 sons sur les touches blanches, 12 moteurs de synthèse (dont la FM à six opérateurs avec les patchs DX7, les modèles physiques et le bruit), 153 sons rangés par famille (basses, claviers, orgues, nappes, leads, plucks, stabs), 37 kits de batterie (808, 909, trap, phonk, house, techno, UK garage, jungle, amapiano, synthwave, chiptune, ambient…) et tes propres kits, tes propres samples, ghost notes et ratchets, verrous de paramètre, décalage des pas et fills, note repeat, accords sur une touche, 16 effets punch-in, et un écran à la teenage engineering qui montre toujours ce que tes mains peuvent faire. Aucun motif d'usine : tout ce que tu entends, tu le joues.
+**Foxxy FM** transforme le M-VAVE FM-1 en groovebox à jouer en live, pour tous les styles : trois synthés et une batterie de 16 sons sur les touches blanches, 12 moteurs de synthèse (dont la FM à six opérateurs avec les patchs DX7, les modèles physiques et le bruit), 153 sons rangés par famille (basses, claviers, orgues, nappes, leads, plucks, stabs), 37 kits de batterie (808, 909, trap, phonk, house, techno, UK garage, jungle, amapiano, synthwave, chiptune, ambient…) et tes propres kits, tes propres samples, ghost notes et ratchets, verrous de paramètre, décalage des pas et fills, note repeat, accords sur une touche, 16 effets punch-in, et un écran à la teenage engineering qui montre toujours ce que tes mains peuvent faire. Aucun motif d'usine : tout ce que tu entends, tu le joues.
 
-Le guide complet, chaque bouton, combinaison et page, avec un aide-mémoire d'une page (en anglais) : [GUIDE.md](GUIDE.md). Le manuel (en anglais) : [SLOOP.md](SLOOP.md).
+Le guide complet, chaque bouton, combinaison et page, avec un aide-mémoire d'une page (en anglais) : [GUIDE.md](GUIDE.md). Le manuel (en anglais) : [FOXXY.md](FOXXY.md).
 
 **Nouveau dans la 2.5 :** deux moteurs de plus, **PHYS** (modèles physiques : guitares, koto, banjo, sitar et tanpura, harpe, cloches, vibraphone, steel pan, violoncelle à l'archet, tabla, conga, timbales…) et **NOISE** (vent, pluie, océan, vinyle, souffle, riser, bitcrush, radio…), et **153 sons** d'usine (77 nouveaux, tous au même volume). Ils ne prennent pas de mémoire en plus : GRAIN, FM6 et PHYS partagent la même place par piste. Le **swing** s'affiche de 0 (droit) à 100 (le plus fort) au lieu de 50–75 % : le swing lui-même ne change pas. La batterie a maintenant un **envoi delay** : GLO → DRUMS → **DLY** (à côté de REV). Sur la page DRUMS, le cadran **level** va de ghost (à gauche) à hard (à droite). Corrigés (le correctif 2.4.1, inclus) : les patchs DX7 importés avec de l'**AMS** ne font plus de bruit ; le **click** s'entend avec tous les kits, même batterie coupée ou une autre piste en solo ; en mode accord, une touche de la page **STEP** écrit l'accord entier. Les projets de la 2.4 se chargent tels quels.
 
@@ -14,7 +14,7 @@ Le guide complet, chaque bouton, combinaison et page, avec un aide-mémoire d'un
 
 ## Installer
 
-1. Double-clique **`INSTALL-SLOOP.bat`** dans le dossier SLOOP : il compile le firmware et ouvre l'installateur sur `http://localhost:8766/webapp/installer/`.
+1. Double-clique **`INSTALL-FOXXY.bat`** dans le dossier Foxxy FM : il compile le firmware et ouvre l'installateur sur `http://localhost:8766/webapp/installer/`.
 2. Dans **Chrome ou Edge**, branche le FM-1 en USB (câble de données, directement, sans hub).
 3. **INSTALL**, autorise le MIDI, attends *Done*. Garde la fenêtre noire ouverte jusque-là.
 
@@ -101,7 +101,7 @@ Une touche noire joue le son de la touche blanche à sa gauche (deux doigts sur 
 
 Le mode et le départ restent comme tu les as laissés (réglages de la FM-1). Avec des notes déjà dans le projet, pas de mode : on enregistre toujours au tempo réglé. Pendant le décompte, REC l'annule et PLAY revient à *rec ready*.
 
-**Prise libre :** joue librement ; l'écran montre les secondes et la boucle que ça donnerait (*2 bars · 92 bpm*). **REC sur le « 1 » qui suit ta dernière mesure** : SLOOP choisit 1, 2 ou 4 mesures au tempo le plus proche, cale tes notes et lance la boucle. **PLAY** abandonne la prise.
+**Prise libre :** joue librement ; l'écran montre les secondes et la boucle que ça donnerait (*2 bars · 92 bpm*). **REC sur le « 1 » qui suit ta dernière mesure** : Foxxy FM choisit 1, 2 ou 4 mesures au tempo le plus proche, cale tes notes et lance la boucle. **PLAY** abandonne la prise.
 
 Les notes vont au pas le plus proche **tel que tu l'as entendu** (la latence de ~12 ms est compensée). La lumière PLAY clignote à chaque temps : un métronome visuel. Clic audible : GLO → GLOBAL → CLICK.
 
@@ -137,7 +137,7 @@ Les notes vont au pas le plus proche **tel que tu l'as entendu** (la latence de 
 - **Annuler / rétablir :** EDIT + OCT− / OCT+ (un niveau : le dernier passage d'enregistrement, effacement, piste effacée, modification de pas ou de motif).
 - **Effacer une piste :** maintiens REC ; après 0,7 s un anneau se remplit ; tiens encore ~1,3 s. Relâche avant : rien. Annuler la ramène.
 - **Sauvegarder :** SAVE + touches 5–8 sauvent la boucle dans la section / le projet A–D (= SLOT 1–4).
-- **Sauvegarde automatique :** à l'arrêt, 2,5 s sans toucher (au plus toutes les 20 s), le projet en cours est gardé ; au rallumage, SLOOP revient comme tu l'as laissé.
+- **Sauvegarde automatique :** à l'arrêt, 2,5 s sans toucher (au plus toutes les 20 s), le projet en cours est gardé ; au rallumage, Foxxy FM revient comme tu l'as laissé.
 - **Nouveau projet :** SAVE → TOOLS → NEW (tourner sur GO).
 
 ## Le master : DUST, DUCK, FILT
@@ -180,15 +180,15 @@ Chrome ou Edge, FM-1 en USB, **Connect**. Il suit l'appareil en direct. Depuis l
 - **Prise MIDI IN** (jack 3,5 mm TRS du FM-1) : un clavier ou des pads avec une sortie MIDI, via un adaptateur TRS ↔ DIN MIDI. Si rien ne joue, essaie l'autre type d'adaptateur (type A / type B).
 - **USB** : depuis un ordinateur ou un téléphone (DAW, appli de routage MIDI) ou un boîtier « USB MIDI host ». Un clavier USB branché directement sur le FM-1 ne peut pas marcher : ce sont deux appareils USB, il faut un hôte.
 - **Canaux :** 1, 2, 3 = pistes synth 1, 2, 3 · 10 = la batterie · 4 à 16 = **la piste sélectionnée** (règle ton clavier sur le canal 4 et il suit ALGORITHM).
-- **Horloge MIDI :** GLO → SYSTEM → **SYNC** = **USB** ou **TRS**. SLOOP suit le tempo, START, CONTINUE et STOP du maître, sans jamais dériver. Sans horloge pendant une demi-seconde, PLAY rejoue au tempo du FM-1. SYNC est un réglage de la FM-1 : il reste quand tu charges un projet.
-- **Horloge seule :** GLO → SYSTEM → **IN** = **CLOCK** : SLOOP suit l'horloge (et START / STOP) mais ignore les notes qui arrivent, pratique quand la DAW envoie aussi des notes à d'autres appareils. **NOTES** (par défaut) : notes et horloge. Un réglage de la FM-1, comme SYNC.
+- **Horloge MIDI :** GLO → SYSTEM → **SYNC** = **USB** ou **TRS**. Foxxy FM suit le tempo, START, CONTINUE et STOP du maître, sans jamais dériver. Sans horloge pendant une demi-seconde, PLAY rejoue au tempo du FM-1. SYNC est un réglage de la FM-1 : il reste quand tu charges un projet.
+- **Horloge seule :** GLO → SYSTEM → **IN** = **CLOCK** : Foxxy FM suit l'horloge (et START / STOP) mais ignore les notes qui arrivent, pratique quand la DAW envoie aussi des notes à d'autres appareils. **NOTES** (par défaut) : notes et horloge. Un réglage de la FM-1, comme SYNC.
 - **Sortie MIDI :** ce que tu joues aux touches sort toujours en MIDI USB (chaque piste sur son canal, la batterie sur 10). GLO → SYSTEM → **MIDI** = **SEQ** envoie aussi ce que jouent le séquenceur, l'arpégiateur et les rolls : pilote un autre synthé, ou enregistre le motif en notes dans ta DAW. Les notes venues d'un ordinateur ou du jack ne sont jamais renvoyées (pas de boucle MIDI). C'est un réglage de la FM-1, comme SYNC.
 - **Les CC MIDI (2.5)** : les potards d'un contrôleur MIDI règlent le son de la piste que joue leur canal (comme les notes) : CC 7 volume, 10 panoramique, 74 le FILTRE de la piste (64 = coupé, en dessous passe-bas, au-dessus passe-haut), 71 résonance (ANALOG, TRIO, VOICE, NOISE), 73 / 75 / 72 attaque / decay / release, 5 glide, 91 / 93 / 94 les envois reverb / chorus / delay. Sur le canal de la batterie : 7, 91 et 94 = GLO → DRUMS → LVL, REV et DLY. Avec IN = CLOCK, les CC sont ignorés. La carte vient de Felucca 1.1.5.
 - Le MIDI Bluetooth n'est pas pris en charge (la radio reste éteinte).
 
 ## Le visualiseur
 
-Sur l'écran TRACKS, tape **HOME** : tout l'écran devient un visualiseur de ce que SLOOP joue. **SELECT** passe d'un style à l'autre (le nom s'affiche une seconde ; le dernier choisi est gardé) : oscilloscope, spectre, spectrogramme, Lissajous, VU-mètres, cercle, tape, LCD, bounce, orbit, wires et le logo SLOOP vivant (les quatre bandes de la voile sont les pistes, le cadran le niveau du mix, le bateau tangue sur l'onde). **HOME** encore, ou n'importe quel bouton de page, le ferme. Les touches, PLAY, REC et les calques marchent comme d'habitude ; KNOB 1 à 4 ne font rien pendant ce temps, et le tempo se règle avec GLO + SELECT. Le visualiseur voit le son comme si **MASTER** était au maximum : il ne suit pas le volume, et même avec MASTER à 0 il bouge comme à plein volume. Ça ne coûte rien au son.
+Sur l'écran TRACKS, tape **HOME** : tout l'écran devient un visualiseur de ce que Foxxy FM joue. **SELECT** passe d'un style à l'autre (le nom s'affiche une seconde ; le dernier choisi est gardé) : oscilloscope, spectre, spectrogramme, Lissajous, VU-mètres, cercle, tape, LCD, bounce, orbit, wires et le logo Foxxy FM vivant (les quatre bandes de la voile sont les pistes, le cadran le niveau du mix, le bateau tangue sur l'onde). **HOME** encore, ou n'importe quel bouton de page, le ferme. Les touches, PLAY, REC et les calques marchent comme d'habitude ; KNOB 1 à 4 ne font rien pendant ce temps, et le tempo se règle avec GLO + SELECT. Le visualiseur voit le son comme si **MASTER** était au maximum : il ne suit pas le volume, et même avec MASTER à 0 il bouge comme à plein volume. Ça ne coûte rien au son.
 
 ## Lumières (jouer dans le noir)
 
@@ -210,8 +210,8 @@ Dans l'éditeur, onglet **Projects** → **Backup** : **Save a backup** enregist
 
 ## Secours
 
-- **Secours USB :** maintiens **OCT−** seul à l'allumage (*SLOOP USB RESCUE*), puis réinstalle.
+- **Secours USB :** maintiens **OCT−** seul à l'allumage (*Foxxy FM USB RESCUE*), puis réinstalle.
 - **Installation interrompue :** le FM-1 reste en mode mise à jour ; relance INSTALL et il termine. Un paquet abîmé est refusé et le FM-1 attend un paquet correct.
 - **Retour au firmware officiel :** sur la page d'installation, ouvre **Return to the official firmware (V15)** : fais d'abord une sauvegarde avec l'éditeur, télécharge FM-1 V15 sur m-vave.com, choisis son fichier FM-1.fwsc (seul ce fichier exact est accepté) et installe-le. M-UPGRADE de M-VAVE marche aussi (ferme les autres applis qui utilisent le MIDI).
 
-SLOOP est libre (GPL-3.0), basé sur Felucca de Leo Kuroshita (Hügelton Instruments). M-VAVE et FM-1 sont des marques de leurs propriétaires ; SLOOP n'y est pas affilié.
+Foxxy FM est libre (GPL-3.0), basé sur Felucca de Leo Kuroshita (Hügelton Instruments). M-VAVE et FM-1 sont des marques de leurs propriétaires ; Foxxy FM n'y est pas affilié.

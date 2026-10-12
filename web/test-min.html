@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM-1 · DEV SCREEN (test)</title>
+</head>
+<body>
+<div class="cap" id="cap">loading…</div>
+<script type="module">
+import createDevScreen from "./devscreen.core.mjs";
+let M;
+async function main() {
+  try {
+    M = await createDevScreen({locateFile: path => {
+      const url = new URL(path, import.meta.url); url.searchParams.set("v", "tempo-tracks-44"); return url.href;
+    }});
+    M._ds_init();
+    document.getElementById("cap").textContent = "ok";
+  } catch (e) {
+    document.getElementById("cap").textContent = "ERR:"+e.message;
+  }
+}
+main();
+</script>
+</body>
+</html>

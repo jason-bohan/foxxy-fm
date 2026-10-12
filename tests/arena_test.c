@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* SLOOP 2.5 (experimental): the engines' shared per-part arena (engines.c eng_arena_of) and the two new
+/* FOXXY FM 2.5 (experimental): the engines' shared per-part arena (engines.c eng_arena_of) and the two new
  * engines (PHYS, NOISE). Three checks:
  *  1. no stale state: an engine that takes the arena over from another one (GRAIN, FM6, PHYS in both slot
  *     layouts) sounds bit for bit as on a fresh FM-1 (the same phrase, the same random seed);

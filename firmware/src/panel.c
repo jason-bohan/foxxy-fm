@@ -57,12 +57,19 @@ static uint32_t ui_input_ms;                    /* the last button, key or knob 
 /* the knobs (roles, bit per EN_*) not to be read again in this UI pass (ui_input: a layer took them, #102 of
  * Felucca): panel_enc returns 0 and leaves their detents for the next pass */
 static uint32_t enc_hold;
+static int32_t enc_midi_steps[7];               /* MIDI already supplies the movement amount. */
 static int32_t panel_enc(uint32_t role)
 {
     int32_t s;
     if ((enc_hold >> role) & 1u)
         return 0;
-    s = fm1_enc_take(panel.enc[role]) * panel.dir[role];
+    {
+        fm1_irq_off();
+        s = ml_take(role);
+        fm1_irq_on();
+    }
+    enc_midi_steps[role] = s;
+    s += fm1_enc_take(panel.enc[role]) * panel.dir[role];
     if (s)
         ui_input_ms = fm1_ms;                      /* a knob turning is not idle either: autosave waits */
     return s;
@@ -76,7 +83,7 @@ struct { uint32_t magic, palette, lowcut, zoom; } settings __attribute__((sectio
  * (project.c persist_t.lights), read at every boot; not in .noinit, so nothing there moves. The same
  * word keeps SYNC and the REC screen's MODE / START (seq.c rec_tempo, rec_count) */
 enum { LIGHTS_OFF, LIGHTS_LOW, LIGHTS_MID, LIGHTS_HIGH, LIGHTS_N };
-enum { KEYS_OFF, KEYS_C, KEYS_WHITE, KEYS_ALL, KEYS_N };   /* (ALL: SLOOP 2.4; an older SLOOP reads it as OFF) */
+enum { KEYS_OFF, KEYS_C, KEYS_WHITE, KEYS_ALL, KEYS_N };   /* (ALL: FOXXY FM 2.4; an older FOXXY reads it as OFF) */
 static uint8_t lights_lvl, lights_keys;
 static uint8_t lights_notes;                   /* 1: on a synth track the sounding notes light their keys */
 static uint8_t lights_sync;                    /* GLO > SYSTEM > SYNC (G_SYNC), kept here: 0 INT, 1 USB, 2 TRS */
@@ -115,7 +122,7 @@ static void settings_init(void)
 {
     if (settings.magic != SETTINGS_MAGIC || settings.palette >= NPALETTES) {
         settings.magic = SETTINGS_MAGIC;
-        settings.palette = 4;                  /* MONO (default) */
+        settings.palette = PALETTE_MONO;     /* MONO (default) */
         settings.lowcut = 0;
         settings.zoom = 0;                     /* large readout of the touched value: off */
     }

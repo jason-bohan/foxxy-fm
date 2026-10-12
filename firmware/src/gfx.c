@@ -29,12 +29,17 @@ typedef struct {
     const char *name;
     uint16_t c[5];
 } palette_t;
+enum { PALETTE_GREEN, PALETTE_AMBER, PALETTE_CYAN, PALETTE_RED, PALETTE_MONO, PALETTE_STARFOX };
 static const palette_t PALETTES[] = {
     {"GREEN", {RGB(0, 40, 12), RGB(0, 84, 30), RGB(16, 140, 54), RGB(56, 200, 92), RGB(120, 255, 146)}},
     {"AMBER", {RGB(60, 26, 0), RGB(110, 50, 0), RGB(170, 82, 0), RGB(225, 120, 8), RGB(255, 166, 40)}},
     {"CYAN", {RGB(0, 30, 50), RGB(0, 62, 96), RGB(16, 112, 160), RGB(56, 172, 222), RGB(140, 222, 255)}},
     {"RED", {RGB(52, 8, 8), RGB(100, 18, 14), RGB(170, 36, 26), RGB(226, 64, 48), RGB(255, 112, 92)}},
     {"MONO", {RGB(40, 40, 40), RGB(80, 80, 80), RGB(130, 130, 130), RGB(186, 186, 186), RGB(226, 226, 226)}},
+    /* STARFOX: a Star Fox vector-HUD ramp on deep space black (the background stays C_BLACK).
+     * Dividers are dim steel blue, the ramp climbs through steel cyan to crisp CRT cyan for
+     * primary text and curves, and the secondary step is Arwing orange-red laser highlights. */
+    {"STARFOX", {RGB(42, 59, 76), RGB(30, 90, 110), RGB(40, 140, 165), RGB(255, 69, 0), RGB(78, 226, 236)}},
 };
 #define NPALETTES (sizeof(PALETTES) / sizeof(PALETTES[0]))
 static uint16_t pal[5];

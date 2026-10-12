@@ -147,7 +147,7 @@ int main(void)
     for (i = 0; i < 8u; i++)
         ok &= v[P_E0 + i] == (int16_t)(2000 + 45 + i);
     bad += check("old record (np 53): SLICER, CHORD and FILTER defaults, E0..E7 kept", ok);
-    /* a record of SLOOP 2.0 .. 2.3 (P_COUNT 58, P_E0 50): only the FILTER (2.4) takes its default */
+    /* a record of FOXXY FM 2.0 .. 2.3 (P_COUNT 58, P_E0 50): only the FILTER (2.4) takes its default */
     r.np = 58;
     for (i = 0; i < 58u; i++)
         r.p[i] = (int16_t)(3000 + i);
@@ -159,7 +159,7 @@ int main(void)
     for (i = 0; i < 8u; i++)
         ok &= v[P_E0 + i] == (int16_t)(3000 + 50 + i);
     bad += check("2.3 record (np 58): FILTER, STRUM, VLEAD defaults, CHORD and E0..E7 kept", ok);
-    /* a record of SLOOP 1.0 (P_COUNT 57, P_E0 49): CHORD (SLOOP 2.0) takes its default */
+    /* a record of FOXXY FM 1.0 (P_COUNT 57, P_E0 49): CHORD (FOXXY FM 2.0) takes its default */
     r.np = 57;
     for (i = 0; i < 57u; i++)
         r.p[i] = (int16_t)(3000 + i);
@@ -170,7 +170,7 @@ int main(void)
     ok &= v[P_CHORD] == def[P_CHORD];
     for (i = 0; i < 8u; i++)
         ok &= v[P_E0 + i] == (int16_t)(3000 + 49 + i);
-    bad += check("SLOOP 1.0 record (np 57): CHORD default, the rest kept", ok);
+    bad += check("FOXXY FM 1.0 record (np 57): CHORD default, the rest kept", ok);
     r.np = P_COUNT;
     for (i = 0; i < P_COUNT; i++)
         r.p[i] = (int16_t)i;

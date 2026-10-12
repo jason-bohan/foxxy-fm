@@ -31,6 +31,10 @@ static struct { volatile uint32_t notes, buttons; } fm1_in;
 static void fm1_irq_off(void) {}                 /* (the host: one thread) */
 static void fm1_irq_on(void) {}
 #include "../firmware/src/core.h"
+#ifdef DEVSCREEN_SAMPLE_BANK
+static uint8_t ds_smp_slots[4][0x14000];
+#define SMP_USER_XIP(k) ds_smp_slots[k]
+#endif
 #include "../firmware/src/engines.c"
 #include "../firmware/src/drums.c"
 #include "../firmware/src/params.c"
@@ -77,7 +81,7 @@ static void host_tracks_init(void)                /* as felucca_init: defaults, 
     uint32_t i, k;
     for (i = 0; i < G_COUNT; i++)
         song.g[i] = GP[i].def;
-    song.g[G_BPM] = 120;                         /* (the tests' tempo; SLOOP powers on at 90) */
+    song.g[G_BPM] = 120;                         /* (the tests' tempo; FOXXY powers on at 90) */
     for (k = 0; k < NTRK; k++) {
         for (i = 0; i < P_E0; i++)
             trk[k].p[i] = TP[i].def;

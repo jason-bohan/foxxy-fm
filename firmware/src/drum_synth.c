@@ -304,7 +304,7 @@ static int ds_render(dsv_t *s, int32_t *out, uint32_t n)
     return ds_alive(s);
 }
 
-/* ---- SLOOP 2.5: your own synthesised kits, SYN1..SYN4 (drums.c DRUM_SYN..), edited in the web editor's DRUM
+/* ---- FOXXY FM 2.5: your own synthesised kits, SYN1..SYN4 (drums.c DRUM_SYN..), edited in the web editor's DRUM
  * SYNTH page (editor_dsyn.c). Each is a kit as DS_KITS has them: 16 dsnd_t and the crush, with a name. They live
  * in RAM (the drum voices play them from there, so an edit is heard at once) and in flash after the settings
  * (project.c settings_write: one A/B object, so a cut-off write keeps the last copy). Never stored: copies of

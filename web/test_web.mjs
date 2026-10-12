@@ -160,7 +160,7 @@ async function editorLibrarian() {
   const rcEmpty = await E.bank.load(rq, 11);
   ok(rc === 0 && !b2.slots[11].used && b2.slots[10].used && rcEmpty === 1, "librarian: UP_ERASE, UP_LOAD of an empty slot -> rc 1");
 
-  /* audition: a PHASE patch with a pattern into an empty sequencer: the sound only (as UP_LOAD in SLOOP), never
+  /* audition: a PHASE patch with a pattern into an empty sequencer: the sound only (as UP_LOAD in Foxxy FM), never
      the pattern, and the mix / pattern / key parameters stay (ui.c param_kept) */
   const bass = await E.bank.get(rq, info, 2);   /* PHASE RESO, with the ACID pattern */
   for (let i = 0; i < info.nstep; i++) await rq(E.req.stepSet(i, emptyStep));
@@ -438,7 +438,7 @@ async function editorTrackParam() {
   o.done();
 }
 
-/* ------------------------------------- editor v9 (SLOOP 2.4): FM6 patches --- */
+/* ------------------------------------- editor v9 (Foxxy FM 2.4): FM6 patches --- */
 async function editorV9() {
   const C = E.CMD, F = E.FM6;
   /* the editor's factory patches == the firmware's (build/gen/felucca_fm6.h, tools/gen_fm6_patches.py) */
@@ -534,7 +534,7 @@ async function editorBackup() {
   await rq(E.req.smpEnd(1, hdr), { timeout: 2000, retries: 0 });
   const A = await E.backupCapture(rq, info);
   const obj = (id) => A.objects.find((o) => o.id === id);
-  ok(A.format === "sloop-backup" && A.objects.map((o) => o.id).join() === "0,1,2,3,4,5,6,7,8,9,32,33,34,35" && obj(9).len === 1464 && obj(33).len > 512 && obj(35).len === 0
+  ok(A.format === "foxxy-backup" && A.objects.map((o) => o.id).join() === "0,1,2,3,4,5,6,7,8,9,32,33,34,35" && obj(9).len === 1464 && obj(33).len > 512 && obj(35).len === 0
     && obj(4).len > 0 && obj(3).len === 0 && obj(32).len === 0, "backup: LIST + GET: 14 objects (project in C, sample in USR2, B empty, the FM6 bank, the SYN kits, USR4)");
   await rq(E.req.upErase(3));
   await rq(E.req.smpErase(1), { timeout: 2500, retries: 0 });
@@ -555,12 +555,12 @@ async function editorBackup() {
   old.done();
 }
 
-/* ------------------------------------- editor v5 (SLOOP 2.0): lanes, levels, ratchets --- */
+/* ------------------------------------- editor v5 (Foxxy FM 2.0): lanes, levels, ratchets --- */
 async function editorV5() {
   const C = E.CMD;
   const { m, rq, ev, done } = attachMock({ watchMs: 1000 });
   const info = E.parse[C.INFO](await rq(E.req.info()));
-  ok(info.proto === 10 && /SLOOP/.test(info.version) && info.pcount === 61 && info.gcount === 33 && info.pe0 === 53, "v5..v10: INFO ends with the protocol version (10: SYN kits); 33 globals (2.5: drum DLY)");
+  ok(info.proto === 10 && /FOXXY/i.test(info.version) && info.pcount === 61 && info.gcount === 33 && info.pe0 === 53, "v5..v10: INFO ends with the protocol version (10: SYN kits); 33 globals (2.5: drum DLY)");
   /* the firmware says the same: ED_DRUM_STEP is command 33, INFO sends 5, P_CHORD / the master globals as the mock has them */
   const ec = readFileSync(join(HERE, "../firmware/src/editor.c"), "utf8"), pc = readFileSync(join(HERE, "../firmware/src/params.c"), "utf8");
   const en = (/enum \{ ED_INFO = 1,([^}]*)\}/.exec(ec) || [])[1] || "";
@@ -571,9 +571,9 @@ async function editorV5() {
     && names.indexOf("ED_MICRO_GET") + 1 === C.MICRO_GET && names.indexOf("ED_MICRO_SET") + 1 === C.MICRO_SET
     && names.indexOf("ED_FILL_GET") + 1 === C.FILL_GET && names.indexOf("ED_FILL_SET") + 1 === C.FILL_SET
     && /ED_FM6_GET = 68, ED_FM6_PUT, ED_FM6_LIST, ED_FM6_ERASE/.test(ec) && C.FM6_GET === 68 && C.FM6_ERASE === 71
-    && /#define ED_PROTO 10u/.test(ec) && /ed_b\(ED_PROTO\);/.test(ec)
+    && /#define ED_PROTO 12u/.test(ec) && /ed_b\(ED_PROTO\);/.test(ec)
     && /enum \{ ED_DSYN_LIST = 72, ED_DSYN_GET, ED_DSYN_PUT, ED_DSYN_STORE, ED_DSYN_PLAY \};/.test(readFileSync(join(HERE, "../firmware/src/editor_dsyn.c"), "utf8"))
-    && C.DSYN_LIST === 72 && C.DSYN_PLAY === 76, "v5..v10: command numbers and INFO == editor.c / editor_dsyn.c");
+    && C.DSYN_LIST === 72 && C.DSYN_PLAY === 76, "v5..v11: command numbers unchanged; firmware INFO announces v12 MIDI Shift mappings");
   const enumNames = (id) => (new RegExp(`${id}\\[\\] = \\{([^}]*)\\}`).exec(pc) || [])[1].split(",").map((x) => x.trim().replace(/"/g, ""));
   const chord = E.parse[C.DESC](await rq(E.req.desc(0, 49)));
   const gd = [];
@@ -636,7 +636,7 @@ async function editorV5() {
   o.done();
 }
 
-/* ----------------------------- editor protocol v7: nudges and parameter locks (SLOOP 2.4) --- */
+/* ----------------------------- editor protocol v7: nudges and parameter locks (Foxxy FM 2.4) --- */
 async function editorV7() {
   const C = E.CMD;
   const { m, rq, ev, done } = attachMock({ watchMs: 1000 });
@@ -691,7 +691,7 @@ async function editorV7() {
     "v7: other tracks untouched; a nudge on the device -> STEP_CHANGED of its step");
   ok(!ev.unknown.length, "v7: no unmatched replies");
   done();
-  /* a v6 device (SLOOP 2.3): INFO 6, no reply to the v7 commands */
+  /* a v6 device (Foxxy FM 2.3): INFO 6, no reply to the v7 commands */
   const o = attachMock({ noBackup: true });
   const oi = E.parse[C.INFO](await o.rq(E.req.info()));
   const nl = await o.rq(E.req.lockGet(0), { timeout: 60, retries: 0, quiet: true }).then(() => "reply", () => "none");
@@ -699,7 +699,7 @@ async function editorV7() {
   o.done();
 }
 
-/* ----------------------------- editor protocol v8: fill conditions (SLOOP 2.4) --- */
+/* ----------------------------- editor protocol v8: fill conditions (Foxxy FM 2.4) --- */
 async function editorV8() {
   const C = E.CMD;
   const { m, rq, ev, done } = attachMock({ watchMs: 1000 });
@@ -800,7 +800,7 @@ await (async () => {
   ok(dfl.data.length === 500 && dfl.data[499] === 65, "drum kit: ... deflated ZIP entries too");
 })();
 
-/* ------------------------------ SLOOP 2.5: length, piano roll, MIDI files, song --- */
+/* ------------------------------ Foxxy FM 2.5: length, piano roll, MIDI files, song --- */
 async function editor25() {
   const { ROLL, SMF, ARR } = E, R = ROLL.rest, len = 16;
   const apply = (st, m) => { const o = st.map((x) => ({ ...x })); for (const [i, v] of m) o[i] = v; return o; };
@@ -833,9 +833,9 @@ async function editor25() {
   const notes = SMF.fromSteps(steps, len, 2);
   ok(notes.length === 3 && notes[0].t === 0 && notes[0].dur === 4 * 24 - 1 && notes[0].vel === 80 && notes[1].vel === 42 && notes[2].t === 8 * 24 && notes[2].vel === 127,
     "midi: a track's steps -> notes (ties as lengths; velocity, level, accent as the device plays them)");
-  const file = SMF.write(notes, { bpm: 97, ch: 2, name: "SLOOP track 3" });
+  const file = SMF.write(notes, { bpm: 97, ch: 2, name: "Foxxy FM track 3" });
   const back = SMF.read(file);
-  ok(back.format === 0 && back.ppq === 96 && back.bpm === 97 && back.tracks.length === 1 && back.tracks[0].name === "SLOOP track 3"
+  ok(back.format === 0 && back.ppq === 96 && back.bpm === 97 && back.tracks.length === 1 && back.tracks[0].name === "Foxxy FM track 3"
     && js(back.tracks[0].notes.map((n) => [n.t, n.dur, n.key, n.vel, n.ch])) === js(notes.slice().sort((a, b) => a.t - b.t || a.key - b.key).map((n) => [n.t, n.dur, n.key, n.vel, 2])),
     "midi: write -> read: the same notes, tempo, name, channel");
   const plan = SMF.toSteps(back.tracks[0].notes, back.ppq, 2, 64);
@@ -917,7 +917,7 @@ sys.stdout.buffer.write(hd+t1+b'MTrk'+struct.pack('>I',len(tr))+tr)`);
     "editor: the LEN control (1..64), the grid and roll redrawn when LEN changes");
 }
 
-/* ------------------------------------- SLOOP 2.5: the DRUM SYNTH page (v10) --- */
+/* ------------------------------------- Foxxy FM 2.5: the DRUM SYNTH page (v10) --- */
 async function editorDsyn() {
   const { DSYN } = E, C = E.CMD;
   const dsc = readFileSync(join(HERE, "../firmware/src/drum_synth.c"), "utf8");
@@ -954,9 +954,9 @@ async function editorDsyn() {
   const kit = { name: "MY 808", crush: 0x21, src: 0, sounds: Array.from({ length: 16 }, (_, l) => raw.slice(1 + l * 22, 23 + l * 22)) };
   const back = DSYN.fromFile(JSON.parse(JSON.stringify(DSYN.toFile(kit))));
   let bad = "";
-  try { DSYN.fromFile({ format: "sloop-drumsynth", sounds: [[1, 2]] }); } catch (e) { bad = e.message; }
+  try { DSYN.fromFile({ format: "foxxy-drumsynth", sounds: [[1, 2]] }); } catch (e) { bad = e.message; }
   const bank = DSYN.bankEncode([kit, kit, kit, kit]), dec = DSYN.bankDecode(bank);
-  ok(back.name === "MY 808" && back.crush === 0x21 && js(back.sounds.map((x) => Array.from(x))) === js(kit.sounds.map((x) => Array.from(x))) && /not a SLOOP/.test(bad)
+  ok(back.name === "MY 808" && back.crush === 0x21 && js(back.sounds.map((x) => Array.from(x))) === js(kit.sounds.map((x) => Array.from(x))) && /not a Foxxy FM/.test(bad)
     && bank.length === 1464 && dec && dec[3].name === "MY 808" && dec[2].crush === 0x21 && js(Array.from(dec[1].sounds[15])) === js(Array.from(kit.sounds[15]))
     && DSYN.bankDecode(bank.slice(1)) === null, "dsyn: a kit file and the backup object, there and back; a wrong file refused");
   /* the device (mock): LIST / GET / PUT / STORE / PLAY */
@@ -1099,7 +1099,7 @@ function editorTabs() {
     const te = readFileSync(join(HERE, "../firmware/src/ui_studio.c"), "utf8");
     ok(/TE_COL\[4\] = \{RGB\(40, 124, 255\), RGB\(30, 204, 112\), RGB\(255, 198, 24\), RGB\(255, 98, 26\)\}/.test(te),
       "editor: ... the same four as the firmware's TE_COL");
-    ok(/SLOOP-FONT\*\/url\(data:font\/ttf;base64,[A-Za-z0-9+\/=]{20000,}\)/.test(html), "editor: the device's Terminus font inlined (tools/gen_webfont.py)");
+    ok(/FOXXY-FONT\*\/url\(data:font\/ttf;base64,[A-Za-z0-9+\/=]{20000,}\)/.test(html), "editor: the device's Terminus font inlined (tools/gen_webfont.py)");
   }
 }
 
@@ -1195,7 +1195,7 @@ function chopTests() {
     && slot.data.length <= E.SMP.MAX_DATA, "chop: slot header (8 zones, one key each)");
   const w = E.parseWav(E.wavFile(zones[1].s));
   ok(w.sr === R && w.x.length === zones[1].s.length && Math.abs(w.x[100] * 32768 - zones[1].s[100]) < 2, "chop: WAV writer round trip");
-  const dir = mkdtempSync(join(tmpdir(), "sloop-chop-")), zp = join(dir, "c.zip");
+  const dir = mkdtempSync(join(tmpdir(), "foxxy-chop-")), zp = join(dir, "c.zip");
   writeFileSync(zp, E.zipStore(zones.slice(0, 3).map((z) => ({ name: "BREAK/" + z.fname, data: E.wavFile(z.s) }))));
   const r = py(`import sys, zipfile
 z = zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None

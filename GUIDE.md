@@ -1,10 +1,10 @@
-<p align="center"><img src="assets/logo/sloop-logo.png" alt="SLOOP" width="420"></p>
+<p align="center"><img src="assets/logo/foxxy-logo.png" alt="Foxxy FM" width="420"></p>
 
-# SLOOP 2.5 — The Complete Guide
+# Foxxy FM 2.5 — The Complete Guide
 
-Everything SLOOP does, every button, every combination, every page, in one place. This guide is written to be read from the top the first time, then used as a reference: the [cheat sheet](#26-cheat-sheet) at the end has every combination on one page.
+Everything Foxxy FM does, every button, every combination, every page, in one place. This guide is written to be read from the top the first time, then used as a reference: the [cheat sheet](#26-cheat-sheet) at the end has every combination on one page.
 
-SLOOP is a free, open-source (GPL-3.0) firmware for the M-VAVE FM-1, based on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita / Hügelton Instruments. The short manual is [SLOOP.md](SLOOP.md); the project page is [README.md](README.md).
+Foxxy FM is a free, open-source (GPL-3.0) firmware for the M-VAVE FM-1, a fork of [Sloop](https://github.com/isod89/sloop-fm1) by isod89, based on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita / Hügelton Instruments. The short manual is [FOXXY.md](FOXXY.md); the project page is [README.md](README.md).
 
 ---
 
@@ -63,13 +63,13 @@ The 11 black keys are F#3, G#3, A#3, C#4, D#4, F#4, G#4, A#4, C#5, D#5, F#5. The
 
 ## 1. Install and update
 
-**From the browser (recommended).** Open the [installer page](https://isod89.github.io/sloop-fm1/) in **Chrome or Edge**, connect the FM-1 by USB (a data cable, plugged straight in, no hub), press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the SLOOP logo.
+**From the browser (recommended).** Open the [installer page](https://spacefoxx.github.io/foxxy-fm/) in **Chrome or Edge**, connect the FM-1 by USB (a data cable, plugged straight in, no hub), press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the Foxxy FM logo.
 
-**From the source folder (Windows).** Double-click **`INSTALL-SLOOP.bat`**: it builds the firmware and opens the installer at `http://localhost:8766/webapp/installer/`. Keep the black window open until the install is done. **`OPEN-EDITOR.bat`** opens the web editor.
+**From the source folder (Windows).** Double-click **`INSTALL-FOXXY.bat`**: it builds the firmware and opens the installer at `http://localhost:8766/webapp/installer/`. Keep the black window open until the install is done. **`OPEN-EDITOR.bat`** opens the web editor.
 
-**Updating** keeps your projects, presets, samples, kits and settings. The installer checks the package (SHA-256), SLOOP's update loader checks it again (CRC) before it starts the new firmware, and a damaged package is refused before anything is written.
+**Updating** keeps your projects, presets, samples, kits and settings. The installer checks the package (SHA-256), Foxxy FM's update loader checks it again (CRC) before it starts the new firmware, and a damaged package is refused before anything is written.
 
-**Before you go back to an older SLOOP** (2.3 or earlier), save a backup in the editor: 2.3 cannot read 2.4 projects (format FUN5).
+**Before you go back to an older Foxxy FM** (2.3 or earlier), save a backup in the editor: 2.3 cannot read 2.4 projects (format FUN5).
 
 ---
 
@@ -157,7 +157,7 @@ The layers are **FX** (punch-in effects), **EDIT** (erase), **ARP** (note repeat
 | **EDIT** | EDIT pages (EDIT 1, EDIT 2, VOICE, VOICE 2) · on TRACKS with the drum track: the **DRUMS** screen · on DRUMS: grid ↔ kit · on the STEP page: clear the step | erase layer |
 | **ARP** | ARP pages (ARP, ARP 2) | note-repeat layer |
 | **SEQ** | SEQ pages (STEP, PATTERN, SONG) · on TRACKS with the drum track: the **DRUMS** screen · on DRUMS: grid ↔ kit | step layer |
-| **GLO** | GLO pages (GLOBAL, MASTER, SYSTEM, DRUMS) | mix layer |
+| **GLO** | from Tracks or Song: MIXER; elsewhere: GLO pages (GLOBAL, MASTER, SYSTEM, DRUMS) | mix layer |
 | **OCT− / OCT+** | synth track: octave down / up (−3 … +3) · both together: octave 0 | drum track: **ghost** (OCT−) / **hard** (OCT+) hits while held |
 | **ALGORITHM** | select track 1–4, on every screen (inside a layer it waits; not during a free take, on the SONG screen or in the menu) | — |
 | **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (all factory sounds by kind, then your user presets) · drum track: the **kit** · on the DRUMS screen: the kit | — |
@@ -169,7 +169,7 @@ The layers are **FX** (punch-in effects), **EDIT** (erase), **ARP** (note repeat
 
 | Combination | Does |
 | --- | --- |
-| **OCT−** held while switching on | **USB rescue** (*SLOOP USB RESCUE*): install again from the browser |
+| **OCT−** held while switching on | **USB rescue** (*Foxxy FM USB RESCUE*): install again from the browser |
 | **OCT− + OCT+** held while switching on | **hardware calibration**: teach each button and knob (also in the HOME menu → SYSTEM) |
 | **OCT− + OCT+** held 5 s, stopped | **update mode** (UBOOT): a countdown shows from 2 s; let go to cancel. Your work is saved first |
 
@@ -262,7 +262,7 @@ While the song plays in song mode, the grid's hit and level knobs wait (*STOP TH
 
 ## 8. Recording
 
-SLOOP records live and layers every pass on top of the last (overdub). Notes go to the nearest step **as you heard it**: the ~12 ms between a key and its sound are taken back, so what you play on the beat lands on the beat. Chords are kept on the synth tracks (up to 4 notes a step); held notes become ties.
+Foxxy FM records live and layers every pass on top of the last (overdub). Notes go to the nearest step **as you heard it**: the ~12 ms between a key and its sound are taken back, so what you play on the beat lands on the beat. Chords are kept on the synth tracks (up to 4 notes a step); held notes become ties.
 
 ### What REC does
 
@@ -289,7 +289,7 @@ LENGTH and START apply when you record at a tempo (MODE *tempo*, or a project th
 ### Free take: the loop follows you
 
 1. On an empty project, **REC**, then play freely. The screen shows *free take*, the seconds, and the loop it would make right now (*2 bars · 92 bpm*).
-2. **Press REC on the "1" after your last bar.** SLOOP picks 1, 2 or 4 bars at the tempo nearest the one set (within 3 % the set tempo is kept), writes your notes with their lengths and levels, and plays the loop at once. All four tracks take that length.
+2. **Press REC on the "1" after your last bar.** Foxxy FM picks 1, 2 or 4 bars at the tempo nearest the one set (within 3 % the set tempo is kept), writes your notes with their lengths and levels, and plays the loop at once. All four tracks take that length.
 3. **PLAY** during a free take drops it. A take closes by itself after 24 s.
 
 ### Metronome and swing
@@ -374,6 +374,7 @@ The 16 white keys are the 16 steps of the current page; the lit ones play.
 | **SEQ + step + KNOB 1** | drums: which **sound** of the step LEVEL and RATCHET edit (you hear it) · synths: the step's **note** (every note of a chord moves together) |
 | **SEQ + step + KNOB 2** | **LEVEL**: ghost, soft, norm, hard |
 | **SEQ + step + KNOB 3** | **RATCHET**: x1–x4 |
+| **Browser: right-click a populated step** | choose 1, 2, 3, 4 or 6 hits within the step; 3 and 6 divide it into triplets. Six-hit metadata uses one parameter-lock slot per step, shared by all its six-hit notes/drum lanes. It saves with the project and supports undo. Older firmware drops this metadata and plays those steps as x4. |
 | **SEQ + step + KNOB 4** | **NUDGE**: −32 … +31 (in 1/64 of a step) |
 | **SEQ + step + PRESETS** | a **parameter lock** on that step: the first click makes it one click away from the track's value, the next ones move it |
 | **SEQ + step + ALGORITHM** | which parameter the lock is on |
@@ -445,6 +446,12 @@ There are three ways to enter steps:
 Not while recording or armed (the keys record live then). On the drum track, the STEP page shows *DRUM TRACK*: use the DRUMS grid or the SEQ layer.
 
 The **PATTERN** page (tap SEQ again) holds the track's **LEN**, **DIV**, **SWG** (swing) and **GATE** (how long each note lasts).
+
+The **TRACKER** supports editing on both firmware and the web app. **K1** moves the row, **K2** selects a note (or drum sound), **K3** adjusts velocity, and **K4** chooses NOTE/TIE/REST (drums: NOTE/REST). ALGORITHM selects the track and SELECT also moves rows. Field edits preserve the cell's other notes, accents and retriggers. Clearing removes the cell and its locks; EDIT + OCT− undoes edits.
+
+Synth steps hold up to **four notes**. On hardware, **PRESETS** selects chord voice V1–V4; K2 edits that voice or adds the next note. The tracker marks chords with `+`. In the browser, the note summary shows every note; click it (or double-click the hardware cell) to edit all four notes together. **Shift + a piano typing key** adds a note without advancing the row. Drum summaries show simultaneous hits; their editor has a checkbox for every drum lane.
+
+The web app has a dedicated **TRACKER** button and a wide grid. Choose notes or named drum sounds from each cell's dropdown, edit velocity directly, and choose time from its dropdown. Click a note cell and use the piano typing keys (Z S X D C V G B H N J M …, starting at F3) to write notes; Edit step controls how far entry advances. Arrow keys navigate; Delete/Backspace clears. FOLLOW ON scrolls the grid during playback; manual browsing pauses following for three seconds. FOLLOW OFF keeps the viewport still. BACK TO INSTRUMENT returns to the panel. The desktop grid uses the same firmware edit functions as the knobs.
 
 ### Nudge (micro timing)
 
@@ -535,6 +542,8 @@ Tap **SEL** twice (or SEL, then SELECT) for **SEL 2**:
 
 | Where | What |
 | --- | --- |
+| **Browser MIXER button** | opens levels, mute and solo for all four tracks over the current screen |
+| **HOME menu → AUDIO → MIXER** | persistent hardware mixer: K1–K4 levels; SELECT track; OCT− mute; OCT+ solo |
 | **GLO + KNOB 1–4** | levels of tracks 1–4 |
 | **TRACKS screen, KNOB 2** | the selected track's level (on a muted track: unmutes it) |
 | **GLO + keys 1–4 / 5–8** | mute / solo |
@@ -561,7 +570,7 @@ A muted track fades out in a few milliseconds and plays no new notes; its patter
 | **Save the loop as a section / project** | **SAVE + key 5–8** (A–D = project slots 1–4) |
 | **Save / load a project** | SAVE → PROJECT: **SLOT** 1–4, **LOAD** (GO), **SAVE** (GO) |
 | **Save a sound** | SAVE → USER: **SLOT** (1–32), **SAVE** (GO) |
-| **Autosave** | automatic: when the transport is stopped and you have not touched anything for 2.5 s (at most every 20 s), the working project is kept in flash; at power-on SLOOP comes back exactly as you left it |
+| **Autosave** | automatic: when the transport is stopped and you have not touched anything for 2.5 s (at most every 20 s), the working project is kept in flash; at power-on Foxxy FM comes back exactly as you left it |
 
 A **project** keeps the four tracks (sounds, patterns, kit, locks, nudges, fill conditions, the track filter) and the global settings of the song (tempo, swing, key…). **Settings of the FM-1** — SYNC, MIDI OUT, IN, the lights, the menu settings, the REC screen's MODE and START — are not part of a project: loading a project or NEW PROJECT never changes them.
 
@@ -579,6 +588,8 @@ GO: one click shows *AGAIN: SAVE* (or LOAD…), a second click within about 1.5 
 ---
 
 ## 14. Song mode: sections, chains, songs
+
+The devtool header has direct **TRACKS · SONG · MIXER** buttons, with the current screen highlighted. **EXPAND MIXER** opens the larger browser mixer. On hardware, tap **SAVE** from Tracks or Mixer to open Song; tap **GLO** from Tracks or Song to open Mixer; **HOME** from Song or Mixer returns to Tracks. Tapping GLO again from Mixer opens the usual global pages; holding GLO still opens the performance mix layer.
 
 A song is up to **16 steps** of **4 sections, A–D**. Each section holds the four tracks (sounds, patterns, kit) and is one of the four project slots.
 
@@ -618,6 +629,8 @@ The song's settings can only be edited while it is stopped (*STOP FIRST*). An em
 | --- | --- | --- |
 | **TRACKS** | tap **HOME** | the performance view: tempo, swing, transport, bar.beat; each track with its sound, steps, playhead, mute / solo / rec badges and level. Dials: KNOB 1 **swing** (global) · KNOB 2 **level** (selected track; on a muted track: unmutes it) · KNOB 3 **steps** (its length) · KNOB 4 **pan** |
 | **Visualiser** | tap **HOME** on TRACKS | twelve full-screen visualisers; see [The visualiser](#19-the-visualiser) |
+| **MIXER** | HOME menu → AUDIO → MIXER, or browser **MIXER** | persistent four-track mixer. K1–K4 adjust levels; SELECT chooses track; OCT− toggles mute and OCT+ toggles solo. Browser controls open over any screen, with independent mute/solo buttons and CLEAR SOLO. |
+| **TAPE** | HOME menu → SCREEN → TAPE, or browser **TAPE** | pattern tape with animated reels. K1 sets loop IN, K2 sets inclusive OUT, K3 chooses 2/4/8/16 chop segments, K4 pitches the cat sound (−24…+24 semitones). SELECT chooses an action; OCT+ runs it; OCT− returns to TRACKS. |
 | **Layer** | hold a layer button | 16 tiles (the white keys) and the four dials, in the layer's colour |
 | **DRUMS** (grid / kit) | tap **EDIT** or **SEQ** on TRACKS with the drum track | see [The DRUMS screen](#the-drums-screen) |
 | **REC READY / FREE TAKE / COUNT-IN** | **REC** while stopped | the tracks, then **mode · length · start** on KNOB 1–3 (4-3-2-1 during a count-in); in a free take: the seconds and the loop it would make |
@@ -627,6 +640,16 @@ The song's settings can only be edited while it is stopped (*STOP FIRST*). An em
 | **Menu** | hold **HOME** | the settings of the FM-1 in four sections; see [The HOME menu](#20-the-home-menu-and-the-lights) |
 
 The **title line** of every screen also carries short messages: *KEY D*, *ERASED*, *AGAIN: SAVE*, *NEXT: B*, *chain A B B C*, *lock flt 12*…
+
+**TAPE** has a devtool mode selector: **Web tape studio** uses the six-minute browser workspace; **Firmware controls · 15 s** uses the native screen and knobs with a separate 15-second browser tape buffer. Switching modes stops recording/playback and preserves each mode’s audio and tape settings for the current tab. The compact browser mode previews firmware controls; the physical board still has approximately 1.49 seconds per track. Firmware builds automatically use **Studio Tape** in the devtool and **Loop Tape** on firmware. Studio Tape opens in its own browser workspace, with BACK TO INSTRUMENT returning to the FM-1 while tape playback continues. It exposes waveform editing, audio import/export and sampler transfers; Loop Tape uses the hardware screen and knobs for short audio loops. Both record audio onto four tracks, with variable speed, reverse, looping, movable regions, overdub, lift/copy/drop, split markers, mute/solo and two settings memories. Its tone controls add saturation, wow/flutter, hiss and bit reduction. The browser supports six minutes per track at normal speed; hardware uses its existing audio pool and has approximately 1.49 seconds per track and a 185 ms clipboard. Export browser tape audio before reloading; it is not saved in a song project.
+
+**MEOW FX** is a frequency-shifting delay effect with frequency, delay, feedback and sideband controls. The effect selector also provides delay, phone, punch, grid, spring and nitro effects.
+
+The devtool’s **Control sounds** setting offers Soft rubber, Muted click or Off. The **Knobs** and **Buttons / keys** switches independently enable tactile feedback and remember your choices. These switches leave musical notes and Pocket Fox sounds controlled by the main sound and master volume controls.
+
+**POCKET FOX** is a virtual pet in HOME menu → SYSTEM → POCKET FOX, or the devtool header. SELECT chooses FEED, PLAY, CLEAN, SLEEP or PET; OCT+ performs the action and OCT− returns home. Turn K1–K4 clockwise for the first four actions, or click an action along the bottom of its screen. Care actions have quiet synthesized sounds: munching, a playful meow, washing, a sleepy sigh and purring. They follow master volume. Food, fun, energy and cleanliness slowly decline; sleeping restores energy. The devtool remembers its cat between visits in browser storage. Hardware keeps the cat for the current power session.
+
+In the **devtool sequencer**, a normal click retains its drawing behaviour. Hold the left mouse button and drag to select multiple steps or drum cells. Ctrl/Cmd+C copies the selection; click a destination step and press Ctrl/Cmd+V to paste. Delete/Backspace clears selected notes. Shift extends the selection, Ctrl/Cmd-click toggles cells, and Escape clears the selection. These mouse selection controls are browser-only.
 
 ---
 
@@ -652,7 +675,7 @@ Tap a button to open its first page (or the last one you used); **tap it again**
 | | **VOICE** | VCE: POLY, MONO, LEG (legato), UNI (unison) | GLD glide | GLMOD: RATE / TIME | PRIO: LAST, LOW, HIGH (mono note priority) |
 | | **VOICE 2** | ALLOC: ROT (rotate) / REUSE | DTUNE (unison detune) | PAN | MUTE |
 | **ARP** | **ARP** | MODE: OFF, UP, DN, UPDN, RND, ORD | RATE: 1/4 … 16T | OCT: 1–4 octaves | GATE |
-| | **ARP 2** | SWG swing | PROB probability of each note | HOLD: OFF / ON (latch) | ORD: NOTE (pitch order) / PLAY (the order you played) |
+| | **ARP 2** | SWG swing | PROB probability of each note | HOLD: OFF / ON / LATCH | ORD: NOTE (pitch order) / PLAY (the order you played) |
 | **SEQ** | **STEP** | STEP (cursor) | NOTE | TIME: NOTE, TIE, REST | FLAG: –, ACC, SLD, A+S |
 | | **PATTERN** | LEN 1–64 steps | DIV 1/4 … 2BAR | SWG track swing | GATE note length |
 | | **SONG** | the SONG screen | | | |
@@ -736,7 +759,7 @@ On FX + KNOB 1–3, or GLO → MASTER:
 
 | | Does |
 | --- | --- |
-| **DUST** 0–100 % | the mix through an old sampler and a record: drive into a soft clip, a lower sample rate (down to ~11 kHz), fewer bits (down to 8), a low-pass closing to ~3 kHz, and, while the transport plays, a little hiss and crackle (a stopped SLOOP is silent) |
+| **DUST** 0–100 % | the mix through an old sampler and a record: drive into a soft clip, a lower sample rate (down to ~11 kHz), fewer bits (down to 8), a low-pass closing to ~3 kHz, and, while the transport plays, a little hiss and crackle (a stopped Foxxy FM is silent) |
 | **DUCK** 0–100 % | every kick pumps the synth tracks down and back over an 1/8 note: the sidechain sound, in time at any tempo |
 | **FILT** | a DJ filter: left of centre a low-pass closing, right a high-pass opening, centre OFF; it glides (no zipper noise) |
 | **ROLL** | the note-repeat rate of ARP + key |
@@ -766,18 +789,20 @@ On FX + KNOB 1–3, or GLO → MASTER:
 
 ## 19. The visualiser
 
-On the TRACKS screen, **tap HOME**: the whole screen becomes a visualiser of what SLOOP plays.
+On the TRACKS screen, **tap HOME**: the whole screen becomes a visualiser of what Foxxy FM plays.
+
+The oscilloscope shows the stereo mix before master volume (blue left, amber right). Its eight divisions use a fixed timebase and gain, so quieter notes shrink naturally. K1 selects 100 µs–2 ms per division; K2 sets digital full-scale amplitude per division; K3 sets the rising-edge trigger level. K4 selects **AUTO** (free-running without a trigger), **NORMAL** (wait for a trigger), **SINGLE** (capture once), or **HOLD** (freeze). Leave SINGLE and select it again to rearm. The browser's **SCOPE** button opens the same display with direct controls and **ARM SINGLE**.
 
 | Control | Does |
 | --- | --- |
 | **SELECT** | the next / previous style (its name shows a second; the last one is kept with the settings) |
 | **HOME**, or any page button | closes it |
 | keys, PLAY, REC, layers | work as ever (a held layer shows its screen, then the visualiser comes back) |
-| KNOB 1–4 | nothing (the tempo is GLO + SELECT meanwhile) |
+| KNOB 1–4 | on OSCILLOSCOPE: time/div, gain/div, trigger level, and trigger mode; other styles leave them unused |
 
 | # | Style | Shows |
 | --- | --- | --- |
-| 1 | **OSCILLOSCOPE** | the mix's wave, standing still |
+| 1 | **OSCILLOSCOPE** | triggered stereo waveform with fixed time and gain scales |
 | 2 | **SPECTRUM** | 32 bands with falling caps |
 | 3 | **SPECTROGRAM** | the spectrum scrolling down, black → blue → green → yellow → white |
 | 4 | **LISSAJOUS** | the stereo image: the wider the cloud, the wider the sound |
@@ -788,7 +813,7 @@ On the TRACKS screen, **tap HOME**: the whole screen becomes a visualiser of wha
 | 9 | **BOUNCE** | a ball per track, kicked up by its notes |
 | 10 | **ORBIT** | four planets turning in 1, 2, 4 and 8 beats round a sun that pulses with the mix |
 | 11 | **WIRES** | a string per track, set swinging by its notes |
-| 12 | **SLOOP** | the logo alive: the sail's four bands are the tracks, the boat rocks on its wave |
+| 12 | **SPACEFOXX** | an audio-synced flight: the ship weaves to the beat and bends toward fresh melody notes, kicks and synth notes fire lasers, golden rings fly at the ship (thread one to score, miss to break the combo), patrol ships drift down to blast |
 
 The visualiser sees the mix **as if MASTER were all the way up**: with MASTER turned down, even to 0, it still moves at full size. It costs the sound nothing.
 
@@ -821,6 +846,7 @@ All of these are **settings of the FM-1**, kept when you load a project or start
 - **LIGHTS** — every button glows at that level, so its label can be read in the dark (on a black FM-1 the labels are unreadable unlit). What is on — the page, PLAY, REC, an octave — stays at full light and still blinks.
 - **KEYS** — the Cs, every white key, or every key glow at the LIGHTS level too (KEYS turns LIGHTS on at LOW if it was off).
 - **NOTES** — ON: the notes sounding on the selected synth track light their keys, played live or by the sequencer (each for at least a tenth of a second, so short sequencer notes show too). The drum track always lights its hits. Works on every page and in every layer.
+- **ARP HOLD** — OFF follows key releases. ON holds the chord after release; the next chord replaces it. LATCH toggles individual notes: press a note to add it, press it again to remove only that note. The other notes keep playing; removing the last note stops the arp. Latched notes stay lit after release, even between arp hits and with NOTES off. Turning HOLD or the arp off clears the latch. SEQ and other tile layers show their own active steps/functions instead.
 - **Always:** PLAY flashes on every beat; REC blinks when armed and is solid while recording; the button of the page shown is lit; in a layer, keys 1, 5, 9, 13 glow dimly and what is on is fully lit; OCT− / OCT+ light when the octave is off 0; a locked layer's button blinks.
 
 ### Hardware calibration
@@ -851,16 +877,16 @@ Both work at once.
 | Knob | Setting | Choices |
 | --- | --- | --- |
 | KNOB 1 | **MIDI** (out) | **KEYS**: only what you play on the keys goes out · **SEQ**: the sequencer, the arp and the rolls go out too |
-| KNOB 2 | **SYNC** (clock in) | **INT**: SLOOP's own tempo · **USB** or **TRS**: follow that MIDI clock |
+| KNOB 2 | **SYNC** (clock in) | **INT**: Foxxy FM's own tempo · **USB** or **TRS**: follow that MIDI clock |
 | KNOB 3 | **IN** | **NOTES**: notes, CCs and clock · **CLOCK**: only the clock and START / CONTINUE / STOP, every incoming note and CC ignored |
 | KNOB 4 | **CPU** | the processor load (or the USB link state while no computer is connected) |
 
 All three are settings of the FM-1, kept when you load a project.
 
-- **MIDI out:** each track on its channel (1–3 synths, 10 drums). With **SEQ**, set a DAW track to record the FM-1's MIDI and you get the pattern as notes, or let SLOOP drive another synth. Every note is ended, STOP ends whatever was still on, and notes that came in are never sent back (no MIDI loop).
-- **Clock in:** START plays from the top, CONTINUE carries on, STOP stops; the tempo follows the master pulse by pulse (24 a beat), so SLOOP cannot drift. When the clock stops for half a second, PLAY on the FM-1 plays at its own tempo again. A MIDI START during the REC count-in starts and records at once.
+- **MIDI out:** each track on its channel (1–3 synths, 10 drums). With **SEQ**, set a DAW track to record the FM-1's MIDI and you get the pattern as notes, or let Foxxy FM drive another synth. Every note is ended, STOP ends whatever was still on, and notes that came in are never sent back (no MIDI loop).
+- **Clock in:** START plays from the top, CONTINUE carries on, STOP stops; the tempo follows the master pulse by pulse (24 a beat), so Foxxy FM cannot drift. When the clock stops for half a second, PLAY on the FM-1 plays at its own tempo again. A MIDI START during the REC count-in starts and records at once.
 - **Clock only (IN = CLOCK):** for a DAW or sequencer that sends notes to other gear on the same cable. A note-off still gets through, so nothing held when you switch is left hanging.
-- **Bluetooth MIDI** is not supported: SLOOP never switches the radio on.
+- **Bluetooth MIDI** is not supported: Foxxy FM never switches the radio on.
 
 ### MIDI CCs (2.5)
 
@@ -938,7 +964,7 @@ On the FM-1 your kit works like any other: steps, levels, ratchets, fill conditi
 
 ### Your own synthesised kits (SYN1–SYN4)
 
-SLOOP 2.5: the editor's **Drum synth** page changes every value of a synthesised kit, sound by sound, and the FM-1 plays the change at once. Never stored, SYN1–SYN4 are copies of 808, 909, TRAP and TECHNO.
+Foxxy FM 2.5: the editor's **Drum synth** page changes every value of a synthesised kit, sound by sound, and the FM-1 plays the change at once. Never stored, SYN1–SYN4 are copies of 808, 909, TRAP and TECHNO.
 
 1. **Pick a kit**, SYN1 to SYN4, and give it a name (8 letters: the DRUMS screen shows it). **Start from** + **Copy** makes it a copy of any of the 32 kits.
 2. **Pick a sound** (KICK, SNARE, CLAP, HAT, OPEN HAT, LOW TOM, HI TOM, CRASH, RIDE, SHAKER, CONGA, RIM, COWBELL, CLAVE, KICK 2, SNARE 2): it plays (also **Play**; **Play on change** plays it after every change).
@@ -959,7 +985,7 @@ SLOOP 2.5: the editor's **Drum synth** page changes every value of a synthesised
 
 ## 24. The web editor
 
-Open it from the [installer page](https://isod89.github.io/sloop-fm1/), the [editor link](https://isod89.github.io/sloop-fm1/webapp/editor/), or **`OPEN-EDITOR.bat`**, in **Chrome or Edge** with the FM-1 on USB, and press **Connect** (allow MIDI). It follows the device live: turn a knob on the FM-1, the editor moves. It looks like the FM-1: the black screen, the four track colours, the FM-1's own pixel font. The language button switches English / Japanese.
+Open it from the [installer page](https://spacefoxx.github.io/foxxy-fm/), the [editor link](https://spacefoxx.github.io/foxxy-fm/webapp/editor/), or **`OPEN-EDITOR.bat`**, in **Chrome or Edge** with the FM-1 on USB, and press **Connect** (allow MIDI). It follows the device live: turn a knob on the FM-1, the editor moves. It looks like the FM-1: the black screen, the four track colours, the FM-1's own pixel font. The language button switches English / Japanese.
 
 **Layout:** the side bar has the pages in three groups — **Track** (Sound, Sequencer, Tracks, Song), **Sounds** (Library, Samples, Drum kit, Drum synth), **Device** (Projects, Settings) — and the connection. On top: the page title, the messages, and on the Track pages the **four tracks** (number, sound, engine): click one to select it. With the side bar focused, the arrow keys move between pages.
 
@@ -988,7 +1014,7 @@ Open it from the [installer page](https://isod89.github.io/sloop-fm1/), the [edi
 
 Every change goes to the FM-1 at once, and the grid shows the same steps.
 
-**Export MIDI** saves the selected track's pattern as a MIDI file (`sloop-track1.mid`…): the notes with their lengths, levels and accents, at the song's tempo; the drum track as GM drum notes on channel 10.
+**Export MIDI** saves the selected track's pattern as a MIDI file (`foxxy-track1.mid`…): the notes with their lengths, levels and accents, at the song's tempo; the drum track as GM drum notes on channel 10.
 
 **Import MIDI** reads a MIDI file into the selected track, at its DIV. First a preview: the file's track to take, how many notes and steps, and what changes on the way: notes off the grid moved to the nearest step, more than 4 notes on a step (the loudest kept), a note cut short by the next one, notes past step 64. **Import** replaces the track's pattern (and, ticked, sets its length); **Cancel** leaves it as it was. On the drum track, the GM notes go to the lanes (36 kick, 38 snare, 42 hat…) and the velocity to the levels, ghost to hard.
 
@@ -1002,7 +1028,7 @@ The editor writes presets, the FM6 bank and backups to flash only while the song
 
 Editor → **Projects** → **Backup**:
 
-- **Save a backup** writes everything on the FM-1 to one file (`SLOOP-backup-DATE.json`): the music you are working on, the projects 1–4 (the song sections A–D), the 32 user presets, the FM6 bank, the SYN drum kits, the samples **USR1–USR4** (your drum kits with them) and the settings (colours, calibration, song order, lights, SYNC, MIDI OUT).
+- **Save a backup** writes everything on the FM-1 to one file (`Foxxy FM-backup-DATE.json`): the music you are working on, the projects 1–4 (the song sections A–D), the 32 user presets, the FM6 bank, the SYN drum kits, the samples **USR1–USR4** (your drum kits with them) and the settings (colours, calibration, song order, lights, SYNC, MIDI OUT).
 - **Restore from a file** puts it all back: what is on the FM-1 is replaced. Stop the song (PLAY) first. A damaged file is refused before anything is written, and each object is written as a save writes it (a cut-off restore never leaves half an object).
 
 A 2.4 backup restores into 2.4 (or later) only. **Save a backup before every update and before going back.**
@@ -1011,14 +1037,14 @@ A 2.4 backup restores into 2.4 (or later) only. **Save a backup before every upd
 
 | Situation | Do |
 | --- | --- |
-| SLOOP does not start | hold **OCT−** alone while switching on (*SLOOP USB RESCUE*), then install again from the browser |
+| Foxxy FM does not start | hold **OCT−** alone while switching on (*Foxxy FM USB RESCUE*), then install again from the browser |
 | An install stopped half-way | the FM-1 waits in update mode: press **INSTALL** again |
 | Buttons or knobs do the wrong thing | hold **OCT− + OCT+** while switching on, or HOME menu → SYSTEM → HARDWARE CALIBRATION |
 | A developer needs UBOOT | hold **OCT− + OCT+** for 5 s while stopped (*UPDATE MODE IN 3…*; let go to cancel) |
 
 ### Going back to the official firmware
 
-On the installer page, open **Return to the official firmware (V15)**: save a backup with the editor first, download FM-1 V15 from m-vave.com, select its `FM-1.fwsc` (only that exact file is accepted) and install it. M-VAVE's own updater (M-UPGRADE) works too; close every other app that uses MIDI first. To come back, install SLOOP again and restore your backup.
+On the installer page, open **Return to the official firmware (V15)**: save a backup with the editor first, download FM-1 V15 from m-vave.com, select its `FM-1.fwsc` (only that exact file is accepted) and install it. M-VAVE's own updater (M-UPGRADE) works too; close every other app that uses MIDI first. To come back, install Foxxy FM again and restore your backup.
 
 ### Troubleshooting
 
@@ -1026,8 +1052,8 @@ On the installer page, open **Return to the official firmware (V15)**: save a ba
 | --- | --- |
 | The installer or editor does not find the FM-1 | Chrome or Edge, a data cable, no hub, allow MIDI; close every other app or tab that uses MIDI, then reload |
 | The black keys are silent on a synth track | it plays chords or the scale: SEL → CHORD OFF and KEYS OFF (with a chord on, the black keys change the chord: CHORD+) |
-| Recorded notes move | SLOOP quantises to the track's DIV: use 1/32, or nudge the step (SEQ + step + KNOB 4) |
-| Notes fade out on a dense part | the processor is at its limit; SLOOP fades one voice at a time (never the bass or lead) rather than glitching. Fewer held notes or a lighter engine help |
+| Recorded notes move | Foxxy FM quantises to the track's DIV: use 1/32, or nudge the step (SEQ + step + KNOB 4) |
+| Notes fade out on a dense part | the processor is at its limit; Foxxy FM fades one voice at a time (never the bass or lead) rather than glitching. Fewer held notes or a lighter engine help |
 | Nothing from the MIDI IN jack | try the other adapter type (A / B); check the channel (1–3, 10, 4–16) and that GLO → SYSTEM → IN is NOTES |
 | The USB audio input does not show | replug the FM-1; on a Mac keep USB SERIAL OFF and restart the FM-1; in Audacity: Transport → Rescan Audio Devices |
 | The USB recording is quiet | HOME menu → USB AUDIO = FULL, or MASTER up |
@@ -1117,4 +1143,4 @@ On the installer page, open **Return to the official firmware (V15)**: save a ba
 
 ---
 
-*SLOOP is based on Felucca by Leo Kuroshita (@kurogedelic), Hügelton Instruments. Full credits and licences: [SLOOP.md](SLOOP.md#rescue-going-back-credits) and [LICENSING.md](LICENSING.md). M-VAVE and FM-1 are trademarks of their owners; SLOOP is not affiliated with them.*
+*Foxxy FM is a fork of Sloop by isod89, based on Felucca by Leo Kuroshita (@kurogedelic), Hügelton Instruments. Full credits and licences: [FOXXY.md](FOXXY.md#rescue-going-back-credits) and [LICENSING.md](LICENSING.md). M-VAVE and FM-1 are trademarks of their owners; Foxxy FM is not affiliated with them.*

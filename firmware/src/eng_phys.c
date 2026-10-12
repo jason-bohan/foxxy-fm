@@ -27,7 +27,7 @@
  * mixes the exciter itself into the output (the mallet / pick). The track's ENV / LFO -> FLT move BRIT.
  *
  * Polyphony 3 per part (engine_t.poly): each part's voices 0..2 own a state slot (SYMP's, the largest:
- * the string's 512 + 128 sample lines, Q20, and three 256-sample sympathetic lines, 16-bit). SLOOP 2.5:
+ * the string's 512 + 128 sample lines, Q20, and three 256-sample sympathetic lines, 16-bit). FOXXY FM 2.5:
  * the slots live in the part's engine arena (engines.c eng_arena_of), shared with GRAIN and FM6. Voice amplitude: the track's ADSR as for every
  * engine; the presets hold SUS at 127 so the model's own decay is heard and REL damps it after the key.
  * Cost (host, 8 notes asked = 3 voices): see the README and cpu_baseline.txt. */
@@ -38,8 +38,8 @@ enum { PM_MODAL, PM_STRING, PM_MEMB, PM_SYMP, PM_COUNT };
 #define PHYS_POLY 3
 /* output: model 1.0 -> this (VOICE_FS scale), then a soft knee; per model (a strike of all the modes in
  * phase peaks high but is short) */
-static const int32_t PHYS_GAIN[PM_COUNT] = {56000, 48000, 135000, 36000};   /* (SLOOP 2.5: x2, x4, x1.5, x3: the
-                                                                               * level of SLOOP's other engines) */
+static const int32_t PHYS_GAIN[PM_COUNT] = {56000, 48000, 135000, 36000};   /* (FOXXY FM 2.5: x2, x4, x1.5, x3: the
+                                                                               * level of FOXXY's other engines) */
 
 typedef struct {
     uint8_t model;               /* PM_* the state belongs to */
@@ -76,7 +76,7 @@ static const int16_t PHYS_CHORDS[7][PX_NSYMP] = {
 };
 static const int8_t PHYS_DETUNE[PX_NSYMP] = {1, -1, 0};   /* 1/16 semitone (6 cents): the strings beat a little */
 
-/* SLOOP 2.5: the slots live in the part's engine arena (engines.c), in one of two layouts over the same
+/* FOXXY FM 2.5: the slots live in the part's engine arena (engines.c), in one of two layouts over the same
  * bytes: SYMP (the largest: a string and three sympathetic lines) two slots, the other models three
  * smaller ones (a string or a modal bank). A switch of layout starts the part's notes over, as a MODEL
  * change under a note always did. SYMP plays two voices (phys_poly), the others three. */
@@ -236,7 +236,7 @@ static const preset_t PHYS_PRESETS[] = {
     /* SYMP: {MODEL, CHRD, BRIT, DAMP, SYMP, ACC, BUZZ, EXC} */
     {"SITAR", {PM_SYMP, 127, 80, 88, 64, 100, 92, 0}, {0, 100, 127, 90}, 0, 0, FX(0, 10, 20, 50)},
     {"PHYS HARP", {PM_SYMP, 8, 62, 74, 60, 90, 0, 0}, {0, 100, 127, 80}, 0, 0, FX(0, 20, 20, 60)},
-    /* SLOOP 2.5: more models. STRNG: {MODEL, STRC, BRIT, DAMP, POS, ACC, BOW, EXC} */
+    /* FOXXY FM 2.5: more models. STRNG: {MODEL, STRC, BRIT, DAMP, POS, ACC, BOW, EXC} */
     {"NYLON GTR", {PM_STRING, 40, 50, 80, 30, 80, 0, 10}, {0, 100, 127, 50}, 0, 0, FX(0, 10, 15, 35)},
     {"STEEL GTR", {PM_STRING, 56, 85, 88, 22, 96, 0, 6}, {0, 100, 127, 56}, 0, 0, FX(0, 15, 18, 35)},
     {"MUTED GTR", {PM_STRING, 50, 40, 55, 30, 90, 0, 20}, {0, 100, 127, 20}, 0, 0, FX(0, 0, 20, 20)},
