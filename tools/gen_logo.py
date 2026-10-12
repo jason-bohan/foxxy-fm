@@ -210,11 +210,10 @@ def svg(kind):
 
 
 # ---- firmware splash ---------------------------------------------------------------------------
-SPLASH_W, SPLASH_H = 240, 159
+SPLASH_W, SPLASH_H = 240, 188
 # the scale: the icon (240) over the "FOXXY FM" wordmark (~60 tall at 0.5).
-# At 0.44 the wordmark stays inside the 159 rows with room for the version line.
-# The splash was 240x188 at 0.5 (4944 B RLE); the image had no flash left for it.
-SPLASH_K = 0.44
+# At 0.5 the wordmark stays inside the 188 rows with room for the version line.
+SPLASH_K = 0.5
 assert 262 * SPLASH_K + 84 * SPLASH_K + 6 <= SPLASH_H, "the wordmark must fit the splash"
 
 
