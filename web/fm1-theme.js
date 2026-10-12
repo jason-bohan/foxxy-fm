@@ -74,7 +74,7 @@ export function setupFinish(stage) {
     try {
       const bg = localStorage.getItem(BG_STORAGE);
       if (typeof bg === 'string' && bg.startsWith('data:image')) bgImage = bg;
-    } catch { /* no saved backdrop: plain stage */ }
+    } catch { /* no saved image: the shell keeps its finish colour */ }
   } catch { /* A missing or damaged preference uses the pink finish. */ }
   function completeCustom() {
     if (!/^#[0-9a-f]{6}$/i.test(custom.buttons || '')) custom.buttons = custom.controls;
