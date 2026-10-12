@@ -38,6 +38,10 @@ LOADER_LOAD = 0x01C0A800
 LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
 DOCKER_IMAGE = os.environ.get("JIELI_DOCKER_IMAGE", "debian:bookworm-slim")
 CFLAGS = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Wno-unused-function"]
+# What the device image wants, where it differs from firmware/src/felucca.c (which the dev screen
+# and the host tests compile). The visualiser costs about 8.7 kB of XIP and the image has none to
+# give: FELUCCA_VIS=1 ./build.sh puts it back, and the link says so if it will not fit.
+APP_DEFAULTS = {"FELUCCA_VIS": "0"}
 LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*\t(.*)$")
 
 # SDK files of AC79NN_SDK_V1.2.1_2023-12-13 (the tested version)
@@ -175,8 +179,8 @@ def build_loader():
 def build_app():
     flags = [*CFLAGS, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
     for flag in ("FELUCCA_FLASH", "FELUCCA_OTA", "FELUCCA_OTA_DRYRUN", "FELUCCA_CDC", "FELUCCA_UART",
-                 "FELUCCA_ICONS", "FELUCCA_SLICE"):
-        v = os.environ.get(flag)    # unset: the default in firmware/src/felucca.c
+                 "FELUCCA_ICONS", "FELUCCA_SLICE", "FELUCCA_VIS"):
+        v = os.environ.get(flag, APP_DEFAULTS.get(flag))   # unset: APP_DEFAULTS, else felucca.c's
         if v in ("0", "1"):
             flags.append(f"-D{flag}={v}")
     flags.append(f'-DFELUCCA_ID="{PRODUCT}"')

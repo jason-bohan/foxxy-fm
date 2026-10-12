@@ -1026,6 +1026,7 @@ static void ui_input(void)
     if (!ui.home && cur_page()->scope == SC_MEOW && (s = panel_enc(EN_SELECT)) != 0) {
         meow_set(6, cat.type + s); ui.force = 1;
     }
+#if FELUCCA_VIS
     if (vis_shown() && !rec_wait && !ft_on) {           /* SELECT changes style; K1..4 adjust the scope. */
         if ((s = panel_enc(EN_SELECT)) != 0)
             vis_select(s);
@@ -1034,6 +1035,7 @@ static void ui_input(void)
             if (s && vis_style % VIS_N == 0) osc_set(k, osc_setting(k) + s);
         }
     }
+#endif
     if (!ui.home && cur_page()->scope == SC_TAPE && !rec_wait && !ft_on && (s = panel_enc(EN_SELECT)) != 0) {
         tape_action = (uint8_t)clamp((int32_t)tape_action + s, 0, TP_ACTIONS - 1); ui.force = 1;
     }

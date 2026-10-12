@@ -960,8 +960,15 @@ static void ui_timers(void)
         ui.hot_t--;
 }
 
+#if FELUCCA_VIS
 static void vis_draw(void);                     /* ui_vis.c */
 static int vis_shown(void);
+static void vis_open(void);
+#else                                           /* built without it: the call sites fold away */
+static void vis_draw(void) { }
+static int vis_shown(void) { return 0; }
+static void vis_open(void) { }
+#endif
 static uint8_t vis_on, vis_shown_last, vis_name_t;   /* the visualiser (ui_vis.c): on, drawn last frame, its name's time */
 static void ui_draw(void)
 {

@@ -15,6 +15,11 @@
 enum { V_POLY, V_MONO, V_LEGATO, V_UNISON };   /* P_VOICE */
 #define NSTEP 64
 #define HALF_FRAMES 256          /* I2S half buffer: 5.8 ms at 44.1 kHz */
+#ifndef FELUCCA_VIS
+#define FELUCCA_VIS 1            /* the full-screen visualiser (ui_vis.c): ~8.7 kB of XIP, and the
+                                  * image has no room for it on the device (build.py defaults it off
+                                  * there; the dev screen and the host tests keep it) */
+#endif
 #ifndef FELUCCA_SLICE
 #define FELUCCA_SLICE 0          /* the SLICE engine (eng_slice.c): kept in the tree, not built by default */
 #endif
