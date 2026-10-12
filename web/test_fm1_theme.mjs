@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// fm1-theme: finish vars apply, backdrop image loads/clears (stub DOM).
+// fm1-theme: finish vars apply, shell image loads/clears on the chassis (stub DOM).
 import assert from "node:assert";
 import { setupFinish, bgFitSize } from "./fm1-theme.js";
 
@@ -33,23 +33,31 @@ function run() {
   };
   globalThis.document = { createElement: (tag) => (tag === "section" ? panel : stubEl()) };
   const style = { props: {}, setProperty(k, v) { this.props[k] = v; } };
-  const stage = { style, querySelector: () => ({ before() {} }) };
+  const shellStyle = {};
+  const stage = {
+    style,
+    querySelector: (sel) => (sel === ".fm1-device" ? { style: shellStyle } : { before() {} }),
+  };
   setupFinish(stage);
-  return { subs, style };
+  return { subs, style, shellStyle };
 }
 
 store.set("foxxy-fm-bgimage-v1", "data:image/png;base64,iVBORw0KGgo=");
 let r = run();
-assert.ok(r.style.backgroundImage.startsWith('url("data:image'), "saved backdrop applied on load");
+assert.ok(r.shellStyle.backgroundImage.includes('url("data:image'), "saved image applied on load");
+assert.ok(r.shellStyle.backgroundImage.startsWith("linear-gradient("),
+  "the finish gradient stays over the photo, so the moulding still shades");
+assert.equal(r.shellStyle.backgroundSize, "cover", "the photo covers the chassis");
+assert.equal(r.style.backgroundImage, undefined, "the page behind the instrument is left alone");
 assert.ok(r.style.props["--device-shell"], "finish vars applied");
 assert.ok(!("#bg-status" in r.subs), "no bg notice on clean load");
 
 r.subs["#bg-clear"].listeners.click[0]();
-assert.equal(r.style.backgroundImage, "", "clear removes the backdrop");
+assert.equal(r.shellStyle.backgroundImage, "", "clear removes the shell image");
 assert.equal(store.has("foxxy-fm-bgimage-v1"), false, "clear removes the stored image");
 assert.equal(r.subs["#bg-status"].textContent, "", "clear leaves no notice");
 
 r = run();
-assert.equal(r.style.backgroundImage, "", "no backdrop without a saved image");
+assert.equal(r.shellStyle.backgroundImage, "", "no shell image without a saved one");
 
-console.log("fm1-theme: finish vars, backdrop load/clear PASS");
+console.log("fm1-theme: finish vars, shell image load/clear PASS");

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 const STORAGE = 'foxxy-fm-finish-v1';
-const BG_STORAGE = 'foxxy-fm-bgimage-v1';  /* the backdrop photo, kept apart so a quota failure never eats the color prefs */
+const BG_STORAGE = 'foxxy-fm-bgimage-v1';  /* the shell photo, kept apart so a quota failure never eats the color prefs */
 const BG_MAX_SIDE = 1600;
 // Stock-inspired colors from FM-1 product photographs; not calibrated paint values.
 const finishes = [
@@ -27,21 +27,26 @@ export function bgFitSize(w, h, max) {
 export function setupFinish(stage) {
   const panel = document.createElement('section'); panel.className = 'finish-picker';
   panel.setAttribute('aria-label', 'Instrument color theme');
-  panel.innerHTML = `<div class="finish-heading"><span class="eyebrow">FINISH</span><span id="finish-name" aria-live="polite"></span></div><div class="finish-options"></div><div class="custom-finish" hidden><label>Shell <input type="color" data-finish="shell"></label><label>Knobs & keys <input type="color" data-finish="controls"></label><label>Buttons <input type="color" data-finish="buttons"></label><label>Button & key panels <input type="color" data-finish="buttonPanel"></label><label>Accent <input type="color" data-finish="accent"></label><button type="button" id="finish-reset">RESET CUSTOM</button></div><div class="bg-image" style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap"><label>Backdrop image <input type="file" id="bg-file" accept="image/*"></label><button type="button" id="bg-clear">CLEAR IMAGE</button><span id="bg-status" role="status"></span></div><div id="finish-status" role="status"></div>`;
+  panel.innerHTML = `<div class="finish-heading"><span class="eyebrow">FINISH</span><span id="finish-name" aria-live="polite"></span></div><div class="finish-options"></div><div class="custom-finish" hidden><label>Shell <input type="color" data-finish="shell"></label><label>Knobs & keys <input type="color" data-finish="controls"></label><label>Buttons <input type="color" data-finish="buttons"></label><label>Button & key panels <input type="color" data-finish="buttonPanel"></label><label>Accent <input type="color" data-finish="accent"></label><button type="button" id="finish-reset">RESET CUSTOM</button></div><div class="bg-image" style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap"><label>Shell image <input type="file" id="bg-file" accept="image/*"></label><button type="button" id="bg-clear">CLEAR IMAGE</button><span id="bg-status" role="status"></span></div><div id="finish-status" role="status"></div>`;
   stage.querySelector('.device-wrap').before(panel);
+  const shell = stage.querySelector('.fm1-device');   /* the chassis itself, not the page behind it */
   let selected = 'pink', custom = {...finishes[0]}, bgImage = null;
   const bgStatus = (t) => { panel.querySelector('#bg-status').textContent = t; };
   function applyBg() {
+    if (!shell) return;
     if (bgImage) {
-      stage.style.backgroundImage = `url("${bgImage}")`;
-      stage.style.backgroundSize = 'cover';
-      stage.style.backgroundPosition = 'center';
-      stage.style.backgroundRepeat = 'no-repeat';
+      /* The photo is the shell's material, so the finish gradient stays on top
+         of it: the moulding still catches light down the same diagonal and the
+         printed labels keep their contrast over a busy image. */
+      shell.style.backgroundImage = `linear-gradient(140deg,#ffffff26,#00000014 48%,#00000030), url("${bgImage}")`;
+      shell.style.backgroundSize = 'cover';
+      shell.style.backgroundPosition = 'center';
+      shell.style.backgroundRepeat = 'no-repeat';
     } else {
-      stage.style.backgroundImage = '';
-      stage.style.backgroundSize = '';
-      stage.style.backgroundPosition = '';
-      stage.style.backgroundRepeat = '';
+      shell.style.backgroundImage = '';
+      shell.style.backgroundSize = '';
+      shell.style.backgroundPosition = '';
+      shell.style.backgroundRepeat = '';
     }
   }
   function shrinkBg(dataUrl, mime) {
@@ -55,7 +60,7 @@ export function setupFinish(stage) {
         const keepPng = mime === 'image/png' && dataUrl.length < 1200000;
         bgImage = cv.toDataURL(keepPng ? 'image/png' : 'image/jpeg', 0.85);
         applyBg();
-        try { localStorage.setItem(BG_STORAGE, bgImage); bgStatus('Backdrop saved.'); }
+        try { localStorage.setItem(BG_STORAGE, bgImage); bgStatus('Shell image saved.'); }
         catch { bgStatus('Image shown for this visit only: too large for browser storage.'); }
       } catch { bgStatus('Could not read that image.'); }
     };
